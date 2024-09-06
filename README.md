@@ -15,7 +15,7 @@ This was done mainly with an IDA-minded approach to be 1:1 as possible.
 ### Status
 #### Done
 - Window Handling
-- Dx9 (Minus Ped Models)
+- Dx9 (Not complete)
 - SDL Gamepad Input
 
 #### TODO
