@@ -51,7 +51,8 @@ namespace Flx
 
 void PlayMovie( const char *pMovieName )
 {
-	PMovies_PlayMovie( pMovieName );
+	return; // lwss: stubbed for now..
+	//PMovies_PlayMovie( pMovieName );
 }
 
 }  // namespace Flx

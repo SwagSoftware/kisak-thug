@@ -82,8 +82,9 @@ private :
     unsigned char       m_actuator_direct[ACTUATOR_BUFFER_LENGTH];
     unsigned char       m_actuator_max[ACTUATOR_BUFFER_LENGTH];
 	
-#	ifdef __PLAT_XBOX__
-	HANDLE				m_handle;
+#	if defined(__PLAT_XBOX__) || defined(__PLAT_WN32__)
+	//HANDLE				m_handle;
+	void*                   m_handle;
 #	endif
 
 	// Ken: Stores the m_actuator_direct values when the game is paused.
@@ -182,12 +183,12 @@ private :
     
 	bool					m_plugged_in; // K: True if the pad is plugged in & acquired, false otherwise.
 	
-#	ifdef __PLAT_XBOX__
+#if defined(__PLAT_XBOX__) || defined(__PLAT_WN32__)
 	unsigned int			m_unplugged_counter;
 	unsigned int			m_unplugged_retry;
 	bool 					m_pressed;
 	bool					m_start_or_a_pressed;
-#	endif // __PLAT_XBOX__
+#endif // __PLAT_XBOX__
 
     void                    process( void );
     void			        read_data ( void );         

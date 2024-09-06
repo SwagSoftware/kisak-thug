@@ -75,7 +75,8 @@ extern EHardware gHardware;
 inline EHardware GetHardware() {return gHardware;}
 
 extern bool gGotExtraMemory;
-inline bool GotExtraMemory() {return gGotExtraMemory;}
+//inline bool GotExtraMemory() {return gGotExtraMemory;}
+inline bool GotExtraMemory() {return true;} // lwss: fk off
 
 extern ELanguage gLanguage;
 inline ELanguage GetLanguage() {return gLanguage;}
@@ -84,7 +85,8 @@ extern ETerritory gTerritory;
 inline ETerritory GetTerritory() {return gTerritory;}
 
 extern bool gCD;
-inline bool CD() {return gCD;}
+//inline bool CD() {return gCD;}
+inline bool CD() {return true;} // lwss: Accurate to PC version.
 
 extern	float	gMasterVolume;
 inline	float	GetMasterVolume() {return gMasterVolume;}

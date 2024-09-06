@@ -3016,7 +3016,7 @@ void CUpperMenuManager::SetPieceSet(CParkManager::CPieceSet *pSet, int set_numbe
 		uint32 name_crc = mp_current_set->mEntryTab[m_current_entry_in_set].mNameCrc;
 		
 		ParkEd("unfocusing item in piece menu %s", Script::FindChecksumName(name_crc));
-		if (p_tracker->GetObject(name_crc))
+		if (p_tracker->GetObj(name_crc))
 			p_tracker->LaunchEvent(Obj::CEvent::TYPE_UNFOCUS, name_crc);
 	}
 	
@@ -3083,7 +3083,7 @@ void CUpperMenuManager::SetPieceSet(CParkManager::CPieceSet *pSet, int set_numbe
 	//Dbg_Assert(m_current_entry_in_set >= 0 && m_current_entry_in_set < 
 	
 	ParkEd("focusing item in piece menu %s", Script::FindChecksumName(pSet->mEntryTab[pSet->mSelectedEntry].mNameCrc));
-	if (p_tracker->GetObject(pSet->mEntryTab[pSet->mSelectedEntry].mNameCrc))
+	if (p_tracker->GetObj(pSet->mEntryTab[pSet->mSelectedEntry].mNameCrc))
 		p_tracker->LaunchEvent(Obj::CEvent::TYPE_FOCUS, pSet->mEntryTab[pSet->mSelectedEntry].mNameCrc);
 	m_current_entry_in_set = pSet->mSelectedEntry;
 

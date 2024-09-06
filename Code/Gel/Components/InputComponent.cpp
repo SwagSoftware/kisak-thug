@@ -285,7 +285,7 @@ void CInputComponent::BindToController ( int controller )
 	Inp::Manager::Instance()->ReassignHandler(*m_input_handler, controller);
 	Inp::Manager::Instance()->ReassignHandler(*m_input_handler2, 1);
 	
-	if (CVibrationComponent* p_vibration_component = GetVibrationComponentFromObject(GetObject()))
+	if (CVibrationComponent* p_vibration_component = GetVibrationComponentFromObject(GetObj()))
 	{
 		p_vibration_component->SetDevice(m_input_handler->m_Device);
 	}
@@ -302,7 +302,7 @@ void CInputComponent::Debounce ( uint32 Checksum, float time, bool clear )
 	
 	float debounce_time = Tmr::GetTime() + (time * 1000.0f);
 	
-	if (CTrickComponent* p_trick_component = GetTrickComponentFromObject(GetObject()))
+	if (CTrickComponent* p_trick_component = GetTrickComponentFromObject(GetObj()))
 	{
 		p_trick_component->Debounce(Inp::GetButtonIndex(Checksum), debounce_time);
 	}
@@ -356,7 +356,7 @@ bool CInputComponent::ignore_button_presses (   )
 
 void CInputComponent::handle_input ( Inp::Data* input )
 {
-	if (GetObject()->IsPaused()) return;
+	if (GetObj()->IsPaused()) return;
 	
 	build_input_mask(input);
 
@@ -372,7 +372,7 @@ void CInputComponent::handle_input ( Inp::Data* input )
 	else
 	{
 		#ifdef __NOPT_ASSERT__
-		m_pad.Update(input, DebugSkaterScripts && GetObject()->GetID() == 0);
+		m_pad.Update(input, DebugSkaterScripts && GetObj()->GetID() == 0);
 		#else
 		m_pad.Update(input);
 		#endif
@@ -382,7 +382,7 @@ void CInputComponent::handle_input ( Inp::Data* input )
 
 void CInputComponent::handle_input2 ( Inp::Data* input )
 {
-	if (GetObject()->IsPaused()) return;
+	if (GetObj()->IsPaused()) return;
 	
 //	build_input_mask(input);
 
@@ -398,7 +398,7 @@ void CInputComponent::handle_input2 ( Inp::Data* input )
 	else
 	{
 		#ifdef __NOPT_ASSERT__
-		m_pad2.Update(input, DebugSkaterScripts && GetObject()->GetID() == 0);
+		m_pad2.Update(input, DebugSkaterScripts && GetObj()->GetID() == 0);
 		#else
 		m_pad2.Update(input);
 		#endif
@@ -419,9 +419,9 @@ void CInputComponent::update_input_mask ( Inp::Data* input, Inp::Data::AnalogBut
 			if (m_input_events_enabled && !m_input_disabled && !m_net_input_disabled)
 			{
 						
-						//uint32	id = GetObject()->GetID();
+						//uint32	id = GetObj()->GetID();
 						//Obj::CTracker::Instance()->LaunchEvent(trigger_event, id, id);
-						GetObject()->SelfEvent(trigger_event);
+						GetObj()->SelfEvent(trigger_event);
 			}
 		}
 		m_input_mask |= mask;
@@ -433,9 +433,9 @@ void CInputComponent::update_input_mask ( Inp::Data* input, Inp::Data::AnalogBut
 			if (m_input_events_enabled && !m_input_disabled && !m_net_input_disabled)
 			{
 						// Fire Event to self, release_event
-						//uint32	id = GetObject()->GetID();
+						//uint32	id = GetObj()->GetID();
 						//Obj::CTracker::Instance()->LaunchEvent(release_event, id, id);
-						GetObject()->SelfEvent(release_event);						
+						GetObj()->SelfEvent(release_event);						
 			}
 		}
 	}

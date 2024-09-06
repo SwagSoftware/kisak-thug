@@ -64,29 +64,29 @@ namespace GameNet
 **							  Private Functions								**
 *****************************************************************************/
 
-void	BuddyMan::s_buddy_state_code( const Tsk::Task< BuddyMan>& task )
-{
-	BuddyMan& man = task.GetData();
-
-	switch( man.m_state )
-	{
-		case vSTATE_UPDATE:
-			man.update_buddy_list();
-			break;
-		case vSTATE_FILL_BUDDY_LIST:
-			man.fill_buddy_list();
-			man.m_state = vSTATE_WAIT;
-			break;
-		case vSTATE_SUCCESS:
-			break;
-		case vSTATE_CANCEL:
-			break;
-		case vSTATE_ERROR:
-			break;
-		case vSTATE_WAIT:
-			break;
-	}
-}
+//void	BuddyMan::s_buddy_state_code( const Tsk::Task< BuddyMan>& task )
+//{
+//	BuddyMan& man = task.GetData();
+//
+//	switch( man.m_state )
+//	{
+//		case vSTATE_UPDATE:
+//			man.update_buddy_list();
+//			break;
+//		case vSTATE_FILL_BUDDY_LIST:
+//			man.fill_buddy_list();
+//			man.m_state = vSTATE_WAIT;
+//			break;
+//		case vSTATE_SUCCESS:
+//			break;
+//		case vSTATE_CANCEL:
+//			break;
+//		case vSTATE_ERROR:
+//			break;
+//		case vSTATE_WAIT:
+//			break;
+//	}
+//}
 
 /******************************************************************/
 /*                                                                */

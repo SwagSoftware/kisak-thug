@@ -136,7 +136,7 @@ public:
 	}
 
 protected:
-	Obj::CCompositeObject*		GetObject();
+	Obj::CCompositeObject*		GetObj();
 	Gfx::CSkeleton*				GetSkeleton();
 
 protected:

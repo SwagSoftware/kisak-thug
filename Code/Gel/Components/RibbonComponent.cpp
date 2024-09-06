@@ -98,7 +98,7 @@ void CRibbonComponent::InitFromStructure( Script::CStruct* pParams )
 
 void CRibbonComponent::Finalize()
 {
-	mp_skeleton_component = GetSkeletonComponentFromObject(GetObject());
+	mp_skeleton_component = GetSkeletonComponentFromObject(GetObj());
 	
 	Dbg_Assert(mp_skeleton_component);
 }
@@ -141,8 +141,8 @@ void CRibbonComponent::Update()
 	// fetch bone position
 	Mth::Vector bone_p;
 	mp_skeleton_component->GetBonePosition(m_bone_name, &bone_p);
-	bone_p = GetObject()->GetMatrix().Rotate(bone_p);
-	bone_p += GetObject()->GetPos();
+	bone_p = GetObj()->GetMatrix().Rotate(bone_p);
+	bone_p += GetObj()->GetPos();
 	
 	// update link constraints
 	for (int c = 20; c--; )
@@ -248,8 +248,8 @@ CBaseComponent::EMemberFunctionResult CRibbonComponent::CallMemberFunction( uint
 			
 			Mth::Vector bone_p;
 			mp_skeleton_component->GetBonePosition(m_bone_name, &bone_p);
-			bone_p = GetObject()->GetMatrix().Rotate(bone_p);
-			bone_p += GetObject()->GetPos();
+			bone_p = GetObj()->GetMatrix().Rotate(bone_p);
+			bone_p += GetObj()->GetPos();
 			
 			for (int n = m_num_links; n--; )
 			{

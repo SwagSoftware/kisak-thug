@@ -173,7 +173,7 @@ public:
 
 	void				SetLeaf(bool yes);
 	void				SetActive(bool yes);
-	void				SetObject(bool yes);
+	void				SetObj(bool yes);
 	void				SetTransformed(bool yes);
 	void				SetSky(bool yes);
 	void				SetZPush0(bool yes);
@@ -253,7 +253,7 @@ public:
 
 	// To get at the different objects in a heirarchy
 	int					GetNumObjects();
-	CGeomNode*			GetObject(int num, bool root = true);		// Don't set root
+	CGeomNode*			GetObj(int num, bool root = true);		// Don't set root
 
 
 	#ifdef __PLAT_WN32__

@@ -93,9 +93,9 @@ EAnimFunctionResult CBaseAnimController::CallMemberFunction( uint32 Checksum, Sc
 /*                                                                */
 /******************************************************************/
 
-Obj::CCompositeObject* CBaseAnimController::GetObject()
+Obj::CCompositeObject* CBaseAnimController::GetObj()
 {
-	return mp_blendChannel->GetObject();
+	return mp_blendChannel->GetObj();
 }
 
 /******************************************************************/
@@ -105,7 +105,7 @@ Obj::CCompositeObject* CBaseAnimController::GetObject()
 
 Gfx::CSkeleton* CBaseAnimController::GetSkeleton()
 {
-	Obj::CSkeletonComponent* pSkeletonComponent = GetSkeletonComponentFromObject( GetObject() );
+	Obj::CSkeletonComponent* pSkeletonComponent = GetSkeletonComponentFromObject( GetObj() );
 	if ( pSkeletonComponent )
 	{
 		return pSkeletonComponent->GetSkeleton();

@@ -409,7 +409,7 @@ CTracker::~CTracker()
 	Will return the object if it has an alias, which is used in the front end for stuff like "MainMenu"
 	But is also now used for "Skater" and "Skater2"
 */
-CObject *CTracker::GetObject(uint32 id)
+CObject *CTracker::GetObj(uint32 id)
 {
 	CObject *p_obj = mp_hash_table->GetItem(id);
 	if (!p_obj)
@@ -652,7 +652,7 @@ bool CTracker::LaunchEvent(uint32 type, uint32 target, uint32 source, Script::CS
 		if (event.m_target_id != CEvent::vSYSTEM_EVENT && !event.WasHandled())
 		{
 			// look for a object with the target id
-			CObject *p_object = GetObject(event.m_target_id);
+			CObject *p_object = GetObj(event.m_target_id);
 			if (!p_object)
 			{
 				// or look for a script with the target id
@@ -1032,7 +1032,8 @@ void CTracker::SuspendScriptUntilEvent(Script::CScript *pScript, uint32 event_ty
 
 
 
-#ifndef __PLAT_WN32__	// These script functions are not necessary from PC tools
+// LWSS: re-enable
+//#ifndef __PLAT_WN32__	// These script functions are not necessary from PC tools 
 
 // @script | LaunchEvent | 
 // @parm name | type | event type
@@ -1144,7 +1145,7 @@ bool ScriptObjectExists(Script::CStruct *pParams, Script::CScript *pScript)
 	uint32 id = p_manager->ResolveComplexID(pParams, CRCD(0x40c698af,"id"));
 	
 	CTracker* p_tracker = CTracker::Instance();
-	return (p_tracker->GetObject(id) != NULL);
+	return (p_tracker->GetObj(id) != NULL);
 }
 
 
@@ -1156,7 +1157,7 @@ bool ScriptTerminateObjectsScripts(Script::CStruct *pParams, Script::CScript *pS
 	uint32 id = p_manager->ResolveComplexID(pParams, CRCD(0x40c698af,"id"));
 	
 	CTracker* p_tracker = CTracker::Instance();
-	CObject *p_object = p_tracker->GetObject(id);
+	CObject *p_object = p_tracker->GetObj(id);
 	
 	
 	// Brad - the use_proper_version flag is a last minute fix at the end of THPS4.
@@ -1199,7 +1200,7 @@ bool ScriptAssignAlias(Script::CStruct *pParams, Script::CScript *pScript)
 	uint32 id_of_original = p_manager->ResolveComplexID(pParams, CRCD(0x40c698af,"id"));
 	
 	CTracker* p_tracker = CTracker::Instance();	
-	CObject *p_object_to_alias = p_tracker->GetObject(id_of_original);
+	CObject *p_object_to_alias = p_tracker->GetObj(id_of_original);
 	Dbg_Assert(p_object_to_alias);
 	
 	uint32 alias;
@@ -1219,7 +1220,7 @@ bool ScriptSetObjectProperties(Script::CStruct *pParams, Script::CScript *pScrip
 	uint32 id_of_original = p_manager->ResolveComplexID(pParams, CRCD(0x40c698af,"id"));
 	
 	CTracker* p_tracker = CTracker::Instance();	
-	CObject *p_object = p_tracker->GetObject(id_of_original);
+	CObject *p_object = p_tracker->GetObj(id_of_original);
 	Dbg_Assert(p_object);
 	
 	p_object->SetProperties(pParams);
@@ -1244,6 +1245,6 @@ bool ScriptPrintEventLog(Script::CStruct *pParams, Script::CScript *pScript)
 }
 
 
-#endif
+//#endif
 
 }

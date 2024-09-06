@@ -117,7 +117,7 @@ void		Manager::s_end_render_code ( const Tsk::Hook< Manager >& hook )
 {
 
 // Note: not currently called.... just left in to show the timing stuff....
-	
+	__debugbreak();
 	Dbg_AssertType ( &hook, Tsk::Hook< Manager > );
 	Manager&	gfx_manager = hook.GetData();
     

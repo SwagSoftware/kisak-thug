@@ -47,7 +47,6 @@ public:
 		BC_NO_UPDATE
 	};
 
-
 public:
 	virtual	void 					Update() = 0;
     virtual void 					InitFromStructure( Script::CStruct* pParams ) = 0;
@@ -55,8 +54,8 @@ public:
     virtual void 					RefreshFromStructure( Script::CStruct* pParams );
 	virtual void					ProcessWait( Script::CScript * pScript );
 	
-	void							SetObject(CCompositeObject* p_object) {mp_object = p_object;}
-	CCompositeObject*				GetObject() const {return mp_object;}
+	void							SetObj(CCompositeObject* p_object) {mp_object = p_object;} // lwss: renamed to match below
+	CCompositeObject*				GetObj() const {return mp_object;} // lwss: renamed due to windows macro cancer :((
 	CBaseComponent*					GetNext() const {return mp_next;}
 	CBaseComponent*					GetNextSameType() const {return mp_next_same_type;}
 	void							SetNextSameType( CBaseComponent *p_component ){ mp_next_same_type = p_component; }

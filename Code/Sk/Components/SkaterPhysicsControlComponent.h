@@ -73,7 +73,7 @@ public:
 
 	static CBaseComponent*			s_create();
 			 	
-	CSkater*						GetSkater() { return static_cast< CSkater* >(GetObject()); }
+	CSkater*						GetSkater() { return static_cast< CSkater* >(GetObj()); }
 
 	void							SuspendPhysics ( bool suspend );
 	bool							IsPhysicsSuspended (   ) { return m_physics_suspended; }
@@ -187,7 +187,7 @@ inline void CSkaterPhysicsControlComponent::SuspendPhysics ( bool suspend )
 inline CCompositeObject* CSkaterPhysicsControlComponent::get_skater_camera (   )
 {
 	
-	return static_cast< CSkater* >(GetObject())->GetCamera();
+	return static_cast< CSkater* >(GetObj())->GetCamera();
 }
 
 }

@@ -110,7 +110,7 @@ public:
 	int				Seek( int offset, FilePointerBase base );
 	bool			Flush( void );
 
-#	ifdef __PLAT_XBOX__
+#	if defined(__PLAT_XBOX__) || defined(__PLAT_WN32__)
 	char			m_DisplayFilename[vMAX_DISPLAY_FILENAME_LEN+1];
 #	endif
 
@@ -199,7 +199,7 @@ public:
 	bool			IsBadDevice( void );
 #	endif
 
-#	ifdef __PLAT_XBOX__
+#	if defined(__PLAT_XBOX__) || defined(__PLAT_WN32__)
 	void			SetAsHardDrive();
 #	endif // #ifdef __PLAT_XBOX__
 
@@ -208,7 +208,7 @@ private:
 	int				m_slot;
 	int				m_last_error;
 
-#	ifdef __PLAT_XBOX__
+#	if defined(__PLAT_XBOX__) || defined(__PLAT_WN32__)
 	char			m_mounted_drive_letter;	// Used also as a flag: == 0 means not yet mounted.
 	enum
 	{
@@ -223,7 +223,7 @@ class  Manager  : public Spt::Class
 public :
 	enum
 	{
-#		ifdef __PLAT_XBOX__
+#		if defined(__PLAT_XBOX__) || defined(__PLAT_WN32__)
 		vMAX_PORT = 4,			// Four controllers...
 		vMAX_SLOT = 2,			// ...each with 2 slots for memory cards.
 #		elif defined __PLAT_NGC__
@@ -255,7 +255,7 @@ private :
 	bool			m_wrongDevice;
 #	endif // #ifdef __PLAT_NGC__
 
-#	ifdef __PLAT_XBOX__
+#	if defined(__PLAT_XBOX__) || defined(__PLAT_WN32__)
 	Card m_hard_drive;
 #	endif // #ifdef __PLAT_XBOX__
 	

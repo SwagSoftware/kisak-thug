@@ -132,14 +132,14 @@ CBaseComponent::EMemberFunctionResult CCarPhysicsComponent::CallMemberFunction( 
 void CCarPhysicsComponent::init_car_skeleton()
 {	
 	// Does some sanity checks
-	Obj::CSkeletonComponent* pSkeletonComponent = (Obj::CSkeletonComponent*)(GetObject()->GetComponent( CRC_SKELETON ));
+	Obj::CSkeletonComponent* pSkeletonComponent = (Obj::CSkeletonComponent*)(GetObj()->GetComponent( CRC_SKELETON ));
 	Gfx::CSkeleton* pSkeleton = NULL;
 	if ( pSkeletonComponent )
 	{
 		pSkeleton = pSkeletonComponent->GetSkeleton();
 	}
 	
-	Obj::CModelComponent* pModelComponent = (Obj::CModelComponent*)(GetObject()->GetComponent( CRC_MODEL ));
+	Obj::CModelComponent* pModelComponent = (Obj::CModelComponent*)(GetObj()->GetComponent( CRC_MODEL ));
 	Nx::CModel* pModel = NULL;
 	if ( pModelComponent )
 	{
@@ -149,7 +149,7 @@ void CCarPhysicsComponent::init_car_skeleton()
 	Dbg_MsgAssert( pSkeleton, ("Car has no skeleton") );
 	Dbg_MsgAssert( pModel, ( "Model hasn't been set up yet" ) );
 	
-	Dbg_MsgAssert( pModel->GetHierarchy(), ("veh flagged as car has no hierarchy from node %s", Script::FindChecksumName(GetObject()->GetID())));
+	Dbg_MsgAssert( pModel->GetHierarchy(), ("veh flagged as car has no hierarchy from node %s", Script::FindChecksumName(GetObj()->GetID())));
 	Nx::CHierarchyObject* pHierarchyObjects = pModel->GetHierarchy();
 	Dbg_MsgAssert(( pHierarchyObjects + 0 ),("Missing matrix in car"));
 	Dbg_MsgAssert(( pHierarchyObjects + 2 ),("Missing matrix in car"));

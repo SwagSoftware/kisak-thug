@@ -68,7 +68,7 @@ CSkaterLocalNetLogicComponent::~CSkaterLocalNetLogicComponent()
 
 void CSkaterLocalNetLogicComponent::InitFromStructure( Script::CStruct* pParams )
 {
-	Dbg_MsgAssert(GetObject()->GetType() == SKATE_TYPE_SKATER, ("CSkaterLocalNetLogicComponent added to non-skater composite object"));
+	Dbg_MsgAssert(GetObj()->GetType() == SKATE_TYPE_SKATER, ("CSkaterLocalNetLogicComponent added to non-skater composite object"));
 	Dbg_MsgAssert(GetSkater()->IsLocalClient(), ("CSkaterLocalNetLogicComponent added to non-local skater"));
 	
 	m_last_update_time = 0;
@@ -92,8 +92,8 @@ void CSkaterLocalNetLogicComponent::RefreshFromStructure( Script::CStruct* pPara
 void CSkaterLocalNetLogicComponent::Finalize (   )
 {
 	
-	mp_state_component = GetSkaterStateComponentFromObject(GetObject());
-	mp_physics_component = GetSkaterCorePhysicsComponentFromObject(GetObject());
+	mp_state_component = GetSkaterStateComponentFromObject(GetObj());
+	mp_physics_component = GetSkaterCorePhysicsComponentFromObject(GetObj());
 	
 	Dbg_Assert(mp_state_component);
 }
@@ -232,7 +232,7 @@ int	CSkaterLocalNetLogicComponent::get_update_flags()
 	on_server = GameNet::Manager::Instance()->OnServer();
 	force_send = on_server || ( !( client->m_FrameCounter % vFORCE_SEND_INTERVAL )); 
 
-	GetObject()->GetDisplayMatrix().GetEulers( eulers );
+	GetObj()->GetDisplayMatrix().GetEulers( eulers );
 	
 	state = (char) mp_state_component->m_state;
 	terrain = (char) mp_state_component->m_terrain;
@@ -251,13 +251,13 @@ int	CSkaterLocalNetLogicComponent::get_update_flags()
 	{
 		if( i == Y )
 		{
-			pos[i] = (short) ( GetObject()->m_pos[i] * 4.0f );
-			//pos[i] = GetObject()->m_pos[i];
+			pos[i] = (short) ( GetObj()->m_pos[i] * 4.0f );
+			//pos[i] = GetObj()->m_pos[i];
 		}
 		else
 		{
-			pos[i] = (short) ( GetObject()->m_pos[i] * 2.0f );
-			//pos[i] = GetObject()->m_pos[i];
+			pos[i] = (short) ( GetObj()->m_pos[i] * 2.0f );
+			//pos[i] = GetObj()->m_pos[i];
 		}
 		if(( pos[i] != m_last_sent_pos[i] ) || force_send )
 		{
@@ -375,7 +375,7 @@ void CSkaterLocalNetLogicComponent::network_update ( void )
 
 	stream.SetOutputData( p_msg.m_Data, 1024 );
 	
-	GetObject()->GetDisplayMatrix().GetEulers( eulers );
+	GetObj()->GetDisplayMatrix().GetEulers( eulers );
 	
 	state = (char) mp_state_component->m_state;
 	terrain = (char) mp_state_component->m_terrain;
@@ -401,9 +401,9 @@ void CSkaterLocalNetLogicComponent::network_update ( void )
 		static Mth::Vector last_pos;
 		Mth::Vector diff;
 
-		diff = GetObject()->m_pos - last_pos;
+		diff = GetObj()->m_pos - last_pos;
 		//Dbg_Printf( "Vel: %f %f %f\n", diff[X], diff[Y], diff[Z] );
-		last_pos = GetObject()->m_pos;
+		last_pos = GetObj()->m_pos;
 	}
 
 // Write out the object's position as three shorts (fixed-point)
@@ -411,13 +411,13 @@ void CSkaterLocalNetLogicComponent::network_update ( void )
 	{
 		if( i == Y )
 		{
-			pos[i] = (short) ( GetObject()->m_pos[i] * 4.0f );
-			//pos[i] = GetObject()->m_pos[i];
+			pos[i] = (short) ( GetObj()->m_pos[i] * 4.0f );
+			//pos[i] = GetObj()->m_pos[i];
 		}
 		else
 		{
-			pos[i] = (short) ( GetObject()->m_pos[i] * 2.0f );
-			//pos[i] = GetObject()->m_pos[i];
+			pos[i] = (short) ( GetObj()->m_pos[i] * 2.0f );
+			//pos[i] = GetObj()->m_pos[i];
 		}
 		if( i == X )
 		{

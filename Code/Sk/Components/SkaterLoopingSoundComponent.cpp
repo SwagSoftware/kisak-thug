@@ -87,7 +87,7 @@ void CSkaterLoopingSoundComponent::RefreshFromStructure( Script::CStruct* pParam
 
 void CSkaterLoopingSoundComponent::Finalize (   )
 {
-	mp_physics_control_component = GetSkaterPhysicsControlComponentFromObject(GetObject());
+	mp_physics_control_component = GetSkaterPhysicsControlComponentFromObject(GetObj());
 	
 	// Dbg_Assert(mp_physics_control_component);
 }
@@ -178,7 +178,7 @@ void CSkaterLoopingSoundComponent::Update()
 	Sfx::CSfxManager* p_sfx_manager = Sfx::CSfxManager::Instance();
 	
 	// adjust volume based of skater's offset from the nearest camera
-	p_sfx_manager->SetVolumeFromPos(&volume, GetObject()->GetPos(), p_sfx_manager->GetDropoffDist(m_sound_info.m_soundChecksum));
+	p_sfx_manager->SetVolumeFromPos(&volume, GetObj()->GetPos(), p_sfx_manager->GetDropoffDist(m_sound_info.m_soundChecksum));
 	
 	// if the skater is in the air and this isn't the first frame we've been playing the air looping sound
 	if ( m_StateType == AIR && m_looping_sound_id )
@@ -291,9 +291,9 @@ CBaseComponent::EMemberFunctionResult CSkaterLoopingSoundComponent::CallMemberFu
 			Dbg_MsgAssert( mp_physics_control_component, ( "Don't call PlayAnim on a non-skater" ) );
 			
 			Script::CStruct* p_anim_tags_struct;
-			if (GetObject()->GetTags()
+			if (GetObj()->GetTags()
 				&& mp_physics_control_component->IsSkating()
-				&& GetObject()->GetTags()->GetStructure(CRCD(0x5db4115f, "AnimTags"), &p_anim_tags_struct)
+				&& GetObj()->GetTags()->GetStructure(CRCD(0x5db4115f, "AnimTags"), &p_anim_tags_struct)
 				&& p_anim_tags_struct->ContainsFlag(CRCD(0x910d77c1, "WalkToSkateTransition")))
 			{
 				Suspend(false);

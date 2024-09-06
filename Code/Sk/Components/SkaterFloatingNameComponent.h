@@ -45,7 +45,7 @@ public:
 
 	static CBaseComponent*			s_create();
 	
-	CSkater*						GetSkater() { return static_cast< CSkater* >(GetObject()); }
+	CSkater*						GetSkater() { return static_cast< CSkater* >(GetObj()); }
 	
 private:
 	uint32							m_screen_element_id;

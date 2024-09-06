@@ -543,7 +543,8 @@ CGeom::~CGeom()
 	
 	if (mp_orig_render_colors)
 	{
-		delete mp_orig_render_colors;
+		// KISAKTODO: readd this and fix the free()
+		//delete mp_orig_render_colors;
 	}
 }
 
@@ -921,7 +922,7 @@ int CGeom::GetNumRenderVerts()								// - returns number of renderable verts
 
 void CGeom::GetRenderVerts(Mth::Vector *p_verts)				// - gets a single array of the verts
 {
-		return plat_get_render_verts(p_verts);
+		return	plat_get_render_verts(p_verts);
 }
 
 /******************************************************************/

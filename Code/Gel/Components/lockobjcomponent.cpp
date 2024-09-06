@@ -259,7 +259,7 @@ CCompositeObject* CLockObjComponent::get_locked_to_object()
 
 void CLockObjComponent::LockToObject( void )
 {
-	Mth::Matrix old_matrix=GetObject()->m_matrix;
+	Mth::Matrix old_matrix=GetObj()->m_matrix;
 	
 	CCompositeObject* p_obj=get_locked_to_object();
 	if (!p_obj)
@@ -268,7 +268,7 @@ void CLockObjComponent::LockToObject( void )
 		return;
 	}	
 
-	Mth::Vector target_pos = GetObject()->m_pos;
+	Mth::Vector target_pos = GetObj()->m_pos;
 	
 	if ( m_locked_to_object_bone_name )
 	{
@@ -278,15 +278,15 @@ void CLockObjComponent::LockToObject( void )
 			pSkeleton = GetSkeletonComponentFromObject(p_obj)->GetSkeleton();
 		}
 		Dbg_MsgAssert( pSkeleton, ( "Locking object to bone on non-skeletal object" ) );
-		if ( pSkeleton && pSkeleton->GetBoneMatrix( m_locked_to_object_bone_name, &GetObject()->m_matrix ) )
+		if ( pSkeleton && pSkeleton->GetBoneMatrix( m_locked_to_object_bone_name, &GetObj()->m_matrix ) )
 		{
-			Mth::Vector boneOffset = GetObject()->m_matrix[Mth::POS];
-			GetObject()->m_matrix[Mth::POS] = Mth::Vector( 0.0f, 0.0f, 0.0f, 1.0f );
+			Mth::Vector boneOffset = GetObj()->m_matrix[Mth::POS];
+			GetObj()->m_matrix[Mth::POS] = Mth::Vector( 0.0f, 0.0f, 0.0f, 1.0f );
 
-		    GetObject()->m_matrix = GetObject()->GetMatrix() * p_obj->GetMatrix();
+		    GetObj()->m_matrix = GetObj()->GetMatrix() * p_obj->GetMatrix();
 
 			target_pos = p_obj->GetDisplayMatrix().Transform( boneOffset );
-			target_pos += p_obj->m_pos+m_lock_offset*GetObject()->GetMatrix();
+			target_pos += p_obj->m_pos+m_lock_offset*GetObj()->GetMatrix();
 		}
 	}
 	else
@@ -331,18 +331,18 @@ void CLockObjComponent::LockToObject( void )
 			// but now zero out the translation part of the matrix otherwise the object will be rendered wrong.
 			Mth::Vector zero(0.0f,0.0f,0.0f,1.0f);
 			display_matrix.SetPos(zero);
-			GetObject()->m_matrix=display_matrix;
+			GetObj()->m_matrix=display_matrix;
 		}
 		else
 		{
-			GetObject()->m_matrix=((CCompositeObject*)p_obj)->GetDisplayMatrix();
-			target_pos=p_obj->GetPos()+m_lock_offset*GetObject()->m_matrix;
+			GetObj()->m_matrix=((CCompositeObject*)p_obj)->GetDisplayMatrix();
+			target_pos=p_obj->GetPos()+m_lock_offset*GetObj()->m_matrix;
 		}
 	}
 
 	if (m_lag)
 	{
-		GetObject()->m_pos=GetObject()->GetPos()+(target_pos-GetObject()->GetPos())*m_lag_factor;
+		GetObj()->m_pos=GetObj()->GetPos()+(target_pos-GetObj()->GetPos())*m_lag_factor;
 		
 		uint32 t=Tmr::ElapsedTime(0)+m_lag_phase;
 		t&=1023;
@@ -353,19 +353,19 @@ void CLockObjComponent::LockToObject( void )
 	}
 	else
 	{
-		GetObject()->m_pos=target_pos;
+		GetObj()->m_pos=target_pos;
 	}
 	
 	// take the object's velocity as well
-	GetObject()->SetVel(p_obj->GetVel());
+	GetObj()->SetVel(p_obj->GetVel());
 	
 	// If the objects rotation is required to be preserved, recover the old value.
 	// Alan's ferris wheel cars use this.
 	if (m_no_rotation)
 	{
-		GetObject()->m_matrix[Mth::UP]=old_matrix[Mth::UP];
-		GetObject()->m_matrix[Mth::AT]=old_matrix[Mth::AT];
-		GetObject()->m_matrix[Mth::RIGHT]=old_matrix[Mth::RIGHT];
+		GetObj()->m_matrix[Mth::UP]=old_matrix[Mth::UP];
+		GetObj()->m_matrix[Mth::AT]=old_matrix[Mth::AT];
+		GetObj()->m_matrix[Mth::RIGHT]=old_matrix[Mth::RIGHT];
 		//printf("m_pos=(%f,%f,%f)\n",m_pos[X],m_pos[Y],m_pos[Z]);
 	}	
 	
@@ -378,22 +378,22 @@ void CLockObjComponent::LockToObject( void )
 	// that sends all the matrices to the model after
 	// the object update task has finished...)
 	Nx::CModel* pModel = NULL;
-	if ( GetObject()->GetComponent( CRC_MODEL ) )
+	if ( GetObj()->GetComponent( CRC_MODEL ) )
 	{
-		pModel = ((Obj::CModelComponent*)GetObject()->GetComponent(CRC_MODEL))->GetModel();
+		pModel = ((Obj::CModelComponent*)GetObj()->GetComponent(CRC_MODEL))->GetModel();
 	}
 	
 	if ( pModel )
 	{
 		Gfx::CSkeleton* pSkeleton = NULL;
-		if ( GetObject()->GetComponent( CRC_SKELETON ) )
+		if ( GetObj()->GetComponent( CRC_SKELETON ) )
 		{
-			pSkeleton = ((Obj::CSkeletonComponent*)GetObject()->GetComponent(CRC_SKELETON))->GetSkeleton();
+			pSkeleton = ((Obj::CSkeletonComponent*)GetObj()->GetComponent(CRC_SKELETON))->GetSkeleton();
 		}
 
 		Mth::Matrix rootMatrix;
-		rootMatrix = GetObject()->GetDisplayMatrix();
-		rootMatrix[Mth::POS] = GetObject()->GetPos();
+		rootMatrix = GetObj()->GetDisplayMatrix();
+		rootMatrix[Mth::POS] = GetObj()->GetPos();
 		rootMatrix[Mth::POS][W] = 1.0f;
 		bool should_animate = false;
 		pModel->Render( &rootMatrix, !should_animate, pSkeleton );

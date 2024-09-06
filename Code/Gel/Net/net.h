@@ -45,7 +45,7 @@
 #endif	// __PLAT_NGPS__
 
 #ifdef __PLAT_WN32__
-#include <winsock2.h>
+//#include <winsock2.h>
 #endif // __PLAT_WN32__
 
 #ifdef __PLAT_XBOX__

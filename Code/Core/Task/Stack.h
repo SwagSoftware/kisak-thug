@@ -59,7 +59,7 @@ public :
 
 private :
 
-	uint					m_mask_off; 			// mask to supress execution of tasks 
+	uint					m_mask_off; 			// +4 mask to supress execution of tasks 
 
 	void					remove_dead_entries( void );
 
@@ -67,12 +67,12 @@ private :
 
 	Lst::Head< StackElement >	m_stack;
 	Lst::Head< StackElement >	m_dead;	// dead element list
-	StackElement*				m_run;	// current run task list
-	StackElement*				m_add;	// current add task list
+	StackElement*				m_run;	// +0x30 current run task list
+	StackElement*				m_add;	// +0x34 current add task list
 
 	// these get reset when Process() is called
-	bool					m_pushedList;
-	bool					m_poppedList;
+	bool					m_pushedList; // +0x38
+	bool					m_poppedList; // +0x39
 };
 
 

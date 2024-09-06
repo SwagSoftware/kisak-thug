@@ -93,7 +93,7 @@ protected:
 
 	// Member variables (protected so the p-classes can access them)
 	int						m_max_particles;		// Maximum size of particle array.
-	int						m_num_particles;		// Current number of active particles.
+	int						m_num_particles;		// lwss: (+312) Current number of active particles.
 		
 	float					m_speed_min;			// Initial Speed setting.
 	float					m_speed_max;

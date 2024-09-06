@@ -1429,6 +1429,23 @@ SCFunction CFunctionLookupTable[]=
 	{"StartPreLoadedStream",			CFuncs::ScriptStartPreLoadedStream},
 	{"FinishRendering",					CFuncs::ScriptFinishRendering},
 
+	// lwss add - Extra funcs for PC version.
+	{ "ForceServerListRefresh",        CFuncs::ScriptDummyCommand },
+	{ "TryJoinServerIP",               CFuncs::ScriptDummyCommand },
+	{ "TryJoinServerIPCancel",         CFuncs::ScriptDummyCommand },
+	{ "TryingToJoinGame",              CFuncs::ScriptDummyCommandFalse },
+	{ "GSEnableNet",				   CFuncs::ScriptDummyCommand },
+	{ "GSDisableNet",				   CFuncs::ScriptDummyCommand },
+	{ "TryJoinServerIPSuccess",        CFuncs::ScriptDummyCommand },
+	{ "IsInternetGameHost",            CFuncs::ScriptDummyCommandFalse },
+	{ "IsJoiningInternetGame",         CFuncs::ScriptDummyCommandFalse },
+	{ "TryJoinInternetGame",           CFuncs::ScriptDummyCommand },
+	{ "InitPrefsBeenox",			   CFuncs::ScriptDummyCommand },
+	{ "AddFacesToMenu",				   CFuncs::ScriptDummyCommand },
+	{ "SkaterIsCustom",				   CFuncs::ScriptDummyCommandFalse },
+	{ "MultiplayerOnly",			   CFuncs::ScriptDummyCommandFalse }, // Accurate to PC ver
+	
+	// lwss end
 // Gamecube-specific message functions.
 #ifdef __PLAT_NGC__
 	{"Ngc_BGColor", 					Nx::ScriptNgc_BGColor},

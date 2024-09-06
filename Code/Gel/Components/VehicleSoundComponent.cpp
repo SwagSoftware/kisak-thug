@@ -156,8 +156,8 @@ void CVehicleSoundComponent::InitFromStructure( Script::CStruct* pParams )
 
 void CVehicleSoundComponent::Finalize()
 {
-	mp_vehicle_component = GetVehicleComponentFromObject(GetObject());
-	mp_sound_component = GetSoundComponentFromObject(GetObject());
+	mp_vehicle_component = GetVehicleComponentFromObject(GetObj());
+	mp_sound_component = GetSoundComponentFromObject(GetObj());
 	
 	Dbg_Assert(mp_vehicle_component);
 	Dbg_Assert(mp_sound_component);
@@ -343,7 +343,7 @@ void CVehicleSoundComponent::update_engine_sounds (   )
 	
 	// setup volume
 	Sfx::sVolume volume;
-	Sfx::CSfxManager::Instance()->SetVolumeFromPos(&volume, GetObject()->GetPos(), Sfx::CSfxManager::Instance()->GetDropoffDist(m_engine_sound_checksum));
+	Sfx::CSfxManager::Instance()->SetVolumeFromPos(&volume, GetObj()->GetPos(), Sfx::CSfxManager::Instance()->GetDropoffDist(m_engine_sound_checksum));
 	float volume_percent = gear_shift_vol_factor * Mth::Lerp(
 		get_param(CRCD(0xb8f81277, "MinEngineVol")),
 		get_param(CRCD(0x288b029d, "MaxEngineVol")),
@@ -412,7 +412,7 @@ void CVehicleSoundComponent::update_tire_sounds (   )
 	
 	// setup volume
 	Sfx::sVolume volume;
-	Sfx::CSfxManager::Instance()->SetVolumeFromPos(&volume, GetObject()->GetPos(), Sfx::CSfxManager::Instance()->GetDropoffDist(m_tire_sound_checksum));
+	Sfx::CSfxManager::Instance()->SetVolumeFromPos(&volume, GetObj()->GetPos(), Sfx::CSfxManager::Instance()->GetDropoffDist(m_tire_sound_checksum));
 	float volume_percent = Mth::Lerp(
 		get_param(CRCD(0x43e6cdf2, "MinTireVol")),
 		get_param(CRCD(0x42ea5746, "MaxTireVol")),

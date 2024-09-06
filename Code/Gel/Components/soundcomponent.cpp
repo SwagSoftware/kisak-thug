@@ -103,7 +103,7 @@ void CSoundComponent::Update()
 	// For tracking the position of the sound, then 
 	// we need to update the old position and the current position
 	m_old_pos = m_pos;
-	m_pos = GetObject()->m_pos;
+	m_pos = GetObj()->m_pos;
 	
 	
 	UpdateMutedSounds();

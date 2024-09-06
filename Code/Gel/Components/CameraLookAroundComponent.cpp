@@ -86,7 +86,7 @@ void CCameraLookAroundComponent::RefreshFromStructure( Script::CStruct* pParams 
 
 void CCameraLookAroundComponent::Finalize (   )
 {
-	mp_input_component = GetInputComponentFromObject(GetObject());
+	mp_input_component = GetInputComponentFromObject(GetObj());
 	
 	Dbg_Assert(mp_input_component);
 }
@@ -119,7 +119,7 @@ void CCameraLookAroundComponent::Update()
 			printf ("Camera Detected Select Pressed\n");
 			p_control_pad->m_select.ClearTrigger();
 			// Depending on which skatercam we are, run one of the UserSelectSelect scripts
-			if (GetObject()->GetID() == CRCD(0x967c138c,"SkaterCam0"))
+			if (GetObj()->GetID() == CRCD(0x967c138c,"SkaterCam0"))
 			{
 				Script::RunScript(CRCD(0x60871393,"UserSelectSelect"));
 			}

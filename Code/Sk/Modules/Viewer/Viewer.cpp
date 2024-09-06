@@ -727,37 +727,38 @@ void	CViewer::v_start_cb ( void )
 	// Sorry Steve, but we need the shift input handler on the CD, so I'm going
 	// to have to start this module all the time.
 	// but on the CD, we don't initialize any of the actual view stuff
-	if (!Config::CD())
-	{
-		
-		
-	
-		mp_server->m_Dispatcher.AddHandler( Net::vMSG_ID_QUICKVIEW, 
-											s_handle_quickview, 
-											Net::mHANDLE_LATE | Net::mHANDLE_FOREIGN );
-		mp_server->m_Dispatcher.AddHandler(	Net::vMSG_ID_UPDATE_MATERIAL, 
-											s_handle_update_material, 
-											Net::mHANDLE_LATE | Net::mHANDLE_FOREIGN );
-		mp_server->m_Dispatcher.AddHandler(	Net::vMSG_ID_REMOTE_Q, 
-											s_handle_rq, 
-											Net::mHANDLE_LATE | Net::mHANDLE_FOREIGN );
-		mp_server->m_Dispatcher.AddHandler( Net::vMSG_ID_INCREMENTAL_UPDATE,
-											s_handle_incremental_update,
-											Net::mHANDLE_LATE | Net::mHANDLE_FOREIGN );
-		mp_server->m_Dispatcher.AddHandler( Net::vMSG_ID_VIEWOBJ_LOAD_MODEL, 
-											s_handle_load_model,
-											Net::mHANDLE_LATE | Net::mHANDLE_FOREIGN, this );
-		mp_server->m_Dispatcher.AddHandler( Net::vMSG_ID_VIEWOBJ_UNLOAD_MODEL, 
-											s_handle_unload_model,
-											Net::mHANDLE_LATE | Net::mHANDLE_FOREIGN, this );
-		mp_server->m_Dispatcher.AddHandler(	Net::vMSG_ID_RUN_SCRIPT_COMMAND, 
-											s_handle_run_script_command, 
-											Net::mHANDLE_LATE | Net::mHANDLE_FOREIGN, this );
-	
-	
-	
-		Dbg_Printf( "Starting Viewer Module....\n" );
-	}	
+	// LWSS: Pretty sure this is gone in pc
+	//if (!Config::CD())
+	//{
+	//	
+	//	
+	//
+	//	mp_server->m_Dispatcher.AddHandler( Net::vMSG_ID_QUICKVIEW, 
+	//										s_handle_quickview, 
+	//										Net::mHANDLE_LATE | Net::mHANDLE_FOREIGN );
+	//	mp_server->m_Dispatcher.AddHandler(	Net::vMSG_ID_UPDATE_MATERIAL, 
+	//										s_handle_update_material, 
+	//										Net::mHANDLE_LATE | Net::mHANDLE_FOREIGN );
+	//	mp_server->m_Dispatcher.AddHandler(	Net::vMSG_ID_REMOTE_Q, 
+	//										s_handle_rq, 
+	//										Net::mHANDLE_LATE | Net::mHANDLE_FOREIGN );
+	//	mp_server->m_Dispatcher.AddHandler( Net::vMSG_ID_INCREMENTAL_UPDATE,
+	//										s_handle_incremental_update,
+	//										Net::mHANDLE_LATE | Net::mHANDLE_FOREIGN );
+	//	mp_server->m_Dispatcher.AddHandler( Net::vMSG_ID_VIEWOBJ_LOAD_MODEL, 
+	//										s_handle_load_model,
+	//										Net::mHANDLE_LATE | Net::mHANDLE_FOREIGN, this );
+	//	mp_server->m_Dispatcher.AddHandler( Net::vMSG_ID_VIEWOBJ_UNLOAD_MODEL, 
+	//										s_handle_unload_model,
+	//										Net::mHANDLE_LATE | Net::mHANDLE_FOREIGN, this );
+	//	mp_server->m_Dispatcher.AddHandler(	Net::vMSG_ID_RUN_SCRIPT_COMMAND, 
+	//										s_handle_run_script_command, 
+	//										Net::mHANDLE_LATE | Net::mHANDLE_FOREIGN, this );
+	//
+	//
+	//
+	//	Dbg_Printf( "Starting Viewer Module....\n" );
+	//}	
 
 	// We also add the regular input handler and logic handler on CD
 	mlp_manager->AddLogicTask( *mp_logic_task );
@@ -802,25 +803,26 @@ void	CViewer::v_stop_cb ( void )
 
 CViewer::CViewer( void )
 {
-	if (!Config::CD())
-	{
-		uint32 local_ip;
-
-		Net::Manager * net_man = Net::Manager::Instance();
-			
-#ifdef __PLAT_NGC__
-		SOInAddr local_addr;
-		SOInetAtoN( net_man->GetLocalIP(), &local_addr );
-		local_ip = local_addr.addr;
-#else
-		local_ip = inet_addr( net_man->GetLocalIP());
-#endif
-		net_man->NetworkEnvironmentSetup();
-		mp_server = net_man->CreateNewAppServer( 0, "Skate4 Viewer", 4, Net::vEXPORT_COMM_PORT,
-													inet_addr( net_man->GetLocalIP()), Net::App::mACCEPT_FOREIGN_CONN );
-	
-		Dbg_Assert( mp_server );
-	}	
+// lwss: Remove for PC it seems...
+//	if (!Config::CD())
+//	{
+//		uint32 local_ip;
+//
+//		Net::Manager * net_man = Net::Manager::Instance();
+//			
+//#ifdef __PLAT_NGC__
+//		SOInAddr local_addr;
+//		SOInetAtoN( net_man->GetLocalIP(), &local_addr );
+//		local_ip = local_addr.addr;
+//#else
+//		local_ip = inet_addr( net_man->GetLocalIP());
+//#endif
+//		net_man->NetworkEnvironmentSetup();
+//		mp_server = net_man->CreateNewAppServer( 0, "Skate4 Viewer", 4, Net::vEXPORT_COMM_PORT,
+//													inet_addr( net_man->GetLocalIP()), Net::App::mACCEPT_FOREIGN_CONN );
+//	
+//		Dbg_Assert( mp_server );
+//	}	
 
 
 	int viewer_controller = Script::GetInt(CRCD(0x702247a5,"Viewer_controller"), false);

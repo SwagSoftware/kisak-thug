@@ -802,7 +802,7 @@ void* Heap::reallocate_down( size_t newSize, void *pOld )
 #ifdef __PLAT_NGC__
 	newSize = (uint)nAlignUpBy( newSize, 5 );	// all allocations aligned by 32 bytes
 #else
-	newSize = (uint)nAlignUpBy( newSize, 4 );	// all allocations aligned by 16 bytes
+	newSize = (uint)nAlignUpBy( newSize, 4 );	// all allocations aligned by 16 bytes (LWSS: Accurate for PC)
 #endif
 #endif		// __EFFICIENT__
 	

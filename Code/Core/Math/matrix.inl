@@ -558,7 +558,7 @@ inline void Vu0Invert(sceVu0FMATRIX m0)
 	vmove.xyzw vf9,vf4
 	qmfc2    $11,vf4
 
-	#ì]íu
+//	#ì]íu // lwss: corrupted file????
 	pextlw     $12,$9,$8
 	pextuw     $13,$9,$8
 	pextlw     $14,$11,$10
@@ -571,7 +571,7 @@ inline void Vu0Invert(sceVu0FMATRIX m0)
 	qmtc2    $9,vf7
 	qmtc2    $10,vf8
 
-	#ì‡êœ
+//	#ì‡êœ  // lwss: corrupted file????
 	vmulax.xyz	ACC,   vf6,vf5
 	vmadday.xyz	ACC,   vf7,vf5
 	vmaddz.xyz	vf4,vf8,vf5

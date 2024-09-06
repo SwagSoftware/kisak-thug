@@ -104,7 +104,7 @@ void CWalkCameraComponent::InitFromStructure( Script::CStruct* pParams )
 	m_last_dot = 1.0f;
 	m_current_zoom = 1.0f;
 	
-	m_last_actual_matrix = GetObject()->GetMatrix();
+	m_last_actual_matrix = GetObj()->GetMatrix();
 }
 
 /******************************************************************/
@@ -124,8 +124,8 @@ void CWalkCameraComponent::RefreshFromStructure( Script::CStruct* pParams )
 
 void CWalkCameraComponent::Finalize()
 {
-	mp_lookaround_component = GetCameraLookAroundComponentFromObject(GetObject());
-	mp_camera_component = GetCameraComponentFromObject(GetObject());
+	mp_lookaround_component = GetCameraLookAroundComponentFromObject(GetObj());
+	mp_camera_component = GetCameraComponentFromObject(GetObj());
 	
 	Dbg_Assert(mp_lookaround_component);
 	Dbg_Assert(mp_camera_component);
@@ -141,7 +141,7 @@ void CWalkCameraComponent::Update()
 	// optimization KLUDGE
 //	if (Script::GetInteger(CRCD(0x1aa88b08, "vehicle_mode")))
 //	{
-//		GetObject()->Pause(true);
+//		GetObj()->Pause(true);
 //		return;
 //	}
 	
@@ -166,13 +166,13 @@ void CWalkCameraComponent::Update()
 	float frame_length = Tmr::FrameLength();
 	
 	// get input
-//	float horiz_control = GetInputComponentFromObject( GetObject())->GetControlPad().m_scaled_rightX;
+//	float horiz_control = GetInputComponentFromObject( GetObj())->GetControlPad().m_scaled_rightX;
 	float horiz_control = mp_lookaround_component->mLookaroundHeading;
 
 	// Restore camera position from last frame, previous to refocusing, lookaround and collision detection.
-	GetObject()->GetMatrix() = m_last_actual_matrix;
+	GetObj()->GetMatrix() = m_last_actual_matrix;
 
-	Mth::Vector	target_facing = -GetObject()->GetMatrix()[Z];
+	Mth::Vector	target_facing = -GetObj()->GetMatrix()[Z];
 	target_facing[Y] = 0.0f;
 	target_facing.Normalize();
 	
@@ -247,9 +247,9 @@ void CWalkCameraComponent::Update()
 	
 	if (!instantly)
 	{
-		if( Mth::DotProduct(target_matrix[X], GetObject()->GetMatrix()[X]) > CAMERA_SLERP_STOP &&
-			Mth::DotProduct(target_matrix[Y], GetObject()->GetMatrix()[Y]) > CAMERA_SLERP_STOP &&
-			Mth::DotProduct(target_matrix[Z], GetObject()->GetMatrix()[Z]) > CAMERA_SLERP_STOP )
+		if( Mth::DotProduct(target_matrix[X], GetObj()->GetMatrix()[X]) > CAMERA_SLERP_STOP &&
+			Mth::DotProduct(target_matrix[Y], GetObj()->GetMatrix()[Y]) > CAMERA_SLERP_STOP &&
+			Mth::DotProduct(target_matrix[Z], GetObj()->GetMatrix()[Z]) > CAMERA_SLERP_STOP )
 		{
 			// we're already at our target, so don't do anything
 			
@@ -263,33 +263,33 @@ void CWalkCameraComponent::Update()
 		else
 		{
 			// Slerp to the target matrix.
-			Mth::SlerpInterpolator slerper( &GetObject()->GetMatrix(), &target_matrix );
+			Mth::SlerpInterpolator slerper( &GetObj()->GetMatrix(), &target_matrix );
 			
 			// Apply the slerping.
-			slerper.getMatrix( &GetObject()->GetMatrix(), GetTimeAdjustedSlerp( slerp, frame_length ));
+			slerper.getMatrix( &GetObj()->GetMatrix(), GetTimeAdjustedSlerp( slerp, frame_length ));
 
 			// Calculate for the skater camera.
-			m_last_dot = Mth::DotProduct(m_last_actual_matrix[Z], GetObject()->GetMatrix()[Z]);
+			m_last_dot = Mth::DotProduct(m_last_actual_matrix[Z], GetObj()->GetMatrix()[Z]);
 		}
 	}
 	else
 	{
-		GetObject()->GetMatrix() = target_matrix;
+		GetObj()->GetMatrix() = target_matrix;
 	}
 
-	// At this point, GetObject()->GetMatrix() is valid to store.
-	m_last_actual_matrix = GetObject()->GetMatrix();
+	// At this point, GetObj()->GetMatrix() is valid to store.
+	m_last_actual_matrix = GetObj()->GetMatrix();
 
 	// Now apply the lookaround adjustments to the matrix.
 	// Control over target facing.
 	if( horiz_control != 0.0f && !m_flush_request_active )
 	{
 		// The horiz_control value needs to be damped when there is an item of interest within the reticle area.
-		GetObject()->GetMatrix().RotateYLocal( horiz_control );
+		GetObj()->GetMatrix().RotateYLocal( horiz_control );
 	}
 
 	float tilt = s_get_gunslinger_param( CRCD( 0xe3c07609, "tilt" ));
-	GetObject()->GetMatrix().RotateXLocal( tilt + mp_lookaround_component->mLookaroundTilt );
+	GetObj()->GetMatrix().RotateXLocal( tilt + mp_lookaround_component->mLookaroundTilt );
 
 	Mth::Vector	camera_pos = get_tripod_pos( instantly );
 
@@ -300,7 +300,7 @@ void CWalkCameraComponent::Update()
 
 		p_weapon->SetCurrentTarget( p_selected_target );
 		p_weapon->SetSightPos( camera_pos );
-		p_weapon->SetSightMatrix( GetObject()->GetMatrix());
+		p_weapon->SetSightMatrix( GetObj()->GetMatrix());
 
 		float extra_heading_change, extra_tilt_change;
 		p_weapon->ProcessStickyTarget( last_heading_change, last_tilt_change, &extra_heading_change, &extra_tilt_change );
@@ -308,14 +308,14 @@ void CWalkCameraComponent::Update()
 		if(( extra_heading_change != 0.0f ) || ( extra_tilt_change != 0.0f ))
 		{
 			// Reset the matrix to what it was prior to the heading and tilt adjustments.
-			GetObject()->SetMatrix( m_last_actual_matrix );
+			GetObj()->SetMatrix( m_last_actual_matrix );
 
 			mp_lookaround_component->mLookaroundHeading += extra_heading_change;
 			horiz_control += extra_heading_change;
-			GetObject()->GetMatrix().RotateYLocal( horiz_control );
+			GetObj()->GetMatrix().RotateYLocal( horiz_control );
 
 			mp_lookaround_component->mLookaroundTilt += extra_tilt_change;
-			GetObject()->GetMatrix().RotateXLocal( tilt + mp_lookaround_component->mLookaroundTilt );
+			GetObj()->GetMatrix().RotateXLocal( tilt + mp_lookaround_component->mLookaroundTilt );
 		}
 	}
 
@@ -323,7 +323,7 @@ void CWalkCameraComponent::Update()
 	float above, behind;
 	calculate_zoom( above, behind );
 	
-	camera_pos += GetObject()->GetMatrix()[Z] * behind + up * above;
+	camera_pos += GetObj()->GetMatrix()[Z] * behind + up * above;
 	
 	Mth::Vector	focus_pos = mp_target_walk_component->GetEffectivePos() + up * above;
 	
@@ -332,7 +332,7 @@ void CWalkCameraComponent::Update()
 	target_matrix[Z].Normalize();
 
 	// Read back the Y from the current matrix.
-//	target_matrix[Y] = GetObject()->GetMatrix()[Y];
+//	target_matrix[Y] = GetObj()->GetMatrix()[Y];
 	target_matrix[Y] = Mth::Vector( 0.0f, 1.0f, 0.0f );
 
 	// Generate new orthonormal X and Y axes.
@@ -344,18 +344,18 @@ void CWalkCameraComponent::Update()
 
 	// Write back into camera matrix.
 	// Since camera points in -Z, but player in +Z, we must negate the X and Z axes
-	GetObject()->GetMatrix()[X]	= -target_matrix[X];
-	GetObject()->GetMatrix()[Y] = target_matrix[Y];
-	GetObject()->GetMatrix()[Z] = -target_matrix[Z];
+	GetObj()->GetMatrix()[X]	= -target_matrix[X];
+	GetObj()->GetMatrix()[Y] = target_matrix[Y];
+	GetObj()->GetMatrix()[Z] = -target_matrix[Z];
 	
 	// clean up matrix
-	GetObject()->GetMatrix()[X][W] = 0.0f;
-	GetObject()->GetMatrix()[Y][W] = 0.0f;
-	GetObject()->GetMatrix()[Z][W] = 0.0f;
-	GetObject()->GetMatrix()[W].Set(0.0f, 0.0f, 0.0f, 1.0f);
+	GetObj()->GetMatrix()[X][W] = 0.0f;
+	GetObj()->GetMatrix()[Y][W] = 0.0f;
+	GetObj()->GetMatrix()[Z][W] = 0.0f;
+	GetObj()->GetMatrix()[W].Set(0.0f, 0.0f, 0.0f, 1.0f);
 
 	// Now do collision detection.
-	ApplyCameraCollisionDetection( camera_pos, GetObject()->GetMatrix(), camera_pos - GetObject()->GetMatrix()[Z] * behind,	focus_pos );
+	ApplyCameraCollisionDetection( camera_pos, GetObj()->GetMatrix(), camera_pos - GetObj()->GetMatrix()[Z] * behind,	focus_pos );
 	
 	#ifdef __USER_DAN__
 	if (Script::GetInteger(CRCD(0xaf90c5fd, "walking_debug_lines")))
@@ -365,7 +365,7 @@ void CWalkCameraComponent::Update()
 	#endif
 	
 	camera_pos[W] = 1.0f;
-	GetObject()->SetPos( camera_pos );
+	GetObj()->SetPos( camera_pos );
 
 	// Do the target selection.
 	if( mp_target )
@@ -375,7 +375,7 @@ void CWalkCameraComponent::Update()
 
 		CWeaponComponent* p_weapon = GetWeaponComponentFromObject( mp_target );
 
-		p_weapon->SetSightMatrix( GetObject()->GetMatrix());
+		p_weapon->SetSightMatrix( GetObj()->GetMatrix());
 		p_selected_target = p_weapon->GetCurrentTarget( reticle_min, &reticle_max );
 
 		if( gun_fired )

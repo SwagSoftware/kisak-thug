@@ -88,10 +88,10 @@
 #include <sk/components/skaterruntimercomponent.h>
 
 #ifdef TESTING_GUNSLINGER
-#include <gel/components/horsecomponent.h>
-#include <gel/components/horsecameracomponent.h>
-#include <gel/components/ridercomponent.h>
-#include <gel/components/weaponcomponent.h>
+//#include <gel/components/horsecomponent.h>
+//#include <gel/components/horsecameracomponent.h>
+//#include <gel/components/ridercomponent.h>
+//#include <gel/components/weaponcomponent.h>
 #endif
 
 
@@ -192,10 +192,10 @@ CCompositeObjectManager::CCompositeObjectManager()
 
 
 #	ifdef TESTING_GUNSLINGER
-	RegisterComponent(CRC_HORSE,				CHorseComponent::s_create);
-	RegisterComponent(CRC_HORSECAMERA,			CHorseCameraComponent::s_create);
-	RegisterComponent(CRC_RIDER,				CRiderComponent::s_create);
-	RegisterComponent(CRC_WEAPON,				CWeaponComponent::s_create);
+	//RegisterComponent(CRC_HORSE,				CHorseComponent::s_create);
+	//RegisterComponent(CRC_HORSECAMERA,			CHorseCameraComponent::s_create);
+	//RegisterComponent(CRC_RIDER,				CRiderComponent::s_create);
+	//RegisterComponent(CRC_WEAPON,				CWeaponComponent::s_create);
 #	endif
 }
 

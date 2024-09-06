@@ -395,8 +395,9 @@ int OurPrintf ( const char* fmt, ... )
 		break;
 	#endif
 		
-	#ifdef	__PLAT_XBOX__
+	#if	defined(__PLAT_XBOX__) || defined(__PLAT_WN32__) // lwss edit
 	case Config::HARDWARE_XBOX:
+	case Config::HARDWARE_WIN32:
 		OutputDebugString(p_buffer);
 		break;
 	#endif

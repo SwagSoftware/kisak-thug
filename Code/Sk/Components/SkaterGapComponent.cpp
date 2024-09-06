@@ -73,7 +73,7 @@ CSkaterGapComponent::~CSkaterGapComponent()
 
 void CSkaterGapComponent::InitFromStructure( Script::CStruct* pParams )
 {
-	Dbg_MsgAssert(GetObject()->GetType() == SKATE_TYPE_SKATER, ("CSkaterGapComponent added to non-skater composite object"));
+	Dbg_MsgAssert(GetObj()->GetType() == SKATE_TYPE_SKATER, ("CSkaterGapComponent added to non-skater composite object"));
 	
 	m_frame_count = 0;
 }
@@ -95,10 +95,10 @@ void CSkaterGapComponent::RefreshFromStructure( Script::CStruct* pParams )
 
 void CSkaterGapComponent::Finalize (   )
 {
-	mp_core_physics_component = GetSkaterCorePhysicsComponentFromObject(GetObject());
-	mp_balance_trick_component = GetSkaterBalanceTrickComponentFromObject(GetObject());
-	mp_physics_control_component = GetSkaterPhysicsControlComponentFromObject(GetObject());
-	mp_walk_component = GetWalkComponentFromObject(GetObject());
+	mp_core_physics_component = GetSkaterCorePhysicsComponentFromObject(GetObj());
+	mp_balance_trick_component = GetSkaterBalanceTrickComponentFromObject(GetObj());
+	mp_physics_control_component = GetSkaterPhysicsControlComponentFromObject(GetObj());
+	mp_walk_component = GetWalkComponentFromObject(GetObj());
 	
 	Dbg_Assert(mp_core_physics_component);
 	Dbg_Assert(mp_balance_trick_component);
@@ -281,7 +281,7 @@ CBaseComponent::EMemberFunctionResult CSkaterGapComponent::CallMemberFunction( u
 						if (pDest->GetChecksum(CRCD(0x2ca8a299, "TriggerScript"),&script))
 						{
 							// found another trigger script in the node we are linked to
-							GetObject()->SpawnAndRunScript(script,pScript->mNode);
+							GetObj()->SpawnAndRunScript(script,pScript->mNode);
 							break;		
 						}						
 					}
@@ -589,8 +589,8 @@ void CSkaterGapComponent::start_gap ( Script::CStruct *pParams, Script::CScript*
 	// Take a snapshot of the skater's position & orientation so that if the gap is successfully
 	// got this info can be recorded into the CGapCheck instance and used to determine a good
 	// camera position for viewing the gap in the view-gaps menu.
-	pGap->m_skater_start_pos=((CSkater*)GetObject())->GetCamera()->GetPos();
-	pGap->m_skater_start_dir=-((CSkater*)GetObject())->GetCamera()->GetMatrix()[Mth::AT];
+	pGap->m_skater_start_pos=((CSkater*)GetObj())->GetCamera()->GetPos();
+	pGap->m_skater_start_dir=-((CSkater*)GetObj())->GetCamera()->GetMatrix()[Mth::AT];
 
 	// if it has a trickscript, it's a gaptrick
 	uint32 trickscript;
@@ -864,13 +864,13 @@ void CSkaterGapComponent::end_gap ( Script::CStruct *pParams, Script::CScript* p
 			{
 				mp_score->Trigger(gap_name, score, flags);
 				
-				CTrickComponent* p_trick_component = GetTrickComponentFromObject(GetObject());
+				CTrickComponent* p_trick_component = GetTrickComponentFromObject(GetObj());
 				Dbg_Assert(p_trick_component);
 				p_trick_component->SetFirstTrickStarted(true);
 
 				Mdl::Skate::Instance()->GetGapChecklist()->GetGapByText(p_name);  
 				  
-				GetObject()->SpawnAndRunScript(CRCD(0x541a2485, "DefaultGapScript"));
+				GetObj()->SpawnAndRunScript(CRCD(0x541a2485, "DefaultGapScript"));
 			}
 		}
 		
@@ -878,7 +878,7 @@ void CSkaterGapComponent::end_gap ( Script::CStruct *pParams, Script::CScript* p
 		uint32 gap_script;
 		if (pParams->GetChecksum(CRCD(0x7c9e51ab, "gapscript"), &gap_script))
 		{
-			GetObject()->SpawnAndRunScript(
+			GetObj()->SpawnAndRunScript(
 				gap_script,
 				pScript->mNode,
 				pParams->ContainsFlag(CRCD(0x20209c31, "NetEnabled")),
@@ -897,7 +897,7 @@ void CSkaterGapComponent::end_gap ( Script::CStruct *pParams, Script::CScript* p
 		// won't happen very often, and broadcasing is cheap)
 		// we also pass in the parameters, just in case we want to do 
 		uint32	id_got = Crc::ExtendCRCWithString(gap_id,"_Success");
-		Obj::CTracker::Instance()->LaunchEvent( id_got, 0xffffffff, GetObject()->GetID(), pParams, true /*, radius */  );
+		Obj::CTracker::Instance()->LaunchEvent( id_got, 0xffffffff, GetObj()->GetID(), pParams, true /*, radius */  );
 						
 		// Script functions we might have called could have deleted this gap and maybe the next gap.
 		// The safest things is to check to see if this one is still there, delete it, then reset back to the start of the list.
@@ -931,7 +931,7 @@ void CSkaterGapComponent::check_gap_tricks ( Script::CStruct *pParams )
 		CGapTrick* pNext = static_cast< CGapTrick* >(pGapTrick->GetNext());
 		if (pGapTrick->m_got)
 		{
-			GetObject()->SpawnAndRunScript(pGapTrick->m_script, pGapTrick->m_node);
+			GetObj()->SpawnAndRunScript(pGapTrick->m_script, pGapTrick->m_node);
 		}
 		pGapTrick = pNext;
 	}

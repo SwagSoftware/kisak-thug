@@ -66,6 +66,7 @@ bool	SetActiveCamera(uint32 id, int viewport, bool move_to_current);
 *****************************************************************************/
 
 bool ScriptDummyCommand(Script::CStruct *pParams, Script::CScript *pScript);
+bool ScriptDummyCommandFalse(Script::CStruct *pParams, Script::CScript *pScript);
 
 bool ScriptAllocateSplitScreenDMA ( Script::CStruct* pParams, Script::CScript* pScript );
 bool ScriptWait(Script::CStruct *pParams, Script::CScript *pScript);

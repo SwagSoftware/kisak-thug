@@ -45,7 +45,8 @@ void Preload()
 {
 	LoadAllStartupQBFiles();
 	
-	#ifdef COUNT_USAGE
+	//#ifdef COUNT_USAGE
+	#if 0
 	CSymbolTableEntry *p_sym=GetNextSymbolTableEntry();
 	while (p_sym)
 	{
@@ -103,17 +104,19 @@ void Preload()
 		{
 			if (p_sym->mType==ESYMBOLTYPE_CFUNCTION)
 			{
-				printf("CFunc %s: Usage=%d\n",Script::FindChecksumName(p_sym->mNameChecksum),p_sym->mUsage);
+				//printf("CFunc %s: Usage=%d\n",Script::FindChecksumName(p_sym->mNameChecksum),p_sym->mUsage);
+				Log("CFunc %s: Usage=%d\n",Script::FindChecksumName(p_sym->mNameChecksum),p_sym->mUsage);
 			}
 			if (p_sym->mType==ESYMBOLTYPE_MEMBERFUNCTION)
 			{
 				//printf("MemberFunc %s: Usage=%d\n",Script::FindChecksumName(p_sym->mNameChecksum),p_sym->mUsage);
+				Log("MemberFunc %s: Usage=%d\n",Script::FindChecksumName(p_sym->mNameChecksum),p_sym->mUsage);
 			}
 		}	
 		p_sym=GetNextSymbolTableEntry(p_sym);
 	}		
 	
-	printf("Finished\n");
+	Log("Finished\n");
 	while (1);
 	#endif // #ifdef COUNT_USAGE
 

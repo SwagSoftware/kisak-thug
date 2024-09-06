@@ -56,7 +56,7 @@ CSkaterMatrixQueriesComponent::~CSkaterMatrixQueriesComponent()
 
 void CSkaterMatrixQueriesComponent::InitFromStructure( Script::CStruct* pParams )
 {
-	Dbg_MsgAssert(GetObject()->GetType() == SKATE_TYPE_SKATER, ("CSkaterMatrixQueriesComponent added to non-skater composite object"));
+	Dbg_MsgAssert(GetObj()->GetType() == SKATE_TYPE_SKATER, ("CSkaterMatrixQueriesComponent added to non-skater composite object"));
 }
 
 /******************************************************************/
@@ -76,7 +76,7 @@ void CSkaterMatrixQueriesComponent::RefreshFromStructure( Script::CStruct* pPara
 
 void CSkaterMatrixQueriesComponent::Finalize (   )
 {
-	mp_core_physics_component = GetSkaterCorePhysicsComponentFromObject(GetObject());
+	mp_core_physics_component = GetSkaterCorePhysicsComponentFromObject(GetObj());
 		
 	Dbg_Assert(mp_core_physics_component);
 }
@@ -210,10 +210,10 @@ CBaseComponent::EMemberFunctionResult CSkaterMatrixQueriesComponent::CallMemberF
 		// called ChangeInSlope
 		case CRCC(0x97201739, "GetSlope"):
 		{
-			Mth::Vector v = GetObject()->m_matrix[Z];
+			Mth::Vector v = GetObj()->m_matrix[Z];
 			v[Y] = 0.0f;
-			float slope = Mth::GetAngle(GetObject()->m_matrix[Z], v);
-			if (GetObject()->m_matrix[Z][Y] < 0.0f)
+			float slope = Mth::GetAngle(GetObj()->m_matrix[Z], v);
+			if (GetObj()->m_matrix[Z][Y] < 0.0f)
 			{
 				slope = -slope;
 			}	
@@ -225,14 +225,14 @@ CBaseComponent::EMemberFunctionResult CSkaterMatrixQueriesComponent::CallMemberF
 		
 		case CRCC(0x8e7833be, "GetHeading"):
 		{
-			float heading = Mth::RadToDeg(cosf(GetObject()->m_matrix[Z][X]));
-			if (GetObject()->m_matrix[Z][Z] < 0.0f)
+			float heading = Mth::RadToDeg(cosf(GetObj()->m_matrix[Z][X]));
+			if (GetObj()->m_matrix[Z][Z] < 0.0f)
 			{
 				heading = 360.0f - heading;
 			}	
 			pScript->GetParams()->AddFloat(CRCD(0xfd4bc03e, "heading"), heading);
-			pScript->GetParams()->AddFloat(CRCD(0x2315ef17, "cosine"), GetObject()->m_matrix[Z][X]);
-			pScript->GetParams()->AddFloat(CRCD(0x26910cc0, "sine"), GetObject()->m_matrix[Z][Z]);
+			pScript->GetParams()->AddFloat(CRCD(0x2315ef17, "cosine"), GetObj()->m_matrix[Z][X]);
+			pScript->GetParams()->AddFloat(CRCD(0x26910cc0, "sine"), GetObj()->m_matrix[Z][Z]);
 			break;
 		}
 		

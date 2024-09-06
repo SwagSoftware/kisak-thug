@@ -100,13 +100,13 @@ private :
 	bool				done;
 	Tsk::Stack			logic_task_stack;
 	Tsk::Stack			display_task_stack;
-	Tsk::Stack			system_task_stack;
+	Tsk::Stack			system_task_stack; // +124 / 0x7C
 	Tsk::BaseHook*		start_render_hook;
 	Tsk::BaseHook*		end_render_hook;
 
 	bool				display_tasks_paused;
 	
-	int				trigger_profiling;
+	int				trigger_profiling; // 0x31
 	int				currently_profiling;
 	
 	DeclareSingletonClass( Manager );

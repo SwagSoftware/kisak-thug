@@ -29,7 +29,7 @@ private:
 	bool 						m_rotated;				// set if it was rotated
 
 public:
-	Obj::CCompositeObject*		GetObject() {return mp_moving_object.Convert();}		// return the object we are in contact with
+	Obj::CCompositeObject*		GetObj() {return mp_moving_object.Convert();}		// return the object we are in contact with
 
 
 };

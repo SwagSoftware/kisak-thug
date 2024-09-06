@@ -58,7 +58,7 @@ CTriggerComponent::~CTriggerComponent()
 
 void CTriggerComponent::InitFromStructure( Script::CStruct* pParams )
 {
-	m_pos_last_frame = GetObject()->GetPos();
+	m_pos_last_frame = GetObj()->GetPos();
 }
 
 /******************************************************************/
@@ -79,18 +79,18 @@ void CTriggerComponent::RefreshFromStructure( Script::CStruct* pParams )
 
 void CTriggerComponent::Update()
 {
-	if (m_pos_last_frame == GetObject()->GetPos()) return;
+	if (m_pos_last_frame == GetObj()->GetPos()) return;
 	
-	if (GetObject()->HasTeleported())
+	if (GetObj()->HasTeleported())
 	{
-		m_pos_last_frame = GetObject()->GetPos();
+		m_pos_last_frame = GetObj()->GetPos();
 		return;
 	}
 	
 	CFeeler feeler;
 	
 	feeler.m_start = m_pos_last_frame;
-	feeler.m_end = GetObject()->GetPos();
+	feeler.m_end = GetObj()->GetPos();
 	
 	feeler.SetIgnore(0, mFD_NON_COLLIDABLE | mFD_TRIGGER);
 	
@@ -99,7 +99,7 @@ void CTriggerComponent::Update()
 	
 	feeler.GetCollision();
 	
-	m_pos_last_frame = GetObject()->GetPos();
+	m_pos_last_frame = GetObj()->GetPos();
 }
 
 /******************************************************************/
@@ -266,7 +266,7 @@ void CTriggerComponent::TripTrigger ( TriggerEventType type, uint32 node_checksu
 	
 	m_latest_trigger_event_type = type;
 	
-	GetObject()->SpawnAndRunScript(
+	GetObj()->SpawnAndRunScript(
 		script_checksum,
 		node,
 		p_node->ContainsFlag(CRCD(0x20209c31, "NetEnabled")),

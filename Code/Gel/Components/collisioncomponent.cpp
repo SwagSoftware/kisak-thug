@@ -107,11 +107,11 @@ void CCollisionComponent::InitCollision( Nx::CollType type, Nx::CCollObjTriData 
 
 	if ( p_coll_tri_data )
 	{
-		mp_collision = Nx::CCollObj::sCreateMovableCollision(type, p_coll_tri_data, 1, GetObject());
+		mp_collision = Nx::CCollObj::sCreateMovableCollision(type, p_coll_tri_data, 1, GetObj());
 	} 
 	else
 	{
-		Obj::CModelComponent* pModelComponent = GetModelComponentFromObject( GetObject() );
+		Obj::CModelComponent* pModelComponent = GetModelComponentFromObject( GetObj() );
 		Dbg_MsgAssert( pModelComponent, ( "Initing collision on something with no model component" ) );
 
 		Nx::CModel* pModel = pModelComponent->GetModel();
@@ -121,11 +121,11 @@ void CCollisionComponent::InitCollision( Nx::CollType type, Nx::CCollObjTriData 
 		Nx::CMesh* pMesh = (Nx::CMesh*)ass_man->GetAsset(pModel->GetFileName(), false);
 		if (pMesh)
 		{
-			mp_collision = Nx::CCollObj::sCreateMovableCollision(type, pMesh->GetCollisionTriDataArray(), pMesh->GetCollisionTriDataArraySize(), GetObject());
+			mp_collision = Nx::CCollObj::sCreateMovableCollision(type, pMesh->GetCollisionTriDataArray(), pMesh->GetCollisionTriDataArraySize(), GetObj());
 		}
 		else
 		{
-			mp_collision = Nx::CCollObj::sCreateMovableCollision(type, NULL, 0, GetObject());
+			mp_collision = Nx::CCollObj::sCreateMovableCollision(type, NULL, 0, GetObj());
 		}
 	}
 }
@@ -151,7 +151,7 @@ void CCollisionComponent::Teleport()
 	// function doesn't really require finalization
 	// right now, but having this assert in here
 	// might help catch future errors
-	Dbg_MsgAssert( GetObject()->IsFinalized(), ( "Has not been finalized!  Tell Gary!" ) );
+	Dbg_MsgAssert( GetObj()->IsFinalized(), ( "Has not been finalized!  Tell Gary!" ) );
 
 	Update();
 }
@@ -183,7 +183,7 @@ void CCollisionComponent::Update()
 
 		Nx::CModel*	p_model = NULL;
 		Nx::CHierarchyObject* p_hierarchy = NULL;
-		Obj::CModelComponent* p_model_component = GetModelComponentFromObject( GetObject() );
+		Obj::CModelComponent* p_model_component = GetModelComponentFromObject( GetObj() );
 		if ( p_model_component )
 		{
 			p_model = p_model_component->GetModel();
@@ -197,13 +197,13 @@ void CCollisionComponent::Update()
 			translation[W] = 0.0f;		// turn into vector
 			p_hierarchy->GetSetupMatrix().Transform(translation);		// Re-orients the translation
 
-			p_coll->SetWorldPosition( GetObject()->GetPos() + translation );
-			p_coll->SetOrientation( p_hierarchy->GetSetupMatrix() * GetObject()->GetDisplayMatrix() );
+			p_coll->SetWorldPosition( GetObj()->GetPos() + translation );
+			p_coll->SetOrientation( p_hierarchy->GetSetupMatrix() * GetObj()->GetDisplayMatrix() );
 		}
 		else
 		{
-			p_coll->SetWorldPosition( GetObject()->GetPos() );
-			p_coll->SetOrientation( GetObject()->GetDisplayMatrix() );
+			p_coll->SetWorldPosition( GetObj()->GetPos() );
+			p_coll->SetOrientation( GetObj()->GetDisplayMatrix() );
 		}
 	}
 }

@@ -87,7 +87,7 @@ CSkaterNonLocalNetLogicComponent::~CSkaterNonLocalNetLogicComponent()
 
 void CSkaterNonLocalNetLogicComponent::InitFromStructure( Script::CStruct* pParams )
 {
-	Dbg_MsgAssert(GetObject()->GetType() == SKATE_TYPE_SKATER, ("CSkaterNonLocalNetLogicComponent added to non-skater composite object"));
+	Dbg_MsgAssert(GetObj()->GetType() == SKATE_TYPE_SKATER, ("CSkaterNonLocalNetLogicComponent added to non-skater composite object"));
 	Dbg_MsgAssert(!GetSkater()->IsLocalClient(), ("CSkaterNonLocalNetLogicComponent added to non-local skater"));
 }
 
@@ -108,13 +108,13 @@ void CSkaterNonLocalNetLogicComponent::RefreshFromStructure( Script::CStruct* pP
 
 void CSkaterNonLocalNetLogicComponent::Finalize (   )
 {
-	mp_state_history_component = GetSkaterStateHistoryComponentFromObject(GetObject());
-	mp_state_component = GetSkaterStateComponentFromObject(GetObject());
-	mp_endrun_component = GetSkaterEndRunComponentFromObject(GetObject());
-	mp_animation_component = GetAnimationComponentFromObject(GetObject());
-	mp_flip_and_rotate_component = GetSkaterFlipAndRotateComponentFromObject(GetObject());
-	mp_model_component = GetModelComponentFromObject(GetObject());
-	mp_shadow_component = GetShadowComponentFromObject(GetObject());
+	mp_state_history_component = GetSkaterStateHistoryComponentFromObject(GetObj());
+	mp_state_component = GetSkaterStateComponentFromObject(GetObj());
+	mp_endrun_component = GetSkaterEndRunComponentFromObject(GetObj());
+	mp_animation_component = GetAnimationComponentFromObject(GetObj());
+	mp_flip_and_rotate_component = GetSkaterFlipAndRotateComponentFromObject(GetObj());
+	mp_model_component = GetModelComponentFromObject(GetObj());
+	mp_shadow_component = GetShadowComponentFromObject(GetObj());
 	
 	Dbg_Assert(mp_state_history_component);
 	Dbg_Assert(mp_state_component);
@@ -142,14 +142,14 @@ void CSkaterNonLocalNetLogicComponent::Update()
 
 	if( mp_state_component->GetState() != AIR )
 	{
-		mp_state_component->m_camera_display_normal = GetObject()->GetMatrix().GetUp();
-		mp_state_component->m_camera_current_normal = GetObject()->GetMatrix().GetUp();
+		mp_state_component->m_camera_display_normal = GetObj()->GetMatrix().GetUp();
+		mp_state_component->m_camera_current_normal = GetObj()->GetMatrix().GetUp();
 	}
 
 	setup_brightness_and_shadow();             
 	
-	m_old_extrap_pos = GetObject()->m_pos;
-	GetObject()->m_old_pos = GetObject()->m_pos;
+	m_old_extrap_pos = GetObj()->m_pos;
+	GetObj()->m_old_pos = GetObj()->m_pos;
 	interpolate_client_position();
 	// Only extrapolate if we can collide with other players. Otherwise, interpolation looks 
 	// much better.
@@ -176,7 +176,7 @@ void CSkaterNonLocalNetLogicComponent::Update()
 		if (mp_state_component->GetState() == AIR)
 		{
 			// we only want to set this flag if we jumped straight up; meaning the x and z velocities are close to zero
-			if (Mth::Abs(GetObject()->m_vel[X]) < 1.0f && Mth::Abs(GetObject()->m_vel[Z]) < 1.0f)
+			if (Mth::Abs(GetObj()->m_vel[X]) < 1.0f && Mth::Abs(GetObj()->m_vel[Z]) < 1.0f)
 			{
 				mp_state_component->mJumpedOutOfLipTrick = true;
 			}				
@@ -193,7 +193,7 @@ void CSkaterNonLocalNetLogicComponent::Update()
 	if (mp_state_component->GetDriving() && mp_state_history_component->GetCurrentVehicleControlType() != 0)
 	{
 		Script::CStruct* pParams = new Script::CStruct;
-		pParams->AddChecksum(CRCD(0x5b24faaa, "SkaterId"), GetObject()->GetID());
+		pParams->AddChecksum(CRCD(0x5b24faaa, "SkaterId"), GetObj()->GetID());
 		pParams->AddChecksum(CRCD(0x81cff663, "control_type"), mp_state_history_component->GetCurrentVehicleControlType());
 		RunScript(CRCD(0x7853f8c4, "NonLocalClientInVehicle"), pParams);
 		delete pParams;
@@ -201,19 +201,19 @@ void CSkaterNonLocalNetLogicComponent::Update()
 	else if (!mp_state_component->GetDriving() && m_last_driving)
 	{
 		Script::CStruct* pParams = new Script::CStruct;
-		pParams->AddChecksum(CRCD(0x5b24faaa, "SkaterId"), GetObject()->GetID());
+		pParams->AddChecksum(CRCD(0x5b24faaa, "SkaterId"), GetObj()->GetID());
 		RunScript(CRCD(0xf02e44f, "NonLocalClientExitVehicle"), pParams);
 		delete pParams;
 	}
 	m_last_driving = mp_state_component->GetDriving();
 	
 	// update the looping sound component
-	CSkaterLoopingSoundComponent* p_looping_sound_component = GetSkaterLoopingSoundComponentFromObject(GetObject());
+	CSkaterLoopingSoundComponent* p_looping_sound_component = GetSkaterLoopingSoundComponentFromObject(GetObj());
 	Dbg_Assert(p_looping_sound_component);
 	if (mp_state_component->m_physics_state == SKATING)
 	{
 		p_looping_sound_component->SetActive(true);
-		float speed_fraction = sqrtf(GetObject()->m_vel[X] * GetObject()->m_vel[X] + GetObject()->m_vel[Z] * GetObject()->m_vel[Z]) / 1000.0f;
+		float speed_fraction = sqrtf(GetObj()->m_vel[X] * GetObj()->m_vel[X] + GetObj()->m_vel[Z] * GetObj()->m_vel[Z]) / 1000.0f;
 		p_looping_sound_component->SetSpeedFraction(speed_fraction);
 		p_looping_sound_component->SetState(mp_state_component->m_state);
 		p_looping_sound_component->SetTerrain(mp_state_component->m_terrain);
@@ -282,17 +282,17 @@ void CSkaterNonLocalNetLogicComponent::snap_to_ground( void  )
 	// (This would not happen if we just skitch on flat ground)																								
 	// if (mp_state_component->m_skater_flags[SKITCHING].Get())
 	// {
-		// col_start = GetObject()->m_matrix[Y] * GetPhysicsFloat(CRCD(0x5c0d9610,"Physics_Ground_Snap_Up_SKITCHING"));	// much above feet
+		// col_start = GetObj()->m_matrix[Y] * GetPhysicsFloat(CRCD(0x5c0d9610,"Physics_Ground_Snap_Up_SKITCHING"));	// much above feet
 	// }
 	// else
 	// {
-		col_start = GetObject()->m_matrix[Y] * GetPhysicsFloat(CRCD(0xe4d79235, "Physics_Ground_Snap_Up"));	  		// bit above the feet
+		col_start = GetObj()->m_matrix[Y] * GetPhysicsFloat(CRCD(0xe4d79235, "Physics_Ground_Snap_Up"));	  		// bit above the feet
 	// }
 	
-	col_end = GetObject()->m_matrix[Y] * -200.0f;		    // WAY! below the feet, we check distance later
+	col_end = GetObj()->m_matrix[Y] * -200.0f;		    // WAY! below the feet, we check distance later
 
-	col_start += GetObject()->m_pos;
-	col_end += GetObject()->m_pos;
+	col_start += GetObj()->m_pos;
+	col_end += GetObj()->m_pos;
 		 
 	bool sticking = false;			
 	
@@ -301,10 +301,10 @@ void CSkaterNonLocalNetLogicComponent::snap_to_ground( void  )
 	// get disatnce to ground and snap the skater to it, but only if the ground is skatable, otherwise we just go to "AIR"
 	if( feeler.GetCollision())
 	{
-		Mth::Vector movement = GetObject()->m_pos - feeler.GetPoint(); 
+		Mth::Vector movement = GetObj()->m_pos - feeler.GetPoint(); 
 		uint16 flags = feeler.GetFlags();
 		float drop_dist = movement.Length();
-		float drop_sign = Mth::DotProduct(GetObject()->m_matrix[Y], movement); // might be approx +/- 0.00001f
+		float drop_sign = Mth::DotProduct(GetObj()->m_matrix[Y], movement); // might be approx +/- 0.00001f
 		if(	(!flags & mFD_SKATABLE ) || ( flags & mFD_NOT_SKATABLE ) || (!flags & mFD_VERT) || 
 			(flags & mFD_WALL_RIDABLE) ||
 			(feeler.GetNormal()[Y] < sinf(Mth::DegToRad(GetPhysicsFloat(CRCD(0x3eede4d3,"Wall_Non_Skatable_Angle"))))))
@@ -313,7 +313,7 @@ void CSkaterNonLocalNetLogicComponent::snap_to_ground( void  )
 			if (drop_sign < 0.001f)
 			{
 				// at point of contact, and move away from surface
-				GetObject()->m_pos = feeler.GetPoint() + feeler.GetNormal();	
+				GetObj()->m_pos = feeler.GetPoint() + feeler.GetNormal();	
 			}
 		}
 		else
@@ -333,7 +333,7 @@ void CSkaterNonLocalNetLogicComponent::snap_to_ground( void  )
 			// Firstly we check the angle between the two faces	
 			Mth::Vector normal = feeler.GetNormal();
 			
-			Mth::Vector	forward = GetObject()->m_matrix[Z];
+			Mth::Vector	forward = GetObj()->m_matrix[Z];
 			float front_dot = Mth::DotProduct(forward,normal);
 
 			Mth::Vector	old_forward = forward;
@@ -365,7 +365,7 @@ void CSkaterNonLocalNetLogicComponent::snap_to_ground( void  )
 					float angle = acosf(up_dot);
 #endif // __PLAT_NGC__
 
-					Mth::Vector	last_move = GetObject()->m_pos - m_old_extrap_pos;
+					Mth::Vector	last_move = GetObj()->m_pos - m_old_extrap_pos;
 					
 					float max_drop = last_move.Length() * tanf(angle);
 					
@@ -391,8 +391,8 @@ void CSkaterNonLocalNetLogicComponent::snap_to_ground( void  )
 					//new_normal(normal);
 					m_current_normal = normal;	  										// remember this, for detecting if it changes
 		
-					GetObject()->m_matrix[Y] = normal;
-					GetObject()->m_matrix.OrthoNormalizeAbout(Y);									// set regular normal immediately
+					GetObj()->m_matrix[Y] = normal;
+					GetObj()->m_matrix.OrthoNormalizeAbout(Y);									// set regular normal immediately
 				}		 
 			}																		  
 		}
@@ -400,7 +400,7 @@ void CSkaterNonLocalNetLogicComponent::snap_to_ground( void  )
 		if (sticking)
 		{	
 			// if there is a collision, then snap to it
-			GetObject()->m_pos = feeler.GetPoint();
+			GetObj()->m_pos = feeler.GetPoint();
 		}
 	}
 }	
@@ -436,17 +436,17 @@ CRailNode*	CSkaterNonLocalNetLogicComponent::travel_on_rail( CRailNode* start_no
 	dir *= (1.0f / segment_length);
 
 	// sign is which way we are going along the rail
-	//float old_sign = Mth::Sgn(Mth::DotProduct(dir, GetObject()->m_vel));
+	//float old_sign = Mth::Sgn(Mth::DotProduct(dir, GetObj()->m_vel));
 
 	// Get gravity force 	
 	Mth::Vector gravity(0.0f, GetPhysicsFloat(CRCD(0xd1f46992, "Physics_Rail_Gravity")), 0.0f);
 
 	// Project gravity onto the line we are on
 	gravity.ProjectToNormal(dir);
-	GetObject()->m_vel += gravity * frame_length;
+	GetObj()->m_vel += gravity * frame_length;
 	
 	// sign is which way we are going along the rail
-	float sign = Mth::Sgn(Mth::DotProduct(dir, GetObject()->m_vel));
+	float sign = Mth::Sgn(Mth::DotProduct(dir, GetObj()->m_vel));
 	
 	// check to see if we are on the last segment of the rail
 	// this logic could be folded into the logic below but it's perhps clearer to have it here
@@ -514,12 +514,12 @@ CRailNode*	CSkaterNonLocalNetLogicComponent::travel_on_rail( CRailNode* start_no
 	if (sign < 0.0f)
 	{
 		// going backwards, so it's the distance from the end of the segment
-		length_along = (GetObject()->m_pos - p_rail_man->GetPos(pEnd)).Length();
+		length_along = (GetObj()->m_pos - p_rail_man->GetPos(pEnd)).Length();
 	}
 	else
 	{
 		// going forwards, so it's the distance from the start
-		length_along = (GetObject()->m_pos - p_rail_man->GetPos(pStart)).Length();
+		length_along = (GetObj()->m_pos - p_rail_man->GetPos(pStart)).Length();
 	}
 	
 	if (length_along > segment_length + 0.1f)	// 0.1 inch, so we don't get stuck
@@ -537,7 +537,7 @@ CRailNode*	CSkaterNonLocalNetLogicComponent::travel_on_rail( CRailNode* start_no
 				if (!last_segment)
 				{
 					// go onto previous segment
-					GetObject()->m_pos = p_rail_man->GetPos(pStart);
+					GetObj()->m_pos = p_rail_man->GetPos(pStart);
 					start_node = (CRailNode*) pStart->GetPrevLink();
 					//set_terrain(start_node->GetTerrain());
 					//maybe_trip_rail_trigger(TRIGGER_SKATE_ONTO);
@@ -562,7 +562,7 @@ CRailNode*	CSkaterNonLocalNetLogicComponent::travel_on_rail( CRailNode* start_no
 			{
 				if (!last_segment)
 				{
-					GetObject()->m_pos = p_rail_man->GetPos(pEnd);
+					GetObj()->m_pos = p_rail_man->GetPos(pEnd);
 					start_node = (CRailNode*) pEnd;					
 					//set_terrain(start_node->GetTerrain());
 					//maybe_trip_rail_trigger(TRIGGER_SKATE_ONTO);						
@@ -593,12 +593,12 @@ CRailNode*	CSkaterNonLocalNetLogicComponent::travel_on_rail( CRailNode* start_no
 		// sign also may have changed, now that we are auto-linking rail segments
 		
 		// sign is which way we are going along the rail
-		float sign = Mth::Sgn(Mth::DotProduct(dir,GetObject()->m_vel));
+		float sign = Mth::Sgn(Mth::DotProduct(dir,GetObj()->m_vel));
 
 		//m_rail_time = Tmr::GetTime();
 							
-		GetObject()->m_vel.RotateToNormal(dir);
-		GetObject()->m_vel *= sign;						   						// sign won't be on a new segment
+		GetObj()->m_vel.RotateToNormal(dir);
+		GetObj()->m_vel *= sign;						   						// sign won't be on a new segment
 
 		//float facing_sign = mRail_Backwards ? -sign : sign;
 		float facing_sign = sign;
@@ -632,29 +632,29 @@ CRailNode*	CSkaterNonLocalNetLogicComponent::travel_on_rail( CRailNode* start_no
 		//m_lerping_display_matrix[Y].Normalize();
 
 		// adjust our Z value towards the new value												 
-		GetObject()->m_matrix[Z] = target_forward;
-		GetObject()->m_matrix[Z].Normalize(); 
+		GetObj()->m_matrix[Z] = target_forward;
+		GetObj()->m_matrix[Z].Normalize(); 
 		
 		#if 0 // old code
-		// GetObject()->m_matrix[Y].Set(0.0f, 1.0f, 0.0f);
-		// GetObject()->m_matrix[X] = Mth::CrossProduct(GetObject()->m_matrix[Y],GetObject()->m_matrix[Z]);
+		// GetObj()->m_matrix[Y].Set(0.0f, 1.0f, 0.0f);
+		// GetObj()->m_matrix[X] = Mth::CrossProduct(GetObj()->m_matrix[Y],GetObj()->m_matrix[Z]);
 		#else
-		GetObject()->m_matrix[X].Set(
-			GetObject()->m_matrix[Z][Z],
+		GetObj()->m_matrix[X].Set(
+			GetObj()->m_matrix[Z][Z],
 			0.0f,
-			-GetObject()->m_matrix[Z][X],
+			-GetObj()->m_matrix[Z][X],
 			0.0f
 		);
 		#endif
-		GetObject()->m_matrix[X].Normalize();
+		GetObj()->m_matrix[X].Normalize();
 		
-		GetObject()->m_matrix[Y] = Mth::CrossProduct(GetObject()->m_matrix[Z], GetObject()->m_matrix[X]);
-		GetObject()->m_matrix[Y].Normalize();
+		GetObj()->m_matrix[Y] = Mth::CrossProduct(GetObj()->m_matrix[Z], GetObj()->m_matrix[X]);
+		GetObj()->m_matrix[Y].Normalize();
 
         // This is where we do the actual movement
 		// if this makes us bump into the wall or the ground, then we should leave the rail
-		GetObject()->m_pos += GetObject()->m_vel * frame_length;			// current movement
-		GetObject()->m_pos += extra_dist * target_forward;						// any extra dist from previous segment
+		GetObj()->m_pos += GetObj()->m_vel * frame_length;			// current movement
+		GetObj()->m_pos += extra_dist * target_forward;						// any extra dist from previous segment
 	}
 	else
 	{
@@ -694,7 +694,7 @@ void CSkaterNonLocalNetLogicComponent::extrapolate_rail_position( void )
 		GameNet::PlayerInfo* player;
 		Net::Conn* client_conn;
 
-		player = gamenet_man->GetPlayerByObjectID( GetObject()->GetID());
+		player = gamenet_man->GetPlayerByObjectID( GetObj()->GetID());
 		Dbg_Assert( player );
 		client_conn = player->m_Conn;
 		net_lag = client_conn->GetAveLatency();
@@ -798,7 +798,7 @@ void CSkaterNonLocalNetLogicComponent::extrapolate_rail_position( void )
 			// If we grinded off a rail, use standard extrapolation instead.
 			if( start_node == NULL )
 			{
-				GetObject()->m_pos = m_interp_pos;
+				GetObj()->m_pos = m_interp_pos;
 				extrapolate_position();
 				break;
 			}
@@ -822,7 +822,7 @@ float CSkaterNonLocalNetLogicComponent::rotate_away_from_wall ( Mth::Vector norm
 	// note turn_angle is passed by reference, and is altered !!!!
 	
 	// given m_right(dot)normal, we should be able to get a nice angle
-	float dot_right_normal = Mth::DotProduct(GetObject()->m_matrix[X], normal);
+	float dot_right_normal = Mth::DotProduct(GetObj()->m_matrix[X], normal);
 
 	float angle = acosf(Mth::Clamp(dot_right_normal, -1.0f, 1.0f)); 	
 
@@ -836,8 +836,8 @@ float CSkaterNonLocalNetLogicComponent::rotate_away_from_wall ( Mth::Vector norm
 	
 	// Rotate the skater so he is at a slight angle to the wall, especially if we are in a right angled corner, where the skater will bounce out
 
-	GetObject()->m_vel.RotateY(turn_angle);
-	GetObject()->m_matrix.RotateYLocal(turn_angle);
+	GetObj()->m_vel.RotateY(turn_angle);
+	GetObj()->m_matrix.RotateYLocal(turn_angle);
 	
 	return angle;
 }
@@ -851,13 +851,13 @@ void CSkaterNonLocalNetLogicComponent::bounce_off_wall ( const Mth::Vector& norm
 {
 	// Given the normal of the wall, then bounce off it, turning the skater away from the wall
 	Mth::Vector col_start, col_end;
-	Mth::Vector	forward = GetObject()->m_pos - m_old_extrap_pos;
+	Mth::Vector	forward = GetObj()->m_pos - m_old_extrap_pos;
 	Mth::Vector movement = forward;				   		// remember how far we moved
 	CFeeler feeler;
 
     forward.Normalize();
 	
-	Mth::Vector up_offset = GetObject()->m_matrix[Y] * GetPhysicsFloat(CRCD(0xd4205c9b,"Skater_First_Forward_Collision_Height"));
+	Mth::Vector up_offset = GetObj()->m_matrix[Y] * GetPhysicsFloat(CRCD(0xd4205c9b,"Skater_First_Forward_Collision_Height"));
 
 	float turn_angle;
 	float angle = rotate_away_from_wall(normal, turn_angle);
@@ -866,35 +866,35 @@ void CSkaterNonLocalNetLogicComponent::bounce_off_wall ( const Mth::Vector& norm
 					 							
 	if (Mth::Abs(angle) > min)
 	{
-		//float old_speed = GetObject()->m_vel.Length();
+		//float old_speed = GetObj()->m_vel.Length();
 		
 		// The maximum value of Abs(angle) would be PI/2 (90 degrees), so scale the velocity 
 		float x = Mth::Abs(angle) - min;
 		x /= (Mth::PI / 2.0f) - min;		// get in the range 0 .. 1
 		x = 1.0f - x; 						// invert, as we want to stop when angle is 90
 		
-		GetObject()->m_vel *= x;
+		GetObj()->m_vel *= x;
 	}
 	
 	// Bit of a patch here to move the skater away from the wall
 	// Not needed so much with new sideways collision checks but we keep it in for low ledges.
 	// Should perhaps standardize the height so collision checks for side and front but we'd probably still have problems.
 	
-	GetObject()->m_pos = point - up_offset;
-	GetObject()->m_pos += normal * 6.0f;
+	GetObj()->m_pos = point - up_offset;
+	GetObj()->m_pos += normal * 6.0f;
 	
 	// Now the majority of cases have been taken care of; we need to see if the skater is going to get stuck in a corner.
 
 	float old_speed = movement.Length();		 					// get how much we moved last time
-	Mth::Vector next_movement = GetObject()->m_vel;					// get new direction of velocity
-	forward = GetObject()->m_vel;
+	Mth::Vector next_movement = GetObj()->m_vel;					// get new direction of velocity
+	forward = GetObj()->m_vel;
 	forward.Normalize();
 	next_movement = forward * old_speed;							// extend by same movment as last time
 	
-	col_start = GetObject()->m_pos + up_offset;
+	col_start = GetObj()->m_pos + up_offset;
 	col_start += up_offset;
 	
-	col_end = GetObject()->m_pos + up_offset + next_movement
+	col_end = GetObj()->m_pos + up_offset + next_movement
 		+ forward * GetPhysicsFloat(CRCD(0x20102726, "Skater_First_Forward_Collision_Length"));
 	
 	// Sanity check to make sure we're not using a line that's a whole level long
@@ -910,11 +910,11 @@ void CSkaterNonLocalNetLogicComponent::bounce_off_wall ( const Mth::Vector& norm
 		// Just rotating the skater will lead to another collision, so try just inverting the skater's velocity from it's original and halving it....
 		
 		// First reverse the rotation, and rotate 180 degrees
-		GetObject()->m_vel.RotateY(Mth::DegToRad(180.0f) - turn_angle);
-		GetObject()->m_matrix.RotateYLocal(Mth::DegToRad(180.0f) - turn_angle);
+		GetObj()->m_vel.RotateY(Mth::DegToRad(180.0f) - turn_angle);
+		GetObj()->m_matrix.RotateYLocal(Mth::DegToRad(180.0f) - turn_angle);
 		//ResetLerpingMatrix();
 		
-		GetObject()->m_vel *= 0.5f; 
+		GetObj()->m_vel *= 0.5f; 
 	}
 }
 
@@ -947,7 +947,7 @@ void CSkaterNonLocalNetLogicComponent::extrapolate_position( void )
 		GameNet::PlayerInfo* player;
 		Net::Conn* client_conn;
 
-		player = gamenet_man->GetPlayerByObjectID( GetObject()->GetID());
+		player = gamenet_man->GetPlayerByObjectID( GetObj()->GetID());
 		Dbg_Assert( player );
 		client_conn = player->m_Conn;
 		net_lag = client_conn->GetAveLatency();
@@ -1032,14 +1032,14 @@ void CSkaterNonLocalNetLogicComponent::extrapolate_position( void )
 	vel.Normalize();
 	vel *= vel_mag;
 	
-	extrap_pos = GetObject()->m_pos + ( vel * ratio );
-	extrap_pos[Y] = GetObject()->m_pos[Y];
-	GetObject()->m_pos = extrap_pos;
+	extrap_pos = GetObj()->m_pos + ( vel * ratio );
+	extrap_pos[Y] = GetObj()->m_pos[Y];
+	GetObj()->m_pos = extrap_pos;
 	
-	Mth::Vector up_offset = GetObject()->m_matrix[Y] * GetPhysicsFloat(CRCD(0xd4205c9b, "Skater_First_Forward_Collision_Height"));
+	Mth::Vector up_offset = GetObj()->m_matrix[Y] * GetPhysicsFloat(CRCD(0xd4205c9b, "Skater_First_Forward_Collision_Height"));
 
 	Mth::Vector col_start = m_interp_pos + up_offset;
-	Mth::Vector col_end = GetObject()->m_pos + up_offset;
+	Mth::Vector col_end = GetObj()->m_pos + up_offset;
 
 	CFeeler feeler;
 
@@ -1116,11 +1116,11 @@ void CSkaterNonLocalNetLogicComponent::interpolate_client_position (   )
 				//Dbg_Printf( "(%d) server initial time = %d\n", nonlocalnet->m_FrameCounter, (int) m_server_initial_update_time );
 				//Dbg_Printf( "(%d) nonlocalnet initial time = %d\n", nonlocalnet->m_FrameCounter, (int) m_client_initial_update_time );
 				
-                GetObject()->SetMatrix( p_pos_history[start_index].Matrix );
-				GetObject()->SetDisplayMatrix( p_pos_history[start_index].Matrix );
-				GetObject()->SetPos(p_pos_history[start_index].Position);
-				GetObject()->SetTeleported(); 
-				GetObject()->m_vel.Set(0.0f, 0.0f, 0.0f);
+                GetObj()->SetMatrix( p_pos_history[start_index].Matrix );
+				GetObj()->SetDisplayMatrix( p_pos_history[start_index].Matrix );
+				GetObj()->SetPos(p_pos_history[start_index].Position);
+				GetObj()->SetTeleported(); 
+				GetObj()->m_vel.Set(0.0f, 0.0f, 0.0f);
 
 				// We don't want to actually render the skaters until we have buffered
 				// up their position updates and are ready to start interpolating. Now we have
@@ -1130,9 +1130,9 @@ void CSkaterNonLocalNetLogicComponent::interpolate_client_position (   )
 					GameNet::PlayerInfo* player;
                     
 					GetSkater()->AddToCurrentWorld();
-					Script::RunScript( "NetIdle", NULL, GetObject() );
+					Script::RunScript( "NetIdle", NULL, GetObj() );
 					//Hide( false );
-					player = gamenet_man->GetPlayerByObjectID( GetObject()->GetID() );
+					player = gamenet_man->GetPlayerByObjectID( GetObj()->GetID() );
 					Dbg_Assert( player );
 					
                     // We're just adding them to the world.  If they were standing still,
@@ -1151,7 +1151,7 @@ void CSkaterNonLocalNetLogicComponent::interpolate_client_position (   )
 				// Maybe a little bit overkill, but this will definitely set skaters that we can
 				// see in the level to be "fully in", which triggers things like their names in
 				// the score list
-				player = gamenet_man->GetPlayerByObjectID( GetObject()->GetID() );
+				player = gamenet_man->GetPlayerByObjectID( GetObj()->GetID() );
 				if( !player->IsFullyIn())
 				{
 					player->MarkAsFullyIn();
@@ -1176,7 +1176,7 @@ void CSkaterNonLocalNetLogicComponent::interpolate_client_position (   )
 					}
 					else
 					{
-						//Dbg_Printf( "************************ (%d) (%d) Slowdown\n", GetObject()->GetID(), client->m_FrameCounter );
+						//Dbg_Printf( "************************ (%d) (%d) Slowdown\n", GetObj()->GetID(), client->m_FrameCounter );
 						m_server_initial_update_time -= Tmr::VBlanks( 1 );
 					}
 					
@@ -1197,12 +1197,12 @@ void CSkaterNonLocalNetLogicComponent::interpolate_client_position (   )
 						// We probably also should adjust if we get too far behind
 						if( lag >= 10 )
 						{   
-							//Dbg_Printf( "************************ (%d) (%d) +7 Catchup. Lag : %d\n", client->m_FrameCounter, GetObject()->GetID(), lag );
+							//Dbg_Printf( "************************ (%d) (%d) +7 Catchup. Lag : %d\n", client->m_FrameCounter, GetObj()->GetID(), lag );
 							m_server_initial_update_time += Tmr::VBlanks( 10 );
 						}
 						else if( lag == 0 )
 						{
-							//Dbg_Printf( "************************ (%d) Resync'ing skater %d\n", client->m_FrameCounter, GetObject()->GetID() );
+							//Dbg_Printf( "************************ (%d) Resync'ing skater %d\n", client->m_FrameCounter, GetObj()->GetID() );
 							GetSkater()->Resync();
 						}
 
@@ -1226,8 +1226,8 @@ void CSkaterNonLocalNetLogicComponent::interpolate_client_position (   )
 						// we have until the switch is made. 
 						if( diff.Length() > 0.75f )
 						{
-							GetObject()->SetMatrix( p_pos_history[prev_index].Matrix );
-							GetObject()->SetDisplayMatrix( p_pos_history[prev_index].Matrix );
+							GetObj()->SetMatrix( p_pos_history[prev_index].Matrix );
+							GetObj()->SetDisplayMatrix( p_pos_history[prev_index].Matrix );
 						}
 						else
 						{
@@ -1236,28 +1236,28 @@ void CSkaterNonLocalNetLogicComponent::interpolate_client_position (   )
 							slerp.setMatrices( &t1, &t2 );
 							slerp.getMatrix( &interp_matrix, ratio );
 							
-							GetObject()->SetMatrix( interp_matrix );
-							GetObject()->SetDisplayMatrix( interp_matrix );
+							GetObj()->SetMatrix( interp_matrix );
+							GetObj()->SetDisplayMatrix( interp_matrix );
 						}
 						
 						if( delta_pos.Length() > FEET( 50 ))
 						{
-							GetObject()->m_pos = p_pos_history[i].Position;
-							GetObject()->m_vel = Mth::Vector( 0, 0, 0 );
-							GetObject()->SetTeleported();
+							GetObj()->m_pos = p_pos_history[i].Position;
+							GetObj()->m_vel = Mth::Vector( 0, 0, 0 );
+							GetObj()->SetTeleported();
 						}
 						else
 						{
 							int idx, mag_index;
 							Mth::Vector total_vel;
 
-							GetObject()->m_pos = p_pos_history[prev_index].Position + ( delta_pos * ratio );
-							GetObject()->m_vel = ( GetObject()->m_pos - m_old_interp_pos ) / m_frame_length; // do_nonlocalnet_position_update, calculating speed
+							GetObj()->m_pos = p_pos_history[prev_index].Position + ( delta_pos * ratio );
+							GetObj()->m_vel = ( GetObj()->m_pos - m_old_interp_pos ) / m_frame_length; // do_nonlocalnet_position_update, calculating speed
 						
 							mag_index = m_num_mags % vMAG_HISTORY_LENGTH;
 
 							// Smooth out changes in velocity
-							m_vel_history[mag_index] = GetObject()->m_vel;
+							m_vel_history[mag_index] = GetObj()->m_vel;
 							for( idx = 0; idx < vMAG_HISTORY_LENGTH; idx++ )
 							{
 								if( idx >= m_num_mags )
@@ -1270,11 +1270,11 @@ void CSkaterNonLocalNetLogicComponent::interpolate_client_position (   )
 
 							if( idx > 0 )
 							{
-								GetObject()->m_vel = total_vel / idx;
+								GetObj()->m_vel = total_vel / idx;
 							}
 						}
 
-						m_interp_pos = GetObject()->m_pos;
+						m_interp_pos = GetObj()->m_pos;
 
 						// Apply the state/flag data from this PosEvent
 						mp_state_component->m_state = static_cast< EStateType >( p_pos_history[i].State );
@@ -1294,7 +1294,7 @@ void CSkaterNonLocalNetLogicComponent::interpolate_client_position (   )
 						}
 						if( mp_state_component->m_skater_flags[SPINE_PHYSICS].Get())
 						{
-							mp_state_component->m_spine_vel = GetObject()->m_vel;
+							mp_state_component->m_spine_vel = GetObj()->m_vel;
 						}
 						else
 						{
@@ -1444,7 +1444,7 @@ void CSkaterNonLocalNetLogicComponent::do_client_animation_update(   )
 						}
 						case GameNet::MSG_ID_CREATE_SPECIAL_ITEM:
 						{
-							CSpecialItemComponent* pSpecialItemComponent = GetSpecialItemComponentFromObject(GetObject());
+							CSpecialItemComponent* pSpecialItemComponent = GetSpecialItemComponentFromObject(GetObj());
 							Dbg_MsgAssert( pSpecialItemComponent, ( "No special item component?" ) );
 
 							Script::CStruct* pSpecialItemParams = Script::GetStructure( event->m_Asset, Script::ASSERT );
@@ -1454,7 +1454,7 @@ void CSkaterNonLocalNetLogicComponent::do_client_animation_update(   )
 							// pass along any bone or offset parameters...
 							//pLockParams->AppendStructure( pParams );
 							pLockParams->AddChecksum( CRCD(0xcab94088,"bone"), event->m_Bone );
-							pLockParams->AddChecksum( CRCD(0x40c698af,"id"), GetObject()->GetID() );
+							pLockParams->AddChecksum( CRCD(0x40c698af,"id"), GetObj()->GetID() );
 								
 							// component-based
 							CLockObjComponent* pLockObjComponent = GetLockObjComponentFromObject( pSpecialItemObject );
@@ -1467,7 +1467,7 @@ void CSkaterNonLocalNetLogicComponent::do_client_animation_update(   )
 
 						case GameNet::MSG_ID_DESTROY_SPECIAL_ITEM:
 						{
-							CSpecialItemComponent* pSpecialItemComponent = GetSpecialItemComponentFromObject(GetObject());
+							CSpecialItemComponent* pSpecialItemComponent = GetSpecialItemComponentFromObject(GetObj());
                             pSpecialItemComponent->DestroySpecialItem( event->m_Index );
 							break;
 						}
@@ -1509,11 +1509,11 @@ void CSkaterNonLocalNetLogicComponent::setup_brightness_and_shadow (   )
 	
 	CFeeler feeler;
 	
-	feeler.m_start = GetObject()->m_pos;
-	feeler.m_end = GetObject()->m_pos;
+	feeler.m_start = GetObj()->m_pos;
+	feeler.m_end = GetObj()->m_pos;
 
 	// Very minor adjustment to move origin away from vert walls
-	feeler.m_start += GetObject()->m_matrix[Y] * 0.001f;
+	feeler.m_start += GetObj()->m_matrix[Y] * 0.001f;
 	
 	feeler.m_start[Y] += 8.0f;
 	feeler.m_end[Y] -= FEET(400);

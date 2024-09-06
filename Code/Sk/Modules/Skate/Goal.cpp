@@ -2998,7 +2998,7 @@ bool fill_trick_and_key_combo_arrays( Script::CArray* p_key_combos, Script::CArr
 
 		const char* p_key_combo_string;
 		p_key_combo_map->GetString( key_combo, &p_key_combo_string, Script::ASSERT );
-		const char* p_trick_name;
+		const char* p_trick_name = nullptr;
 		if ( found_cat )
 		{            
 			// printf("getting cat params\n");

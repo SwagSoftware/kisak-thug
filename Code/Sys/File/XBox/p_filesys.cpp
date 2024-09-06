@@ -23,19 +23,21 @@
 **							  	  Includes									**
 *****************************************************************************/
 
-#include <xtl.h>
+//#include <xtl.h>
 #include <stdio.h>
 #include <string.h>
+#include <shlwapi.h> // lwss: yes I am that lazy
 
 #include <core/defines.h>
 #include <core/support.h>
 #include <sys/file/filesys.h>
 #include <sys/file/AsyncFilesys.h>
 #include <sys/file/PRE.h>
-#include <sys/file/xbox/p_streamer.h>
+//#include <sys/file/xbox/p_streamer.h>
 #include <sys/config/config.h>
 
-#include <gfx/xbox/nx/nx_init.h>
+//#include <gfx/xbox/nx/nx_init.h>
+#include <gfx/DX8/nx/nx_init.h>
 
 /*****************************************************************************
 **							  DBG Information								**
@@ -92,8 +94,16 @@ BOOL OkayToUseUtilityDrive = FALSE;
 static void* prefopen( const char *filename, const char *mode )
 {
 	// Used for prepending the root data directory on filesystem calls.
+#ifdef __PLAT_XBOX__
 	char		nameConversionBuffer[256] = "d:\\data\\";
 	int			index = PREPEND_START_POS;
+#else
+	char		nameConversionBuffer[256];
+	GetModuleFileNameA(NULL, nameConversionBuffer, 255);
+	PathRemoveFileSpecA(nameConversionBuffer);
+	strcat(nameConversionBuffer, "\\Data\\");
+	int			index = strlen(nameConversionBuffer);
+#endif
 	const char*	p_skip;
 
 	if(( filename[0] == 'c' ) && ( filename[1] == ':' ))
@@ -127,35 +137,46 @@ static void* prefopen( const char *filename, const char *mode )
 		nameConversionBuffer[index - 2] = 'x';
 	}
 
-	// If this is a .pre file, switch to a .prx file.
-	if(((( nameConversionBuffer[index - 1] ) == 'e' ) || (( nameConversionBuffer[index - 1] ) == 'x' )) &&
-	    (( nameConversionBuffer[index - 2] ) == 'r' ) &&
-	    (( nameConversionBuffer[index - 3] ) == 'p' ))
+	// LWSS: Fuck your .xbx extension!!
+	char* xbx = StrStrIA(nameConversionBuffer, ".xbx");
+	if (xbx)
 	{
-#		ifdef __PAL_BUILD__
-		// Switch to a .prf, .prg or .prx file, depending on language.
-		switch( Config::GetLanguage())
-		{
-			case Config::LANGUAGE_FRENCH:
-			{
-				nameConversionBuffer[index - 1] = 'f';
-				break;
-			}
-			case Config::LANGUAGE_GERMAN:
-			{
-				nameConversionBuffer[index - 1] = 'g';
-				break;
-			}
-			default:
-			{
-				nameConversionBuffer[index - 1] = 'x';
-				break;
-			}
-		}
-#		else
-		nameConversionBuffer[index - 1] = 'x';
-#		endif // __PLAT_BUILD__
+		xbx[0] = '\0';
+		xbx[1] = '\0';
+		xbx[2] = '\0';
+		xbx[3] = '\0';
 	}
+
+	// If this is a .pre file, switch to a .prx file.
+	// LWSS: dont.
+	//if(((( nameConversionBuffer[index - 1] ) == 'e' ) || (( nameConversionBuffer[index - 1] ) == 'x' )) &&
+	//    (( nameConversionBuffer[index - 2] ) == 'r' ) &&
+	//    (( nameConversionBuffer[index - 3] ) == 'p' ))
+	//{
+#	//	ifdef __PAL_BUILD__
+	//	// Switch to a .prf, .prg or .prx file, depending on language.
+	//	switch( Config::GetLanguage())
+	//	{
+	//		case Config::LANGUAGE_FRENCH:
+	//		{
+	//			nameConversionBuffer[index - 1] = 'f';
+	//			break;
+	//		}
+	//		case Config::LANGUAGE_GERMAN:
+	//		{
+	//			nameConversionBuffer[index - 1] = 'g';
+	//			break;
+	//		}
+	//		default:
+	//		{
+	//			nameConversionBuffer[index - 1] = 'x';
+	//			break;
+	//		}
+	//	}
+#	//	else
+	//	nameConversionBuffer[index - 1] = 'x';
+#	//	endif // __PLAT_BUILD__
+	//}
 
 	// First we try reading the file from the utility partition (z:\) on the HD, rather than the DVD.
 	HANDLE h_file = INVALID_HANDLE_VALUE;
@@ -168,7 +189,8 @@ static void* prefopen( const char *filename, const char *mode )
 	if( h_file == INVALID_HANDLE_VALUE )
 	{
 		// Not on the utility partition, so load it from the DVD.
-		nameConversionBuffer[0] = 'D';
+		// LWSS: NO!
+		//nameConversionBuffer[0] = 'D';
 		h_file = CreateFile( nameConversionBuffer, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL );
 
 		// Deal with various error returns.
@@ -205,7 +227,7 @@ static void* prefopen( const char *filename, const char *mode )
 **							   Public Functions								**
 *****************************************************************************/
 
-static CThreadedLevelLoader *pLoader;
+//static CThreadedLevelLoader *pLoader;
 
 /******************************************************************/
 /*                                                                */

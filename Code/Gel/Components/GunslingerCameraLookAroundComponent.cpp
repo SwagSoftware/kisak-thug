@@ -90,7 +90,7 @@ void CCameraLookAroundComponent::RefreshFromStructure( Script::CStruct* pParams 
 
 void CCameraLookAroundComponent::Finalize (   )
 {
-	mp_input_component = GetInputComponentFromObject(GetObject());
+	mp_input_component = GetInputComponentFromObject(GetObj());
 	
 	Dbg_Assert(mp_input_component);
 

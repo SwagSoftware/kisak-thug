@@ -89,10 +89,10 @@ void CSkaterFlipAndRotateComponent::RefreshFromStructure( Script::CStruct* pPara
 void CSkaterFlipAndRotateComponent::Finalize (   )
 {
 	// Note: Non-local clients have a CSkaterFlipAndRotateComponent, but not a CSkaterCorePhysicsComponent.
-	mp_core_physics_component = GetSkaterCorePhysicsComponentFromObject(GetObject());
+	mp_core_physics_component = GetSkaterCorePhysicsComponentFromObject(GetObj());
 	
-	mp_model_component = GetModelComponentFromObject(GetObject());
-   	mp_animation_component = GetAnimationComponentFromObject(GetObject());
+	mp_model_component = GetModelComponentFromObject(GetObj());
+   	mp_animation_component = GetAnimationComponentFromObject(GetObj());
 	
 	Dbg_Assert(mp_model_component);
 	Dbg_Assert(mp_animation_component);
@@ -165,7 +165,7 @@ CBaseComponent::EMemberFunctionResult CSkaterFlipAndRotateComponent::CallMemberF
         // @flag normal | put the board back to normal (otherwise just flip)
 		case CRCC(0xe0f3a644, "BoardRotate"):
 		{
-			GameNet::PlayerInfo* player = GameNet::Manager::Instance()->GetPlayerByObjectID(GetObject()->GetID());
+			GameNet::PlayerInfo* player = GameNet::Manager::Instance()->GetPlayerByObjectID(GetObj()->GetID());
 			Dbg_Assert(player);
 			
 			Net::Client* client = GameNet::Manager::Instance()->GetClient(player->GetSkaterNumber());
@@ -174,12 +174,12 @@ CBaseComponent::EMemberFunctionResult CSkaterFlipAndRotateComponent::CallMemberF
 			if (pParams->ContainsFlag(CRCD(0xde7a971b, "Normal")))
 			{
 				// Put the board back to normal
-				RotateSkateboard(GetObject()->GetID(), false, client->m_Timestamp, true);
+				RotateSkateboard(GetObj()->GetID(), false, client->m_Timestamp, true);
 			}
 			else
 			{
 				// Otherwise flip it, flip it good.
-				RotateSkateboard(GetObject()->GetID(), !m_rotate_board, client->m_Timestamp, true);
+				RotateSkateboard(GetObj()->GetID(), !m_rotate_board, client->m_Timestamp, true);
 			}	
 			break;
 		}
@@ -213,7 +213,7 @@ void CSkaterFlipAndRotateComponent::GetDebugInfo(Script::CStruct *p_info)
 	{
 		p_info->AddChecksum(CRCD(0x8f66b80b, "switched"), mp_core_physics_component->IsSwitched() ? CRCD(0x203b372, "true") : CRCD(0xd43297cf, "false"));
 	}
-	p_info->AddChecksum(CRCD(0xc7a712c, "flipped"), GetSkaterStateComponentFromObject(GetObject())->GetFlag(FLIPPED) ? CRCD(0x203b372, "true") : CRCD(0xd43297cf, "false"));
+	p_info->AddChecksum(CRCD(0xc7a712c, "flipped"), GetSkaterStateComponentFromObject(GetObj())->GetFlag(FLIPPED) ? CRCD(0x203b372, "true") : CRCD(0xd43297cf, "false"));
 	
 	p_info->AddChecksum(CRCD(0xeba11b20, "FlipAfter"), mFlipAfter ? CRCD(0x203b372, "true") : CRCD(0xd43297cf, "false"));
 	p_info->AddChecksum(CRCD(0xacac1bad, "RotateAfter"), mRotateAfter ? CRCD(0x203b372, "true") : CRCD(0xd43297cf, "false"));
@@ -260,7 +260,7 @@ bool CSkaterFlipAndRotateComponent::RotateSkateboard ( uint32 objId, bool rotate
 	m_rotate_board = rotate;
 	
 	#ifdef __NOPT_ASSERT__
-	if (DebugSkaterScripts && GetObject()->GetType() == SKATE_TYPE_SKATER)
+	if (DebugSkaterScripts && GetObj()->GetType() == SKATE_TYPE_SKATER)
 	{
 		printf("%d: Rotating board [rotated = %s]\n", (int) Tmr::GetRenderFrame(), m_rotate_board ? "true" : "false");
 	}
@@ -321,14 +321,14 @@ void CSkaterFlipAndRotateComponent::DoAnyFlipRotateOrBoardRotateAfters (   )
 		
 	if (mBoardRotateAfter)
 	{
-		GameNet::PlayerInfo* player = GameNet::Manager::Instance()->GetPlayerByObjectID(GetObject()->GetID());
+		GameNet::PlayerInfo* player = GameNet::Manager::Instance()->GetPlayerByObjectID(GetObj()->GetID());
 		Dbg_Assert(player);
 
 		Net::Client* client = GameNet::Manager::Instance()->GetClient(player->GetSkaterNumber());
 		Dbg_Assert(client);
 
 		// Rotate the board.
-		RotateSkateboard(GetObject()->GetID(), !m_rotate_board, client->m_Timestamp, true);
+		RotateSkateboard(GetObj()->GetID(), !m_rotate_board, client->m_Timestamp, true);
 		mBoardRotateAfter = false;
 	}	
 	
@@ -358,10 +358,10 @@ void CSkaterFlipAndRotateComponent::Reset (   )
 
 void CSkaterFlipAndRotateComponent::ToggleFlipState (   )
 {
-	GetSkaterStateComponentFromObject(GetObject())->m_skater_flags[FLIPPED].Toggle();	
+	GetSkaterStateComponentFromObject(GetObj())->m_skater_flags[FLIPPED].Toggle();	
 	
 	#ifdef __NOPT_ASSERT__
-	if (DebugSkaterScripts && GetObject()->GetType() == SKATE_TYPE_SKATER)
+	if (DebugSkaterScripts && GetObj()->GetType() == SKATE_TYPE_SKATER)
 	{
 		printf("%d: Flipping skater [flipped = %s]\n", (int) Tmr::GetRenderFrame(), mp_core_physics_component->GetFlag(FLIPPED) ? "true" : "false");
 	}
@@ -381,7 +381,7 @@ void CSkaterFlipAndRotateComponent::ApplyFlipState (   )
 	Net::Client* client = GameNet::Manager::Instance()->GetClient(GetSkater()->GetSkaterNumber());
 	Dbg_Assert(client);
 	
-	mp_animation_component->FlipAnimation(GetObject()->GetID(), GetSkaterStateComponentFromObject(GetObject())->GetFlag(FLIPPED), client->m_Timestamp, true);
+	mp_animation_component->FlipAnimation(GetObj()->GetID(), GetSkaterStateComponentFromObject(GetObj())->GetFlag(FLIPPED), client->m_Timestamp, true);
 }
 
 }

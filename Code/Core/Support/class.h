@@ -44,7 +44,7 @@ class Class
 {
 	public:
 	
-	#if (defined ( ZERO_CLASS_MEM ) && !defined ( __PLAT_WN32__ ))
+	//#if (defined ( ZERO_CLASS_MEM ) && !defined ( __PLAT_WN32__ ))
 		void*			operator new( size_t size );
 		void*			operator new[] ( size_t size );
 		void*			operator new( size_t size, bool assert_on_fail );
@@ -54,7 +54,7 @@ class Class
 		void*			operator new( size_t size, void* pLocation );
 		void*			operator new[]( size_t size, void* pLocation );
 	
-	#endif // ZERO_CLASS_MEM
+	//#endif // ZERO_CLASS_MEM
 };
 
 } // namespace Spt

@@ -20,7 +20,8 @@ class CVector;
 class CPair;
 class CStruct;
 
-#ifdef __PLAT_WN32__
+//#ifdef __PLAT_WN32__ // LWSS: undo this 
+#if 0
 class CArray
 #else
 class CArray : public Mem::CPoolable<CArray>

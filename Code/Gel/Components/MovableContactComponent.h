@@ -91,7 +91,7 @@ inline bool CMovableContactComponent::HaveContact (   )
 {
 	if (!mp_contact) return false;
 	
-	if (mp_contact->GetObject()) return true;
+	if (mp_contact->GetObj()) return true;
 	
 	LoseAnyContact();
 	return false;

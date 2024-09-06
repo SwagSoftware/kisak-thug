@@ -724,7 +724,7 @@ inline bool CVehicleComponent::very_close ( const Mth::Vector p, const Mth::Vect
 
 inline bool CVehicleComponent::reset_this_frame (   ) const
 {
-	return m_reset_this_frame || GetObject()->IsDead();
+	return m_reset_this_frame || GetObj()->IsDead();
 }
 
 /******************************************************************/

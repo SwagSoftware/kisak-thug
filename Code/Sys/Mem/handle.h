@@ -89,7 +89,8 @@ protected :
 *****************************************************************************/
 
 template < class _T > inline   
-Handle< _T >::Handle< _T >( _T* ptr ) 
+//Handle< _T >::Handle< _T >( _T* ptr ) 
+Mem::Handle<_T>::Handle( _T* ptr )
 : m_ptr ( ptr ), m_id ( Allocator::sGetId( ptr ))
 {
 	

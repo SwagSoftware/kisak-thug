@@ -139,7 +139,7 @@ Dbg_DefineProject( PS2, "Test Project" )
 
 extern "C"
 {
-#ifdef __PLAT_XBOX__
+#if defined(__PLAT_XBOX__) || defined(__PLAT_WN32__)
 int pre_main( void );
 #endif
 #ifdef __PLAT_NGC__
@@ -181,7 +181,7 @@ void post_main( void );
 **							   Public Functions								**
 *****************************************************************************/
 
-#ifdef __PLAT_XBOX__
+#if defined(__PLAT_XBOX__) || defined(__PLAT_WN32__)
 int pre_main( void )
 #endif
 #ifdef __PLAT_NGC__
@@ -191,6 +191,14 @@ void __init_vm( void )
 void pre_main( void )
 #endif
 {
+#ifdef __PLAT_WN32__
+	static bool hasRan = false;
+	if (hasRan)
+	{
+		return 0;
+	}
+	hasRan = true;
+#endif
 	DEBUG_FLASH(0x07f7f7f);		// initial white
 
 
@@ -210,14 +218,16 @@ void pre_main( void )
 	
 	DEBUG_FLASH(0x02050);		// brown
 
-#ifdef __PLAT_XBOX__
+#if defined(__PLAT_XBOX__) || defined(__PLAT_WN32__)
 	// Must return 0 here, as this is called from CRT initialization code.
 	return 0;
 }
 
-#pragma data_seg( ".CRT$RIX" )
-static int (*_mypreinit)(void) = pre_main;
-#pragma data_seg()
+// LWSS: this shit isn't working in Win32. Not called at all. I will just do a static var hack
+//#pragma data_seg( ".CRT$RIX" )
+//static int (*_mypreinit)(void) = pre_main;
+//#pragma data_seg()
+static volatile int mypreinit = pre_main();
 
 #else
 }
@@ -487,7 +497,12 @@ int main ( sint argc, char** argv )
 #endif
 #endif
 
-	Dbg_Message ( "Begin Application" );						 
+	Dbg_Message ( "Begin Application" );		
+// lwss add
+#ifdef __PLAT_WN32__
+	SetThreadExecutionState(ES_CONTINUOUS | ES_DISPLAY_REQUIRED | ES_SYSTEM_REQUIRED);
+#endif
+// lwss end
 	Mth::InitialRand(107482099);
 
 #if 0
@@ -536,7 +551,8 @@ int main ( sint argc, char** argv )
 #endif
 
 	
-	while (  true )
+	//while (  true )
+	while (!gbQuit)
 	{	
 		Mem::Manager::sHandle().BottomUpHeap()->PushContext();
 		Mem::Manager::sHandle().PushMemoryMarker(MAINLOOP_MEMMARKER);
@@ -567,8 +583,9 @@ int main ( sint argc, char** argv )
 			************************************************/
 			
 			Mem::PushMemProfile("Hash Item Pool Manager");
-#			if( defined( __PLAT_NGC__ ) || defined( __PLAT_XBOX__ ))
-			Mem::PoolManager::SSetupPool(Mem::PoolManager::vHASH_ITEM_POOL, 12500);	// Mick: increased from 5600 to 10000
+#			if( defined( __PLAT_NGC__ ) || defined( __PLAT_XBOX__ )|| defined( __PLAT_WN32__ ))
+			//Mem::PoolManager::SSetupPool(Mem::PoolManager::vHASH_ITEM_POOL, 12500);	// Mick: increased from 5600 to 10000
+			Mem::PoolManager::SSetupPool(Mem::PoolManager::vHASH_ITEM_POOL, 52500);	// LWSS: increased from 5600
 #			else
 			Mem::PoolManager::SSetupPool(Mem::PoolManager::vHASH_ITEM_POOL, 10000);	// Mick: increased from 5600 to 10000
 #			endif // __PLAT_NGC__ || __PLAT_XBOX__
@@ -629,9 +646,9 @@ int main ( sint argc, char** argv )
 			SkateScript::Init();	 			
 
 			Mem::PushMemProfile("Game Singletons");
-			#ifdef __NOPT_ASSERT__
-			Spt::SingletonPtr< Dbg::CScriptDebugger> script_debugger(true);
-			#endif
+			//#ifdef __NOPT_ASSERT__ // lwss: remove for now. Fucked up
+			//Spt::SingletonPtr< Dbg::CScriptDebugger> script_debugger(true);
+			//#endif
 			Mem::PopMemProfile();
 
 #ifdef __PLAT_NGC__
@@ -656,7 +673,7 @@ extern uint8 * RES_gamecube;
 
 #ifndef __PLAT_NGC__
 			Spt::SingletonPtr< Script::CScriptCache>			script_cache( true );
-#endif		// __PLAT_NGC__
+#endif		// __PLAT_NGC__	
 			Spt::SingletonPtr< Ass::CAssMan > 					ass_manager( true );
 			Spt::SingletonPtr< Sfx::CSfxManager > 				sfx_manager( true );			
 			Spt::SingletonPtr< Net::Manager >					net_manager( true );	
@@ -707,9 +724,9 @@ extern uint8 * RES_gamecube;
 			mdl_manager->RegisterModule ( *front );
 			mdl_manager->RegisterModule ( *skate_mod );
 			mdl_manager->RegisterModule ( *async_poll );
-			#ifdef __NOPT_ASSERT__
-			mdl_manager->RegisterModule ( *script_debugger );
-			#endif
+			//#ifdef __NOPT_ASSERT__
+			//mdl_manager->RegisterModule ( *script_debugger );
+			//#endif
 			
 			/***********************************************
 			Start modules section
@@ -796,9 +813,9 @@ extern uint8 * RES_gamecube;
 			mdl_manager->UnregisterModule ( *front );
 			mdl_manager->UnregisterModule ( *grandpas_park_editor );
 			mdl_manager->UnregisterModule ( *async_poll );
-			#ifdef __NOPT_ASSERT__
-			mdl_manager->UnregisterModule ( *script_debugger );
-			#endif
+			//#ifdef __NOPT_ASSERT__
+			//mdl_manager->UnregisterModule ( *script_debugger );
+			//#endif
 			
 			/***********************************************
 			General closedown

@@ -58,7 +58,7 @@ public:
     virtual EMemberFunctionResult   CallMemberFunction( uint32 Checksum, Script::CStruct* pParams, Script::CScript* pScript );
 	virtual void 					GetDebugInfo( Script::CStruct* p_info );
 	
-	CSkater*						GetSkater() { return static_cast< CSkater* >(GetObject()); }
+	CSkater*						GetSkater() { return static_cast< CSkater* >(GetObj()); }
 	
 	void							ComboStarted (   );
 	void							ComboEnded (   );
@@ -142,7 +142,7 @@ inline void CSkaterRunTimerComponent::pause (   )
 	
 	set_state(ACTIVE_PAUSED);
 	
-	CTracker::Instance()->LaunchEvent(CRCD(0x813cc576, "HideRunTimer"), get_run_timer_controller_id(), GetObject()->GetID());
+	CTracker::Instance()->LaunchEvent(CRCD(0x813cc576, "HideRunTimer"), get_run_timer_controller_id(), GetObj()->GetID());
 }
 
 /******************************************************************/

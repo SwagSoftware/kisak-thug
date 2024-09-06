@@ -78,7 +78,7 @@ void CSkaterRotateComponent::RefreshFromStructure( Script::CStruct* pParams )
 
 void CSkaterRotateComponent::Finalize (   )
 {
-	mp_core_physics_component = GetSkaterCorePhysicsComponentFromObject(GetObject());
+	mp_core_physics_component = GetSkaterCorePhysicsComponentFromObject(GetObj());
 	
 	Dbg_Assert(mp_core_physics_component);	
 }
@@ -110,7 +110,7 @@ void CSkaterRotateComponent::Update()
 		
 		Mth::CreateRotateMatrix(rotation_matrix, n, amount);
 		
-		GetObject()->m_matrix = rotation_matrix * GetObject()->m_matrix;
+		GetObj()->m_matrix = rotation_matrix * GetObj()->m_matrix;
 		mp_core_physics_component->m_lerping_display_matrix = rotation_matrix * mp_core_physics_component->m_lerping_display_matrix;;
 	}
 	
@@ -193,7 +193,7 @@ CBaseComponent::EMemberFunctionResult CSkaterRotateComponent::CallMemberFunction
 					Mth::Vector node_pos;
 					SkateScript::GetPosition(node, &node_pos);
 				
-					mp_rotations[Y].angle = Mth::RadToDeg(Mth::GetAngle(GetObject()->m_matrix, node_pos - GetObject()->m_pos));
+					mp_rotations[Y].angle = Mth::RadToDeg(Mth::GetAngle(GetObj()->m_matrix, node_pos - GetObj()->m_pos));
 					
 					mp_rotations[Y].duration = duration;
 					mp_rotations[Y].angle_step = Mth::DegToRad(mp_rotations[Y].angle / mp_rotations[Y].duration);
@@ -210,24 +210,24 @@ CBaseComponent::EMemberFunctionResult CSkaterRotateComponent::CallMemberFunction
 				float angle;
 				if (pParams->GetFloat(CRCD(0x7323e97c, "x"), &angle))
 				{
-					GetObject()->m_matrix.RotateXLocal(Mth::DegToRad(angle));				
+					GetObj()->m_matrix.RotateXLocal(Mth::DegToRad(angle));				
 					mp_core_physics_component->ResetLerpingMatrix();
 				}
 				else if (pParams->GetFloat(CRCD(0x424d9ea, "y"), &angle))
 				{
-					GetObject()->m_matrix.RotateYLocal(Mth::DegToRad(angle));				
+					GetObj()->m_matrix.RotateYLocal(Mth::DegToRad(angle));				
 					mp_core_physics_component->ResetLerpingMatrix();
 				}
 				else if (pParams->GetFloat(CRCD(0x9d2d8850, "z"), &angle))
 				{
-					GetObject()->m_matrix.RotateZLocal(Mth::DegToRad(angle));
+					GetObj()->m_matrix.RotateZLocal(Mth::DegToRad(angle));
 					mp_core_physics_component->ResetLerpingMatrix();
 				}
 				else
 				{
 					// if no parameters are given, rotate 180 degrees about Y
-					GetObject()->m_matrix[Z].Negate();
-					GetObject()->m_matrix[X].Negate();
+					GetObj()->m_matrix[Z].Negate();
+					GetObj()->m_matrix[X].Negate();
 					mp_core_physics_component->ResetLerpingMatrix();
 					
 					mp_core_physics_component->mRail_Backwards = !mp_core_physics_component->mRail_Backwards;

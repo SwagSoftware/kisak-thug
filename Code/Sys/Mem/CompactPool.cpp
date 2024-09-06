@@ -128,13 +128,13 @@ void * CCompactPool::Allocate()
 		
 		void *pItem = mp_freeList;
 		mp_freeList = (uint32 *) *mp_freeList;
-		#ifdef	__NOPT_ASSERT__
-		if ((int)pItem == REPORT_ON)
-		{
-			printf ("++++ CCompactPool::Allocate %p\n",pItem);
-			DumpUnwindStack(20,0);
-		}
-		#endif
+		//#ifdef	__NOPT_ASSERT__
+		//if ((int)pItem == REPORT_ON)
+		//{
+		//	printf ("++++ CCompactPool::Allocate %p\n",pItem);
+		//	DumpUnwindStack(20,0);
+		//}
+		//#endif
 		return pItem;
 	}
 
@@ -147,13 +147,13 @@ void * CCompactPool::Allocate()
 
 void CCompactPool::Free(void *pFreeItem)
 {
-	#ifdef	__NOPT_ASSERT__
-	if ((int)pFreeItem == REPORT_ON)
-	{
-		printf ("--- CCompactPool::Free %p\n",pFreeItem);
-		DumpUnwindStack(20,0);
-	}
-	#endif
+	//#ifdef	__NOPT_ASSERT__
+	//if ((int)pFreeItem == REPORT_ON)
+	//{
+	//	printf ("--- CCompactPool::Free %p\n",pFreeItem);
+	//	DumpUnwindStack(20,0);
+	//}
+	//#endif
 #ifdef __REALLY_DEBUG_COMPACTPOOL__
 	// make sure block is within range
 	int pool_item = ((int) ((uint8 *) pFreeItem - mp_buffer)) / m_itemSize;

@@ -133,7 +133,7 @@ void CHorseCameraComponent::RefreshFromStructure( Script::CStruct* pParams )
 /******************************************************************/
 void CHorseCameraComponent::Finalize( void )
 {
-	mp_input_component = GetInputComponentFromObject( GetObject());
+	mp_input_component = GetInputComponentFromObject( GetObj());
 	Dbg_Assert( mp_input_component );
 }
 
@@ -233,9 +233,9 @@ void CHorseCameraComponent::Update()
 
 	do_reticle();
 
-	GetObject()->SetPos( m_pos );
-	GetObject()->SetMatrix( m_orientation_matrix );
-	GetObject()->SetDisplayMatrix( m_orientation_matrix );
+	GetObj()->SetPos( m_pos );
+	GetObj()->SetMatrix( m_orientation_matrix );
+	GetObj()->SetDisplayMatrix( m_orientation_matrix );
 }
 
 /******************************************************************/
@@ -450,9 +450,9 @@ void CHorseCameraComponent::reset_camera( void )
 	calculate_orientation_matrix();
 	calculate_position();
 	
-	GetObject()->SetPos( m_pos );
-	GetObject()->SetMatrix( m_orientation_matrix );
-	GetObject()->SetDisplayMatrix(m_orientation_matrix);
+	GetObj()->SetPos( m_pos );
+	GetObj()->SetMatrix( m_orientation_matrix );
+	GetObj()->SetDisplayMatrix(m_orientation_matrix);
 }
 
 

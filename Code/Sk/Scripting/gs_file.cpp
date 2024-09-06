@@ -35,6 +35,8 @@
 #include "sys/ngc/p_display.h"
 #endif		// __PLAT_NGC__
 
+char g_currentScriptFile[256]; // lwss add
+
 namespace SkateScript
 {
 using namespace Script;
@@ -62,6 +64,7 @@ void LoadAllStartupQBFiles()
 			break;
 	}
 #else
+	// KISAKTODO: Replace this w/ raw qb files
 	Pip::LoadPre("qb.pre");
 #endif		// __PLAT_NGC__
 	Mem::Manager::sHandle().PopContext();
@@ -100,16 +103,24 @@ void LoadAllStartupQBFiles()
 			char *p_data_backslash=strstr(p_file_name,"data\\");
 			if (p_data_backslash)
 			{
-				strcpy( p_file_name, p_data_backslash+5); // Safe cos it will copy backwards
+				// lwss: fix this overlap (ASAN)
+				char tmp[MAX_FILENAME_CHARS + 1]{ 0 };
+				//strcpy( p_file_name, p_data_backslash+5); // Safe cos it will copy backwards
+				strcpy( tmp, p_data_backslash+5);
+				strcpy(p_file_name, tmp);
 			}
 				
 			// Make sure this script isn't already loaded.
 			SkateScript::UnloadQB( Crc::GenerateCRCFromString(p_file_name) );
 
+			// lwss add
+			strncpy(g_currentScriptFile, p_file_name, 255);
+
 			SkateScript::LoadQB(p_file_name,
 								// We do want assertions if duplicate symbols when loading all 
 								// the qb's on startup. (Just not when reloading a qb)
 								ASSERT_IF_DUPLICATE_SYMBOLS);
+			memset(g_currentScriptFile, 0x00, 256);
 		}	
 #ifdef __PLAT_NGC__
 		NsDisplay::doReset();
@@ -216,6 +227,7 @@ void LoadQB(const char *p_fileName, EBoolAssertIfDuplicateSymbols assertIfDuplic
 			// No need to keep checking for more NodeArray's, there can be only one.
 			break;
 		}
+
 		p_sym=GetNextSymbolTableEntry(p_sym);
 	}		
 	

@@ -141,7 +141,7 @@ void CSkaterStateHistoryComponent::CollideWithOtherSkaters( int start_index )
 {
     GameNet::PlayerInfo* p_player;
 
-	p_player = GameNet::Manager::Instance()->GetPlayerByObjectID(GetObject()->GetID());
+	p_player = GameNet::Manager::Instance()->GetPlayerByObjectID(GetObj()->GetID());
 	if( p_player == NULL )
 	{
 		return;
@@ -289,7 +289,7 @@ void CSkaterStateHistoryComponent::CollideWithOtherSkaters( int start_index )
 			lost_msg.m_Id |= (1 << 7) * other_driving;
 			lost_msg.m_Offset = my_pt - other_pt;
 
-			if (CInputComponent* p_input_component = GetInputComponentFromObject(GetObject()))
+			if (CInputComponent* p_input_component = GetInputComponentFromObject(GetObj()))
 			{
 				p_input_component->DisableInput();
 			}
@@ -303,7 +303,7 @@ void CSkaterStateHistoryComponent::CollideWithOtherSkaters( int start_index )
 			p_server->EnqueueMessage(p_player->GetConnHandle(), &msg_desc);
 
 			// basically a one-byte message explaining "You knocked someone down"
-			won_msg.m_Data = GetObject()->GetID();
+			won_msg.m_Data = GetObj()->GetID();
 			won_msg.m_Data |= (1 << 7) * my_driving;
 
 			msg_desc.m_Id = GameNet::MSG_ID_SKATER_COLLIDE_WON;
@@ -623,7 +623,7 @@ int	CSkaterStateHistoryComponent::sHandleCollision( Net::MsgHandlerContext* cont
 
 Mth::Vector	CSkaterStateHistoryComponent::get_vel (   )
 {
-	return GetObject()->m_vel * Tmr::UncappedFrameLength();
+	return GetObj()->m_vel * Tmr::UncappedFrameLength();
 }
 
 /******************************************************************/
@@ -633,7 +633,7 @@ Mth::Vector	CSkaterStateHistoryComponent::get_vel (   )
 
 Mth::Vector CSkaterStateHistoryComponent::get_latest_position(   )
 {
-	return GetObject()->m_pos;
+	return GetObj()->m_pos;
 }
 
 /******************************************************************/
@@ -643,7 +643,7 @@ Mth::Vector CSkaterStateHistoryComponent::get_latest_position(   )
 
 Mth::Vector CSkaterStateHistoryComponent::get_last_position(   )
 {
-    return GetObject()->m_old_pos;
+    return GetObj()->m_old_pos;
 }
 
 /******************************************************************/

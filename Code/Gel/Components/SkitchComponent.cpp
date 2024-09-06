@@ -57,7 +57,7 @@ CSkitchComponent::~CSkitchComponent()
 void CSkitchComponent::InitFromStructure( Script::CStruct* pParams )
 {
 	// There needs to be a ObjectHookManagerComponent attached for the SkitchComponent to operate.
-	mp_object_hook_manager_component = GetObjectHookManagerComponentFromObject( GetObject());
+	mp_object_hook_manager_component = GetObjectHookManagerComponentFromObject( GetObj());
 	Dbg_MsgAssert( mp_object_hook_manager_component, ( "SkitchComponent created without ObjectHookManagerComponent" ));
 }
 
@@ -142,7 +142,7 @@ int CSkitchComponent::GetNearestSkitchPoint( Mth::Vector *p_point, Mth::Vector &
 	int nearest_node_number = -1;	// -1 means not found yet
 
 	// Only continue if we have a parent object (we always should) and a object hook manager component.
-	CCompositeObject *p_parent_object = GetObject();
+	CCompositeObject *p_parent_object = GetObj();
 	if( mp_object_hook_manager_component && p_parent_object )
 	{
 		Obj::CObjectHookManager *p_object_hook_man = mp_object_hook_manager_component->GetObjectHookManager();
@@ -206,7 +206,7 @@ int CSkitchComponent::GetNearestSkitchPoint( Mth::Vector *p_point, Mth::Vector &
 bool CSkitchComponent::GetIndexedSkitchPoint( Mth::Vector *p_point, int index )
 {
 	// Only continue if we have a parent object (we always should) and a object hook manager component.
-	CCompositeObject *p_parent_object = GetObject();
+	CCompositeObject *p_parent_object = GetObj();
 	if( mp_object_hook_manager_component && p_parent_object )
 	{
 		Obj::CObjectHookManager *p_object_hook_man = mp_object_hook_manager_component->GetObjectHookManager();

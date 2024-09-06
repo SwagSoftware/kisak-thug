@@ -1516,10 +1516,9 @@ bool CScript::run_cfunction(bool (*p_cfunc)(CStruct *pParams, CScript *pCScript)
 	p_entry->mAverageExecutionTime = (p_entry->mAverageExecutionTime*p_entry->mNumCalls+TimeTaken)/(p_entry->mNumCalls+1);
 	++p_entry->mNumCalls;
 	p_entry->mNumCallsInThisFrame=600;
-	#endif
-	
-	
-	#ifdef STOPWATCH_STUFF
+
+
+
 	pCFunctionStopWatch->Stop();
 	pUpdateStopWatch->Start();
 	#endif
@@ -1635,9 +1634,9 @@ bool CScript::execute_command()
 	{
 		Obj::CObject *p_substitute_object = NULL;
 		// Find the object
-#ifndef __PLAT_WN32__
+//#ifndef __PLAT_WN32__
 		p_substitute_object=Obj::ResolveToObject(name);
-#endif
+//#endif
 		Dbg_MsgAssert(p_substitute_object,("\n%s\nCould not resolve '%s' to a CObject instance",GetScriptInfo(),FindChecksumName(name)));
 		if( p_substitute_object == NULL )
 		{
@@ -1792,12 +1791,12 @@ bool CScript::execute_command()
 		else
 		#endif
 		{
-			#ifdef __PLAT_WN32__
+			//#ifdef __PLAT_WN32__
 			// Don't printf if compiling on PC, otherwise LevelAssetLister prints lots
 			// of warning messages when running the load sound scripts.
-			#else
+			//#else
 			printf ("WARNING: script %s not found, ignoring in default level.\n",FindChecksumName(name));
-			#endif
+			//#endif
 			return true;
 		}
 	}
@@ -3003,9 +3002,9 @@ void RunScript(uint32 scriptChecksum, CStruct *p_params, Obj::CObject *p_object,
 		#endif
 		return;
 	}	
-	if (p_entry->mType!=ESYMBOLTYPE_QSCRIPT && 
-		p_entry->mType!=ESYMBOLTYPE_CFUNCTION &&
-		p_entry->mType!=ESYMBOLTYPE_MEMBERFUNCTION)
+	if (p_entry->mType!=ESYMBOLTYPE_QSCRIPT && //7
+		p_entry->mType!=ESYMBOLTYPE_CFUNCTION && //8
+		p_entry->mType!=ESYMBOLTYPE_MEMBERFUNCTION) //9
 	{
 		#ifdef __NOPT_ASSERT__
 		printf("Warning! RunScript sent '%s' which is not a script, a c-function or a member function. Type=%s\n",sGetRunScriptName(scriptChecksum,p_scriptName),GetTypeName(p_entry->mType));

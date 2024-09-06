@@ -62,12 +62,12 @@ CSkaterScoreComponent::~CSkaterScoreComponent()
 
 void CSkaterScoreComponent::InitFromStructure( Script::CStruct* pParams )
 {
-	Dbg_MsgAssert(GetObject()->GetType() == SKATE_TYPE_SKATER, ("CSkaterScoreComponent added to non-skater composite object"));
+	Dbg_MsgAssert(GetObj()->GetType() == SKATE_TYPE_SKATER, ("CSkaterScoreComponent added to non-skater composite object"));
 	
 	if (!mp_score)
 	{
 		mp_score = new Mdl::Score();
-		mp_score->SetSkaterId(GetObject()->GetID());
+		mp_score->SetSkaterId(GetObj()->GetID());
 	}
 }
 

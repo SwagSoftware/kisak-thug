@@ -119,7 +119,7 @@ public:
 
 	static CBaseComponent*			s_create();
 	
-	CSkater*						GetSkater() { return static_cast< CSkater* >(GetObject()); }
+	CSkater*						GetSkater() { return static_cast< CSkater* >(GetObj()); }
 	
 	static int						sHandleCollision ( Net::MsgHandlerContext* context );
 	static int						sHandleProjectileHit ( Net::MsgHandlerContext* context );

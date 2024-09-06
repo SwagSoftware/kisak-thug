@@ -310,7 +310,7 @@ void FrontEnd::PauseGame(bool paused)
 
 void FrontEnd::AddEntriesToEventButtonMap(Script::CStruct *pParams)
 {
-	#ifdef __PLAT_XBOX__
+	#if defined(__PLAT_XBOX__) || defined(__PLAT_WN32__) // lwss add
 	const char *p_array_name = "xbox";
 	#else
 	#ifdef __PLAT_NGC__
@@ -322,7 +322,7 @@ void FrontEnd::AddEntriesToEventButtonMap(Script::CStruct *pParams)
 	
 	// This seems a very hacky way of doing things.
 	// Black and white need to be in position 16 and 17, since they are button indices 16 and 17.
-	#ifdef __PLAT_XBOX__
+#if defined(__PLAT_XBOX__) || defined(__PLAT_WN32__) // lwss add
 	const char *p_button_names[] =
 	{
 		"left_trigger_full",

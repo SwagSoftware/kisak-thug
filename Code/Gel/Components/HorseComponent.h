@@ -136,11 +136,11 @@ public:
 	
 	void							MoveToNode ( Script::CStruct* p_node );
 	
-	const Mth::Vector&				GetPos( void )						{ return GetObject()->GetPos(); }
+	const Mth::Vector&				GetPos( void )						{ return GetObj()->GetPos(); }
 	const Mth::Vector&				GetVel( void )				const	{ return m_vel; }
 
-	Mth::Matrix&					GetMatrix( void )					{ return GetObject()->GetMatrix(); }
-	Mth::Matrix&					GetDisplayMatrix( void )			{ return GetObject()->GetDisplayMatrix(); }
+	Mth::Matrix&					GetMatrix( void )					{ return GetObj()->GetMatrix(); }
+	Mth::Matrix&					GetDisplayMatrix( void )			{ return GetObj()->GetDisplayMatrix(); }
 
 	bool							AcceptRiderMount( CCompositeObject*	p_rider );
 	bool							AcceptRiderDismount( CCompositeObject*	p_rider );

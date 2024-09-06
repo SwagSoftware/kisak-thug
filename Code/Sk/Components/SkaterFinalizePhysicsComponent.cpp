@@ -77,8 +77,8 @@ void CSkaterFinalizePhysicsComponent::RefreshFromStructure( Script::CStruct* pPa
 
 void CSkaterFinalizePhysicsComponent::Finalize (   )
 {
-	mp_core_physics_component = GetSkaterCorePhysicsComponentFromObject(GetObject());
-	mp_state_component = GetSkaterStateComponentFromObject(GetObject());
+	mp_core_physics_component = GetSkaterCorePhysicsComponentFromObject(GetObj());
+	mp_state_component = GetSkaterStateComponentFromObject(GetObj());
 		
 	Dbg_Assert(mp_core_physics_component);
 	Dbg_Assert(mp_state_component);
@@ -101,7 +101,7 @@ void CSkaterFinalizePhysicsComponent::Update()
 		if (mp_state_component->GetState() == AIR)
 		{
 			// we only want to set this flag if we jumped straight up; meaning the x and z velocities are close to zero
-			if (Mth::Abs(GetObject()->m_vel[X]) < 1.0f && Mth::Abs(GetObject()->m_vel[Z]) < 1.0f)
+			if (Mth::Abs(GetObj()->m_vel[X]) < 1.0f && Mth::Abs(GetObj()->m_vel[Z]) < 1.0f)
 			{
 				mp_state_component->mJumpedOutOfLipTrick = true;
 			}				
@@ -118,39 +118,39 @@ void CSkaterFinalizePhysicsComponent::Update()
 	mp_state_component->m_camera_current_normal = mp_core_physics_component->m_current_normal;
 	
 	// make sure the matrices don't get distorted
-	GetObject()->m_matrix.OrthoNormalizeAbout(Y);
+	GetObj()->m_matrix.OrthoNormalizeAbout(Y);
 	mp_core_physics_component->m_lerping_display_matrix.OrthoNormalizeAbout(Y);
 	
 	// if any part of the matrix has collapsed, then we will neet to patch it up	
 	// Note, this is a very rare occurence; probably only occurs when you hit things perfectly at right angles, so
 	// you attempt to orthonormalize about an axis that that is now coincident with another axis
 	// would not happen if we rotated the matrix, or used quaternions
-	if (GetObject()->m_matrix.PatchOrthogonality())
+	if (GetObj()->m_matrix.PatchOrthogonality())
 	{
 		mp_core_physics_component->ResetLerpingMatrix();
 	}
 	
 	// Extract the informations from the physics object that we need for rendering
-	GetObject()->SetDisplayMatrix(mp_core_physics_component->m_lerping_display_matrix);
+	GetObj()->SetDisplayMatrix(mp_core_physics_component->m_lerping_display_matrix);
 	
 	#ifdef __USER_DAN__
-	// Gfx::AddDebugArrow(GetObject()->GetPos(), GetObject()->GetPos() + 60.0f * GetObject()->GetDisplayMatrix()[Z], RED, 0, 1);
-	// Gfx::AddDebugArrow(GetObject()->GetPos(), GetObject()->GetPos() + 60.0f * GetObject()->GetDisplayMatrix()[X], BLUE, 0, 1);
-	// Gfx::AddDebugArrow(GetObject()->GetPos(), GetObject()->GetPos() + 60.0f * GetObject()->GetDisplayMatrix()[Y], GREEN, 0, 1);
+	// Gfx::AddDebugArrow(GetObj()->GetPos(), GetObj()->GetPos() + 60.0f * GetObj()->GetDisplayMatrix()[Z], RED, 0, 1);
+	// Gfx::AddDebugArrow(GetObj()->GetPos(), GetObj()->GetPos() + 60.0f * GetObj()->GetDisplayMatrix()[X], BLUE, 0, 1);
+	// Gfx::AddDebugArrow(GetObj()->GetPos(), GetObj()->GetPos() + 60.0f * GetObj()->GetDisplayMatrix()[Y], GREEN, 0, 1);
 	#endif
 	
 	// update the sound components' state
 	
-	Obj::CSkaterSoundComponent *pSoundComponent = GetSkaterSoundComponentFromObject( GetObject() );
+	Obj::CSkaterSoundComponent *pSoundComponent = GetSkaterSoundComponentFromObject( GetObj() );
 	Dbg_Assert( pSoundComponent );
 	
 	pSoundComponent->SetIsRailSliding( mp_state_component->GetFlag(RAIL_SLIDING) );
 	pSoundComponent->SetTerrain( mp_state_component->GetTerrain() );
 	
-	Obj::CSkaterLoopingSoundComponent *pLoopingSoundComponent = GetSkaterLoopingSoundComponentFromObject( GetObject() );
+	Obj::CSkaterLoopingSoundComponent *pLoopingSoundComponent = GetSkaterLoopingSoundComponentFromObject( GetObj() );
 	Dbg_Assert( pLoopingSoundComponent );
 	
-	float speed_fraction = sqrtf( GetObject()->GetVel()[X] * GetObject()->GetVel()[X] + GetObject()->GetVel()[Z] * GetObject()->GetVel()[Z] ) / GetSkater()->GetScriptedStat(CRCD(0xcc5f87aa, "Skater_Max_Max_Speed_Stat") );
+	float speed_fraction = sqrtf( GetObj()->GetVel()[X] * GetObj()->GetVel()[X] + GetObj()->GetVel()[Z] * GetObj()->GetVel()[Z] ) / GetSkater()->GetScriptedStat(CRCD(0xcc5f87aa, "Skater_Max_Max_Speed_Stat") );
 	pLoopingSoundComponent->SetSpeedFraction( speed_fraction );
 	pLoopingSoundComponent->SetIsBailing(mp_state_component->GetFlag(IS_BAILING));
 	pLoopingSoundComponent->SetIsRailSliding( mp_state_component->GetFlag(RAIL_SLIDING) );

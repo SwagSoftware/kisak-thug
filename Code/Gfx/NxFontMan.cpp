@@ -47,7 +47,7 @@ void CFontManager::sLoadFont(const char *pName, int charSpacing, int spaceSpacin
 
 	if (!s_meta_button_map_initialized)
 	{
-		#ifdef __PLAT_XBOX__
+		#if defined(__PLAT_XBOX__) || defined(__PLAT_WN32__) // lwss: PC version uses this as well.
 		Script::CArray *p_array = Script::GetArray("meta_button_map_xbox", Script::ASSERT);
 		#else
 		#ifdef __PLAT_NGC__

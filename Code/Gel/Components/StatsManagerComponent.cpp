@@ -126,7 +126,7 @@ void CStatsManagerComponent::InitFromStructure( Script::CStruct* pParams )
     m_restarted_this_frame = true;
 
     // Set p_skater
-    uint32 target_id = Obj::CBaseComponent::GetObject()->GetID();
+    uint32 target_id = Obj::CBaseComponent::GetObj()->GetID();
     Dbg_MsgAssert(target_id >=0 && target_id <= 15,("Bad StatsManagerTarget 0x%x in SkaterStatsManagerComponent",target_id));
     
 	CSkater* p_skater = static_cast<CSkater*>(CCompositeObjectManager::Instance()->GetObjectByID(target_id)); 
@@ -248,7 +248,7 @@ void CStatsManagerComponent::InitFromStructure( Script::CStruct* pParams )
 	// and BEFORE the CCompositeObject::Update function is called
 	
 	// Example:
-	// mp_suspend_component =  GetSuspendComponentFromObject( GetObject() );
+	// mp_suspend_component =  GetSuspendComponentFromObject( GetObj() );
     
 }*/
 
@@ -356,7 +356,7 @@ void CStatsManagerComponent::Update()
                 // vert take off
                 vert_set = 1;
                 vert_height = 0;
-                vert_start_pos = GetObject()->GetPos();
+                vert_start_pos = GetObj()->GetPos();
                 vert_start_base = current_base;
                 vert_start_mult = current_mult;
                 printf("vert_start_score = %i\n", current_score );
@@ -365,7 +365,7 @@ void CStatsManagerComponent::Update()
             else
             {
                 // vert in air
-                Mth::Vector new_pos = GetObject()->GetPos();
+                Mth::Vector new_pos = GetObj()->GetPos();
                 if ( ( new_pos[1] - vert_start_pos[1] ) > vert_height )
                 {
                     vert_height = ( new_pos[1] - vert_start_pos[1] );
@@ -389,7 +389,7 @@ void CStatsManagerComponent::Update()
 
                 if ( vert_set == 1 )
                 {
-                    vert_end_pos = GetObject()->GetPos();
+                    vert_end_pos = GetObj()->GetPos();
                     air_combo_score = ((current_base - vert_start_base) * (current_mult - vert_start_mult));
                     air_combo_mult = (current_mult - vert_start_mult);
                     vert_set = 2;
@@ -426,7 +426,7 @@ void CStatsManagerComponent::Update()
                 if ( !mpSkaterStateComponent->GetFlag(IS_BAILING) )
                 {
                     jump_set = 1;
-                    jump_start_pos = GetObject()->GetPos();
+                    jump_start_pos = GetObj()->GetPos();
                 }
             }
         }
@@ -436,7 +436,7 @@ void CStatsManagerComponent::Update()
             {
                 if ( jump_set == 1 )
                 {
-                    jump_end_pos = GetObject()->GetPos();
+                    jump_end_pos = GetObj()->GetPos();
                     jump_set = 2;
                 }
             }

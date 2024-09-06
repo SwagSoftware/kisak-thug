@@ -75,7 +75,7 @@ void CModelLightUpdateComponent::InitFromStructure( Script::CStruct* pParams )
 
 void CModelLightUpdateComponent::Finalize()
 {
-	mp_model_component =  GetModelComponentFromObject( GetObject() );
+	mp_model_component =  GetModelComponentFromObject( GetObj() );
 }
 
 /******************************************************************/
@@ -100,11 +100,11 @@ void CModelLightUpdateComponent::Update()
 
 	CFeeler feeler;
 	
-	feeler.m_start = GetObject()->m_pos;
-	feeler.m_end = GetObject()->m_pos;
+	feeler.m_start = GetObj()->m_pos;
+	feeler.m_end = GetObj()->m_pos;
 
 	// Very minor adjustment to move origin away from vert walls
-	feeler.m_start += GetObject()->m_matrix[Y] * 0.001f;
+	feeler.m_start += GetObj()->m_matrix[Y] * 0.001f;
 	
 	feeler.m_start[Y] += 8.0f;
 	feeler.m_end[Y] -= FEET(400);

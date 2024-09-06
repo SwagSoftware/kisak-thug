@@ -834,22 +834,22 @@ void PreMgr::loadPre(const char *pFilename, bool async, bool dont_assert, bool u
 
 	// Moved this to below the Pcm::UsingCD() call as that is used (bad!!) to turn off
 	// music and streams.
-#	ifdef __PLAT_NGPS__
+#ifdef __PLAT_NGPS__
 //	scePrintf("Loading PRE file %s...\n", pFilename);
-#	endif
+#endif
 
 	char fullname[256];
 	sprintf(fullname, "pre\\%s", pFilename);
 
-#	ifdef __PLAT_XBOX__
+#ifdef __PLAT_XBOX__
 	// Replace the .pre extension (if one exists) with .prx for Xbox PRE file.
 	if( strrchr( pFilename, '.' ) && ( strlen( fullname ) > 4 ))
 	{
 		fullname[strlen( fullname ) - 1] = 'x';
 	}
-#	endif
+#endif
 
-#	if !defined( __PLAT_NGC__ ) || ( defined( __PLAT_NGC__ ) && !defined( __NOPT_FINAL__ ) )
+#if !defined( __PLAT_NGC__ ) || ( defined( __PLAT_NGC__ ) && !defined( __NOPT_FINAL__ ) )
 	Tmr::Time basetime = Tmr::ElapsedTime(0);
 #endif
 
@@ -916,6 +916,7 @@ void PreMgr::loadPre(const char *pFilename, bool async, bool dont_assert, bool u
 	}
 	else
 	{
+			// lwss: Note: some files (ex: mainmenusprites.pre) fail here normally.
 			void *fp = File::Open(fullname, "rb");
 			if (!fp)
 			{
@@ -1010,6 +1011,7 @@ void PreMgr::loadPre(const char *pFilename, bool async, bool dont_assert, bool u
 	}
 	else
 	{
+		Mem::Heap* fuckurself = Mem::Manager::sHandle().TopDownHeap();
 		if (!mp_table->PutItem(pFilename, new (Mem::Manager::sHandle().TopDownHeap()) PreFile(pFile)))
 			Dbg_MsgAssert(0,( "PRE %s loaded twice", pFilename));
 	}		

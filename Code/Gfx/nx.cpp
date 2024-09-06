@@ -105,7 +105,7 @@ CSector	*		CEngine::sGetSector(uint32 sector_checksum)
 /******************************************************************/
 
 void			CEngine::sStartEngine()
-{		
+{
 	for (int i = 0; i < MAX_LOADED_SCENES; i++)
 	{
 		Dbg_Assert(!sp_loaded_scenes[i]);	// Make sure it was deallocated
@@ -190,12 +190,18 @@ void			CEngine::sRenderWorld()
 {
 	process_particles( Tmr::FrameLength() ); 
 
-	ScreenFlashUpdate();
+	//ScreenFlashUpdate(); // lwss remove
 	TextureSplatUpdate();
 	ShatterUpdate();
 	
-	CLightManager::sUpdateVCLights();
+	//CLightManager::sUpdateVCLights(); // lwss remove
 	
+	mp_particle_manager->UpdateParticles(); // lwss add
+	mp_weather->Process( Tmr::FrameLength() ); // lwss add
+	CEngine::sGetImposterManager()->ProcessImposters(); // lwss add
+
+	CLightManager::sUpdateVCLights(); // LWSS Add for PC
+
 	s_plat_render_world();
 }
 

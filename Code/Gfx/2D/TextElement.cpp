@@ -1220,8 +1220,8 @@ void CTextBlockElement::read_in_text_line(const char *pText)
 			// printf("line %d: %s\n", m_out_line, mpp_parsed_lines[m_out_line]);
 			
 			// if last character on line is a space, do away with it
-			if ( mpp_parsed_lines[m_out_line][m_out_char-1] == ' ' )
-				mpp_parsed_lines[m_out_line][m_out_char-1] = '\0';
+			if ( mpp_parsed_lines[m_out_line][max(m_out_char-1, 0)] == ' ' )
+				mpp_parsed_lines[m_out_line][max(m_out_char-1, 0)] = '\0';
 			
 			// Wrap to next	line.
 			// Once we fill all visible lines, we start recycling the buffer,

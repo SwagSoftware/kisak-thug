@@ -4221,9 +4221,9 @@ bool CCutsceneData::Load( const char* p_fileName, bool assertOnFail, bool async_
 	}
 #endif		// __NOPT_ASSERT__ 
 #endif		// DVDETH
-#	elif defined( __PLAT_XBOX__ )
+#	elif defined( __PLAT_XBOX__ ) || defined( __PLAT_WN32__ ) // lwss add
 	// Reserve more for Xbox since audio streams will be allocated from bottom up heap.
-	mem_available -= 512 * 1024;
+	//mem_available -= 512 * 1024;
 #	else
 	mem_available -= 200 * 1024;
 #	endif		// __PLAT_NGC__
@@ -4238,7 +4238,7 @@ bool CCutsceneData::Load( const char* p_fileName, bool assertOnFail, bool async_
 		}
 #endif
 
-	Mem::Manager::sHandle().InitCutsceneHeap( mem_available );
+	Mem::Manager::sHandle().InitCutsceneHeap(512 * 1024);
 	Mem::Manager::sHandle().PopContext(); 
 	//-------------------------------------------------------------
 #	if defined( __PLAT_NGC__ )
@@ -5370,7 +5370,7 @@ void CCutsceneDetails::hide_moving_objects()
 	{
 		Obj::CModelComponent* pModelComponent = ((Obj::CModelComponent*)p_component);
 		Nx::CModel* pModel = pModelComponent->GetModel();
-		if ( p_component->GetObject()->GetID() == 0 )
+		if ( p_component->GetObj()->GetID() == 0 )
 		{
 			// skip the skater...
 		}
@@ -5395,7 +5395,7 @@ void CCutsceneDetails::hide_moving_objects()
 	{
 		Obj::CModelComponent* pModelComponent = ((Obj::CModelComponent*)p_component);
 		Nx::CModel* pModel = pModelComponent->GetModel();
-		if ( p_component->GetObject()->GetID() == 0 )
+		if ( p_component->GetObj()->GetID() == 0 )
 		{
 			// skip the skater...
 		}
@@ -5405,8 +5405,8 @@ void CCutsceneDetails::hide_moving_objects()
 			// number we need a few moments ago...
 			Dbg_MsgAssert( m_numHiddenObjects < numObjects, ( "Too many objects in scene to hide?" ) );
 
-//			printf( "Found model to hide (%s)\n", Script::FindChecksumName(p_component->GetObject()->GetID()) );
-			mp_hiddenObjects[m_numHiddenObjects] = p_component->GetObject()->GetID();
+//			printf( "Found model to hide (%s)\n", Script::FindChecksumName(p_component->GetObj()->GetID()) );
+			mp_hiddenObjects[m_numHiddenObjects] = p_component->GetObj()->GetID();
 			pModel->Hide( true );
 			m_numHiddenObjects++;
 		}

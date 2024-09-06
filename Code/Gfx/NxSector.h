@@ -176,7 +176,7 @@ protected:
 	Mth::ERot90				m_rot_y;		// since rotation already applied below p-line, we keep the value above
 	Mth::Vector				m_scale;		// since scale already applied below p-line, we keep the value above
 
-	CGeom *					mp_geom;		// The geometry of the sector
+	CGeom *					mp_geom;	// 0x24	// The geometry of the sector
 	CCollStatic *			mp_coll_sector;	// Collision object for the sector
 
 private:

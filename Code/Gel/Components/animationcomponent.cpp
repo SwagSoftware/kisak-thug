@@ -121,9 +121,9 @@ void CAnimationComponent::Reset()
 	if (m_animation_script_block_active)
 	{
 		m_animation_script_block_active = false;
-		if (GetObject()->GetScript())
+		if (GetObj()->GetScript())
 		{
-			GetObject()->GetScript()->UnBlock();
+			GetObj()->GetScript()->UnBlock();
 		}
 	}
 	m_animation_script_unblock_point = 0;
@@ -182,7 +182,7 @@ void CAnimationComponent::InitFromStructure( Script::CStruct* pParams )
 
 	// if it's the local skater, then give it some procedural animation as well
 	// (the decision to do this should really be coming from a higher-level...)
- 	if ( GetObject()->GetID() == 0 )
+ 	if ( GetObj()->GetID() == 0 )
 	{
 		Dbg_MsgAssert( mp_proceduralBones == NULL, ( "Already has procedural bones!" ) );
 		mp_proceduralBones = new Gfx::CProceduralBone[vMAXPROCEDURALBONES];
@@ -209,7 +209,7 @@ void CAnimationComponent::ToggleFlipState( void )
 	// Flip the animation to the correct orientation
 	GameNet::Manager* gamenet_man = GameNet::Manager::Instance();
 	Net::Client* client = gamenet_man->GetClient( 0 );
-	this->FlipAnimation( GetObject()->GetID(), !IsFlipped(), client->m_Timestamp, true );
+	this->FlipAnimation( GetObj()->GetID(), !IsFlipped(), client->m_Timestamp, true );
 }
 
 /******************************************************************/
@@ -281,7 +281,7 @@ CBaseComponent::EMemberFunctionResult CAnimationComponent::CallMemberFunction( u
 				// time it gets to the animation component, then it's ignored
 				// (this works for the case of the skater balance trick, because
 				// it comes early in the component list)
-				GetObject()->CallMemberFunction( CRCD(0xea6d0efd,"SetWobbleDetails"), pParams, pScript );
+				GetObj()->CallMemberFunction( CRCD(0xea6d0efd,"SetWobbleDetails"), pParams, pScript );
 			}
 		}
 		break;
@@ -466,19 +466,19 @@ CBaseComponent::EMemberFunctionResult CAnimationComponent::CallMemberFunction( u
 			
 //			Dbg_MsgAssert( m_animation_script_unblock_point>=Start && m_animation_script_unblock_point<=End, ( "WaitAnim time %f out of range of anim (%f %f) in %s", m_animation_script_unblock_point, Start, End, pScript->GetScriptInfo() ) );
 
-			if ( !GetObject()->GetScript() )
+			if ( !GetObj()->GetScript() )
 			{
-				GetObject()->SetScript(new Script::CScript);
+				GetObj()->SetScript(new Script::CScript);
 			}
 
 			if ((Start<=End && Current>=m_animation_script_unblock_point) || (Start>=End && Current<=m_animation_script_unblock_point))
 			{
-				GetObject()->GetScript()->UnBlock();
+				GetObj()->GetScript()->UnBlock();
 				m_animation_script_block_active=false;
 			}	
 			else
 			{
-				GetObject()->GetScript()->Block();
+				GetObj()->GetScript()->Block();
 				m_animation_script_block_active=true;
 			}	
 			
@@ -736,7 +736,7 @@ void CAnimationComponent::create_new_blend_channel( float blend_period )
 	}
 	
 	// now add a new channel to the front of the list
-	Gfx::CBlendChannel* pPrimaryChannel = new Gfx::CBlendChannel( GetObject() );
+	Gfx::CBlendChannel* pPrimaryChannel = new Gfx::CBlendChannel( GetObj() );
 	m_blendChannelList.AddToHead( pPrimaryChannel );
 	Dbg_MsgAssert( !s_updating_channels, ( "Someone is trying to add an animation channel while in channel update loop" ) );
 }
@@ -816,7 +816,7 @@ float CAnimationComponent::AnimDuration( uint32 checksum )
     Dbg_MsgAssert( p_anim, ( "Trying to get duration on an animation that doesn't exist %s %s %s", 
 							 Script::FindChecksumName(m_animScriptName), 
 							 Script::FindChecksumName(checksum),
-							 Script::FindChecksumName(GetObject()->GetID()) ) );
+							 Script::FindChecksumName(GetObj()->GetID()) ) );
 
 	return ( p_anim->GetDuration() );
 }
@@ -890,15 +890,15 @@ void CAnimationComponent::Update()
 	
 	if (m_animation_script_block_active)
 	{
-		if ( !GetObject()->GetScript() )
+		if ( !GetObj()->GetScript() )
 		{
-			GetObject()->SetScript( new Script::CScript );
+			GetObj()->SetScript( new Script::CScript );
 		}
 		
 		// The script should be blocked at this point, if it isn't that must
 		// be because the script just got reloaded. So clear the m_animation_script_block_active
 		// flag so that it doesn't get stuck on forever.
-		if ( !GetObject()->GetScript()->getBlocked() )
+		if ( !GetObj()->GetScript()->getBlocked() )
 		{
 			m_animation_script_block_active = false;
 		}	
@@ -909,7 +909,7 @@ void CAnimationComponent::Update()
 			
 			if ( ( start <= end && current >= m_animation_script_unblock_point ) || ( start >= end && current <= m_animation_script_unblock_point ) )
 			{
-				GetObject()->GetScript()->UnBlock();
+				GetObj()->GetScript()->UnBlock();
 				m_animation_script_block_active = false;
 			}	
 		}	
@@ -1091,7 +1091,7 @@ void CAnimationComponent::PlayPrimarySequence( uint32 animName, bool propagate, 
 		GameNet::Manager * gamenet_man = GameNet::Manager::Instance();
 		GameNet::PlayerInfo* player;
 		
-		player = gamenet_man->GetPlayerByObjectID( GetObject()->GetID() );
+		player = gamenet_man->GetPlayerByObjectID( GetObj()->GetID() );
 		if ( player && player->IsLocalPlayer())
 		{
 			GameNet::MsgPlayPrimaryAnim	anim_msg;
@@ -1106,7 +1106,7 @@ void CAnimationComponent::PlayPrimarySequence( uint32 animName, bool propagate, 
 
 			//anim_msg.m_Time = client->m_Timestamp;
             anim_msg.m_Index = animName;
-			anim_msg.m_ObjId = GetObject()->GetID();
+			anim_msg.m_ObjId = GetObj()->GetID();
 			anim_msg.m_LoopingType = loop_type;
 			anim_msg.m_StartTime = (unsigned short )( start_time * 4096.0f );
 			anim_msg.m_EndTime = ((unsigned short )( end_time * 4096.0f ));
@@ -1173,7 +1173,7 @@ void CAnimationComponent::PlayPrimarySequence( uint32 animName, bool propagate, 
 
 void CAnimationComponent::delete_anim_tags()
 {
-	Script::CStruct* pTags = GetObject()->GetTags();
+	Script::CStruct* pTags = GetObj()->GetTags();
 	if ( pTags )
 	{
 		pTags->RemoveComponent( CRCD(0x5db4115f,"AnimTags") );
@@ -1200,7 +1200,7 @@ void CAnimationComponent::add_anim_tags( uint32 animName )
 			pTags->AppendStructure( pSubStruct );
 			pTempStruct->AddStructurePointer(CRCD(0x5db4115f,"AnimTags"), pTags);
 
-			GetObject()->SetTagsFromScript( pTempStruct );
+			GetObj()->SetTagsFromScript( pTempStruct );
 
 			delete pTempStruct;
 		}
@@ -1220,7 +1220,7 @@ void CAnimationComponent::SetWobbleTarget( float alpha, bool propagate )
 		GameNet::PlayerInfo* player;
 		static unsigned char s_last_alpha = 255;
 		
-		player = gamenet_man->GetPlayerByObjectID( GetObject()->GetID() );
+		player = gamenet_man->GetPlayerByObjectID( GetObj()->GetID() );
 		if ( player && player->IsLocalPlayer())
 		{
 			Net::Client* client;
@@ -1240,7 +1240,7 @@ void CAnimationComponent::SetWobbleTarget( float alpha, bool propagate )
 			
 			//msg.m_Time = client->m_Timestamp;
 			msg.m_Alpha = (unsigned char ) ( alpha * 255.0f );
-			msg.m_ObjId = GetObject()->GetID();
+			msg.m_ObjId = GetObj()->GetID();
 			
 			if( s_last_alpha != msg.m_Alpha )
 			{
@@ -1378,7 +1378,7 @@ void CAnimationComponent::SetWobbleDetails( const Gfx::SWobbleDetails& wobble_de
 		GameNet::Manager * gamenet_man = GameNet::Manager::Instance();
 		GameNet::PlayerInfo* player;
 
-		player = gamenet_man->GetPlayerByObjectID( GetObject()->GetID() );
+		player = gamenet_man->GetPlayerByObjectID( GetObj()->GetID() );
 		if ( player && player->IsLocalPlayer())
 		{
 			Net::Client* client;
@@ -1402,7 +1402,7 @@ void CAnimationComponent::SetWobbleDetails( const Gfx::SWobbleDetails& wobble_de
 			msg.m_WobbleDetails |= ( mask << 4 );
 			mask = s_get_wobble_mask( GameNet::MsgSetWobbleDetails::vSPAZFACTOR, wobble_details.spazFactor );
 			msg.m_WobbleDetails |= ( mask << 5 );
-			msg.m_ObjId = GetObject()->GetID();
+			msg.m_ObjId = GetObj()->GetID();
 
 			// Only propagate if it's actually different from our last wobble details message
 			if( s_last_mask != msg.m_WobbleDetails )
@@ -1450,7 +1450,7 @@ void CAnimationComponent::SetLoopingType( Gfx::EAnimLoopingType looping_type, bo
 		GameNet::PlayerInfo* player;
 		static char s_last_type = -1;
 		
-		player = gamenet_man->GetPlayerByObjectID( GetObject()->GetID() );
+		player = gamenet_man->GetPlayerByObjectID( GetObj()->GetID() );
 		if ( player && player->IsLocalPlayer())
 		{
 			Net::Client* client;
@@ -1461,7 +1461,7 @@ void CAnimationComponent::SetLoopingType( Gfx::EAnimLoopingType looping_type, bo
 
 			//msg.m_Time = client->m_Timestamp;
 			msg.m_LoopingType = looping_type;
-			msg.m_ObjId = GetObject()->GetID();
+			msg.m_ObjId = GetObj()->GetID();
 			if( s_last_type != looping_type )
 			{
 				Net::MsgDesc msg_desc;
@@ -1526,7 +1526,7 @@ void CAnimationComponent::SetAnimSpeed( float speed, bool propagate, bool all_ch
 		GameNet::MsgSetAnimSpeed msg;
 		GameNet::PlayerInfo* player;
 
-		player = gamenet_man->GetPlayerByObjectID( GetObject()->GetID() );
+		player = gamenet_man->GetPlayerByObjectID( GetObj()->GetID() );
 		if ( player && player->IsLocalPlayer())
 		{
 			client = gamenet_man->GetClient( player->GetSkaterNumber() );
@@ -1536,7 +1536,7 @@ void CAnimationComponent::SetAnimSpeed( float speed, bool propagate, bool all_ch
 
 				//msg.m_Time = client->m_Timestamp;
 				msg.m_AnimSpeed = speed;
-				msg.m_ObjId = GetObject()->GetID();
+				msg.m_ObjId = GetObj()->GetID();
 
 				msg_desc.m_Data = &msg;
 				msg_desc.m_Length = sizeof( GameNet::MsgSetAnimSpeed );
@@ -1560,7 +1560,7 @@ void CAnimationComponent::SetAnimSpeed( float speed, bool propagate, bool all_ch
 		get_primary_channel()->SetAnimSpeed( speed );
 	}
 	
-	if (DebugSkaterScripts && GetObject()->GetID() == 0)
+	if (DebugSkaterScripts && GetObj()->GetID() == 0)
 	{
 		printf("%d: Setting Anim Speed: %f\n",(int)Tmr::GetRenderFrame(),speed);
 	}
@@ -1637,7 +1637,7 @@ uint32 CAnimationComponent::PlayAnim(Script::CStruct *pParams, Script::CScript *
 	if ( !AnimChecksum )
 	{
 		Script::PrintContents(pParams);
-		Dbg_MsgAssert(0,("\n%s\nobj: %s\nPlayAnim requires an anim name",Script::FindChecksumName(GetObject()->GetID()),pScript->GetScriptInfo()));
+		Dbg_MsgAssert(0,("\n%s\nobj: %s\nPlayAnim requires an anim name",Script::FindChecksumName(GetObj()->GetID()),pScript->GetScriptInfo()));
 	}
 	
 	float Speed=1.0f;
@@ -1669,14 +1669,14 @@ uint32 CAnimationComponent::PlayAnim(Script::CStruct *pParams, Script::CScript *
 			Dbg_MsgAssert( 0, ( "*** Anim %s (%s) was not defined for object %s!",
 							Script::FindChecksumName(AnimChecksum),
 							Script::FindChecksumName(m_animScriptName),
-							Script::FindChecksumName(GetObject()->GetID() ) ) );
+							Script::FindChecksumName(GetObj()->GetID() ) ) );
 		}
 		else if ( Script::GetInt( CRCD(0xf42cb81a,"WarnOnMissingAnims"), Script::NO_ASSERT ) )
 		{
 			Dbg_Message( "*** Anim %s (%s) was not defined for object %s!",
 						 Script::FindChecksumName(AnimChecksum),
 						 Script::FindChecksumName(m_animScriptName),
-						 Script::FindChecksumName(GetObject()->GetID() ) );
+						 Script::FindChecksumName(GetObj()->GetID() ) );
 		}
 #endif
 
@@ -1752,13 +1752,13 @@ uint32 CAnimationComponent::PlayAnim(Script::CStruct *pParams, Script::CScript *
 #ifdef __NOPT_ASSERT__
 	if ( Script::GetInt( CRCD(0xca108bce,"DebugAnims"), false ) )
 	{
-		if ( GetObject()->GetID() == 0 )
+		if ( GetObj()->GetID() == 0 )
 		{
 			printf( "DebugAnims:  Playing skater anim %s\n", Script::FindChecksumName(AnimChecksum) );
 		}
 	}
 	
-	if (DebugSkaterScripts && AnimChecksum && GetObject()->GetID() == 0)
+	if (DebugSkaterScripts && AnimChecksum && GetObj()->GetID() == 0)
 	{
 		printf("%d: Playing anim '%s'\n",(int)Tmr::GetRenderFrame(),Script::FindChecksumName(AnimChecksum));
 	}
@@ -1772,7 +1772,7 @@ uint32 CAnimationComponent::PlayAnim(Script::CStruct *pParams, Script::CScript *
 	}
 	
 	/*
-	if ( GetObject()->GetID() == 0 )
+	if ( GetObj()->GetID() == 0 )
 	{
 		printf("-standard-anim-\n");
 		printf("Anim = %s\n", Script::FindChecksumName(AnimChecksum));
@@ -1822,12 +1822,12 @@ uint32 CAnimationComponent::PlayAnim(Script::CStruct *pParams, Script::CScript *
 		delete pPartialAnimParams;
 		
 		#ifdef __NOPT_ASSERT__
-		if ( GetObject()->GetID() == 0 && Script::GetInt( CRCD(0xca108bce,"DebugAnims"), false ) )
+		if ( GetObj()->GetID() == 0 && Script::GetInt( CRCD(0xca108bce,"DebugAnims"), false ) )
 		{
 			printf( "DebugAnims:  Playing skater partial anim overlay %s\n", Script::FindChecksumName(PartialAnim) );
 		}
 		
-		if (DebugSkaterScripts && PartialAnim && GetObject()->GetID() == 0)
+		if (DebugSkaterScripts && PartialAnim && GetObj()->GetID() == 0)
 		{
 			printf("%d: Playing partial anim overlay '%s'\n",(int)Tmr::GetRenderFrame(),Script::FindChecksumName(PartialAnim));
 		}
@@ -1984,7 +1984,7 @@ void CAnimationComponent::get_blend_channel( int blendChannel, Gfx::CPose* pResu
 		// if it's the primary animation, assert
 		if ( blendChannel == 0 )
 		{
-			Dbg_MsgAssert( 0, ( "No primary animation found!  Is %08x/%s playing a default animation?", GetObject()->GetID(), Script::FindChecksumName(m_animScriptName) ) );
+			Dbg_MsgAssert( 0, ( "No primary animation found!  Is %08x/%s playing a default animation?", GetObj()->GetID(), Script::FindChecksumName(m_animScriptName) ) );
 		}
 	}
 	
@@ -2343,9 +2343,9 @@ bool CAnimationComponent::IsFlipped()
 
 void CAnimationComponent::Finalize()
 {
-	mp_skeleton_component = GetSkeletonComponentFromObject( GetObject() );
-	mp_suspend_component = GetSuspendComponentFromObject( GetObject() );
-	mp_model_component = GetModelComponentFromObject( GetObject() );
+	mp_skeleton_component = GetSkeletonComponentFromObject( GetObj() );
+	mp_suspend_component = GetSuspendComponentFromObject( GetObj() );
+	mp_model_component = GetModelComponentFromObject( GetObj() );
 }
 
 /******************************************************************/

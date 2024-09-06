@@ -33,6 +33,8 @@
 
 #ifndef __PLAT_WN32__
     #include <sys/profiler.h>
+#else
+	#include <Core/Defines_IDA.h>
 #endif
 
 #include <gel/scripting/symboltable.h>
@@ -53,6 +55,22 @@
 *****************************************************************************/
 
 Dbg_DefineProject( GEL, "GEL Library" )
+
+// lwss add
+#ifdef __PLAT_WN32__
+void Win32_ApplyInputs();
+void Win32_ProcessMsgPump();
+void Win32_GameNetUpdate();
+
+void D3D_ResetTextures();
+void D3D_ResetBuffers();
+void D3D_ReleaseRenderSurfaces();
+
+void D3D_ReCreateTextures();
+void D3D_ReCreateBuffers();
+void D3D_RecreateRenderSurfaces();
+#endif
+// lwss end
 
 namespace Mdl
 {
@@ -239,14 +257,127 @@ inline	void		Manager::render_frame( void )
 
 void		Manager::MainLoop( void )
 {
-	
-
-	bool								old_flag = done;	// push the current done flag
+	bool old_flag = done;	// push the current done flag
 
 	done = false;
 
-	while ( !done )
+// lwss add
+#ifdef __PLAT_WN32__
+	void* timeout;
+	SystemParametersInfoA(SPI_GETSCREENSAVETIMEOUT, 0, &timeout, 0);
+	LARGE_INTEGER frequency;
+	QueryPerformanceFrequency(&frequency);
+
+	int v3 = (frequency.QuadPart / 60) >> 32;
+	DWORD v4 = (frequency.QuadPart / 60);
+
+	LARGE_INTEGER perf;
+	QueryPerformanceCounter(&perf);
+
+	int v12 = 0;
+	while (true)
 	{
+		// g_debugMeshSubmitCounter = 0; // optional
+
+		if (timeout)
+		{
+			if (v12++ >= 200)
+			{
+				v12 = 0;
+				SystemParametersInfoA(SPI_SETSCREENSAVETIMEOUT, (UINT)timeout, 0, 0); // KISAKTODO: check logic here...
+			}
+		}
+		NxXbox::g_disableRendering = false;
+		Win32_ApplyInputs();
+		Win32_ProcessMsgPump();
+		Win32_GameNetUpdate();
+
+		if (g_isWindowInFocus)
+		{
+			break;
+		}
+
+		if (g_hasJustEnteredNetworkGame)
+		{
+			NxXbox::g_disableRendering = true;
+			break;
+		}
+
+		do
+		{
+			Sleep(100u);
+			Win32_ProcessMsgPump();
+		} while (!g_isWindowInFocus);
+
+		if (done)
+		{
+			done = old_flag;
+			return;
+		}
+	}
+
+#endif
+
+	//while ( !done )
+	while ( !gbQuit )
+	{
+		//if (g_windowJustWentOutOfFocus)
+		//{
+		//	if (D3DDevice_TestCooperativeLevel() != D3DERR_DEVICELOST)
+		//	{
+		//		D3D_ResetTextures();
+		//		D3D_ResetBuffers();
+		//		D3D_ReleaseRenderSurfaces();
+		//		if (D3DDevice_Reset(&NxXbox::EngineGlobals.params) >= 0)
+		//		{
+		//			D3D_ReCreateTextures();
+		//			D3D_ReCreateBuffers();
+		//			D3D_RecreateRenderSurfaces();
+		//			g_windowJustWentOutOfFocus = false;
+		//		}
+		//	}
+		//	//NxXbox::g_disableRendering = true;
+		//}
+
+		static int s_mainLoopCounter = 0;
+
+		LARGE_INTEGER perfcount;
+		QueryPerformanceCounter(&perfcount);
+		LONG itr;
+		for (itr = perfcount.HighPart; perfcount.QuadPart < __PAIR64__(v3, v4) + perf.QuadPart; itr = perfcount.HighPart)
+		{
+			Sleep(0);
+			QueryPerformanceCounter(&perfcount);
+		}
+		DWORD v8 = (__PAIR64__(itr, perfcount.LowPart) - perf.QuadPart) >> 32;
+		DWORD v7 = perfcount.LowPart - perf.LowPart;
+		if (__PAIR64__(itr, perfcount.LowPart) - perf.QuadPart > 20 * __PAIR64__(v3, v4))
+		{
+			perf.QuadPart = __PAIR64__(itr, perfcount.LowPart) - __PAIR64__(v3, v4);
+			v7 = v4;
+			v8 = v3;
+		}
+		if (s_mainLoopCounter >= 4 && g_isWindowInFocus)
+		{
+			s_mainLoopCounter = 0;
+		}
+		else
+		{
+			if (__PAIR64__(v8, v7) < __PAIR64__(v3, v4) + (__PAIR64__(v3, v4) >> 1) && g_isWindowInFocus)
+			{
+				s_mainLoopCounter = 0;
+			}
+			else
+			{
+				//++dword_69B6F0;
+				++s_mainLoopCounter;
+				//NxXbox::g_disableRendering = true;
+			}
+		}
+		perf.QuadPart += __PAIR64__(v3, v4);
+
+		Tmr::Vblank();
+		Tmr::PreUpdateTimerInfo();
 	
 		if (trigger_profiling)
 		{
@@ -256,7 +387,7 @@ void		Manager::MainLoop( void )
 		}
 		
 
-#ifndef __PLAT_WN32__
+//#ifndef __PLAT_WN32__
 
 #ifdef	__PLAT_NGPS__		
 // for profiling on the PS2, we do a bit of the code from sPreRender here
@@ -296,21 +427,22 @@ void		Manager::MainLoop( void )
 #	endif		
 #endif		
 		
-		Nx::CEngine::sPreRender();			 			// start rendering previous frame's DMA list
+		if (!NxXbox::g_disableRendering)
+			Nx::CEngine::sPreRender();			 			// start rendering previous frame's DMA list
 
 #ifdef	__PLAT_NGPS__		
 		Sfx::CSpuManager::sUpdateStatus();				// Garrett: This should go into some system task, but I'll put it here for now
 #endif
 
 //		Sys::Profiler::sStartFrame();		  		
-#endif
+//#endif
 
 #ifdef	__PLAT_NGC__		
 #	ifdef __USE_PROFILER__
 		Sys::Profiler::sStartFrame();		  		
 #	endif		
 #	endif		
-					 
+		
 		service_system();
 
 #if	defined(__PLAT_NGPS__) && defined(BATCH_TRI_COLLISION)
@@ -339,9 +471,9 @@ void		Manager::MainLoop( void )
 		}
 #endif
 
-#ifndef __PLAT_WN32__
+//#ifndef __PLAT_WN32__
 		// Display the memory contents, (if memview is active)
-		MemView_Display();
+		//MemView_Display();
 #	ifdef __USE_PROFILER__
 		Sys::CPUProfiler->PushContext( 255, 255, 0 );  // yellow = render world
 #	endif		
@@ -358,11 +490,12 @@ void		Manager::MainLoop( void )
 #endif
 #endif
 		// Mick: bit of a patch here, we need some better debug hooks
-		Mdl::Rail_DebugRender();
+		//Mdl::Rail_DebugRender();
 #	ifdef __USE_PROFILER__
 			Sys::CPUProfiler->PushContext( 0, 0, 0 );	 	// Black (Under Yellow) = sPostRender
 #	endif // __USE_PROFILER__
-		Nx::CEngine::sPostRender();		  // Previous frames profiler is rendered here
+		if (!NxXbox::g_disableRendering)
+			Nx::CEngine::sPostRender();		  // Previous frames profiler is rendered here
 #	ifdef __USE_PROFILER__
 		Sys::CPUProfiler->PopContext(  );
 #	endif		
@@ -377,7 +510,7 @@ void		Manager::MainLoop( void )
  #ifdef	__PLAT_NGPS__		
 //		snProfSetRange( 4, (void*)NULL, (void*)-1);
  #endif		
-#endif		
+//#endif		
 		
 		currently_profiling = false;
 

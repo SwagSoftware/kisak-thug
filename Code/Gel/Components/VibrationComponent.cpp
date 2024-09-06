@@ -139,7 +139,7 @@ CBaseComponent::EMemberFunctionResult CVibrationComponent::CallMemberFunction( u
 		{
 			// NOTE: ignoring pause state in VibrationComponent for now
 			// Don't let it be switched on if skater is paused
-			if (!pParams->ContainsFlag(CRCD(0xd443a2bc, "Off")) && (Mdl::FrontEnd::Instance()->GamePaused() || GetObject()->IsPaused())) break;
+			if (!pParams->ContainsFlag(CRCD(0xd443a2bc, "Off")) && (Mdl::FrontEnd::Instance()->GamePaused() || GetObj()->IsPaused())) break;
 		
 			Dbg_MsgAssert(mp_input_device, ("No associated input device"));
 			

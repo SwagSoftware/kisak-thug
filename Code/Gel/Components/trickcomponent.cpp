@@ -144,12 +144,12 @@ CTrickComponent::~CTrickComponent()
 
 void CTrickComponent::Finalize()
 {
-	mp_input_component = GetInputComponentFromObject(GetObject());
-	mp_skater_balance_trick_component = GetSkaterBalanceTrickComponentFromObject(GetObject());
-	mp_skater_core_physics_component = GetSkaterCorePhysicsComponentFromObject(GetObject());
-	mp_skater_flip_and_rotate_component = GetSkaterFlipAndRotateComponentFromObject(GetObject());
-	mp_skater_state_component = GetSkaterStateComponentFromObject(GetObject());
-    mp_stats_manager_component = GetStatsManagerComponentFromObject(GetObject());
+	mp_input_component = GetInputComponentFromObject(GetObj());
+	mp_skater_balance_trick_component = GetSkaterBalanceTrickComponentFromObject(GetObj());
+	mp_skater_core_physics_component = GetSkaterCorePhysicsComponentFromObject(GetObj());
+	mp_skater_flip_and_rotate_component = GetSkaterFlipAndRotateComponentFromObject(GetObj());
+	mp_skater_state_component = GetSkaterStateComponentFromObject(GetObj());
+    mp_stats_manager_component = GetStatsManagerComponentFromObject(GetObj());
             
 	Dbg_Assert(mp_input_component);
 	Dbg_Assert(mp_skater_balance_trick_component);
@@ -1932,7 +1932,7 @@ bool CTrickComponent::RunTrick(Script::CStruct *pTrick, uint32 optionalFlag, Scr
 		// Run the script.
 		mp_skater_flip_and_rotate_component->DoAnyFlipRotateOrBoardRotateAfters(); // <- See huge comment above definition of this function.
 		
-		CCompositeObject *p_object=GetObject();
+		CCompositeObject *p_object=GetObj();
 		Dbg_MsgAssert(p_object,("Trick component has NULL object ?"));
 		p_object->SwitchScript(ScriptChecksum,pScriptParams);
 
@@ -2015,8 +2015,8 @@ void CTrickComponent::TriggerNextQueuedTrick(uint32 scriptToRunFirst, Script::CS
 			// So if one was specified, run it.
 			if (scriptToRunFirst)
 			{
-				GetObject()->AllocateScriptIfNeeded();
-				GetObject()->GetScript()->Interrupt(scriptToRunFirst, p_scriptToRunFirstParams);
+				GetObj()->AllocateScriptIfNeeded();
+				GetObj()->GetScript()->Interrupt(scriptToRunFirst, p_scriptToRunFirstParams);
 			}
 				
 			// Get the trick array that the trick belongs to.
@@ -2055,7 +2055,7 @@ void CTrickComponent::TriggerNextQueuedTrick(uint32 scriptToRunFirst, Script::CS
 						
 						p_params->AppendStructure(pExtraParams);
 						
-						CCompositeObject *p_object=GetObject();
+						CCompositeObject *p_object=GetObj();
 						Dbg_MsgAssert(p_object,("Trick component has NULL object ?"));
 						p_object->SwitchScript(CRCD(0x2d90485d,"CreateATrick"),p_params);
 						delete p_params;
@@ -2191,8 +2191,8 @@ void CTrickComponent::TriggerAnyManualTrick(Script::CStruct *pExtraParams)
 		{
 			// we need to copy and restore the script parameters as they will be corrupted by the interrupt
 			Script::CStruct extraParamsCopy(*pExtraParams);
-			GetObject()->AllocateScriptIfNeeded();
-			GetObject()->GetScript()->Interrupt(scriptToRunFirst, pScriptToRunFirstParams);
+			GetObj()->AllocateScriptIfNeeded();
+			GetObj()->GetScript()->Interrupt(scriptToRunFirst, pScriptToRunFirstParams);
 			*pExtraParams = extraParamsCopy;
 		}
 		
@@ -2243,7 +2243,7 @@ void CTrickComponent::TriggerAnyManualTrick(Script::CStruct *pExtraParams)
 				Script::CStruct *pScriptParams=NULL;
 				pStruct->GetStructure(CRCD(0x7031f10c,"Params"),&pScriptParams);
 				
-				CCompositeObject *p_object=GetObject();
+				CCompositeObject *p_object=GetObj();
 				Dbg_MsgAssert(p_object,("Trick component has NULL object ?"));
 
 				if (pExtraParams)
@@ -2728,7 +2728,7 @@ bool CTrickComponent::TriggerAnyExtraGrindTrick(bool Right, bool Parallel, bool 
 			// Initialise mGrindTweak, which should get set by a SetGrindTweak command
 			// in the script that is about to be run.
 			// TODO: Is there a neater way of doing this?
-			CCompositeObject *p_object=GetObject();
+			CCompositeObject *p_object=GetObj();
 			if (p_object->GetType()==SKATE_TYPE_SKATER)
 			{
 				mp_skater_core_physics_component->ResetGrindTweak();
@@ -2885,7 +2885,11 @@ bool CTrickComponent::IsExcluded(Script::CStruct *pTrick, const char *pIgnoreNam
 			Dbg_MsgAssert(pIgnoreName,("NULL pIgnoreName"));
 			// Compare pName and pIgnoreName.
 			// If they match, return true so that the trick gets excluded.
+#ifdef __PLAT_WN32__ // lwss add
+			if (_stricmp(pName, pIgnoreName) == 0)
+#else
 			if (stricmp(pName,pIgnoreName)==0)
+#endif
 			{
 				return true;
 			}	
@@ -3028,7 +3032,7 @@ void CTrickComponent::HandleBashing()
 {
 	if (!mBashingEnabled) return;
 	
-	CAnimationComponent* p_animation_component = GetAnimationComponentFromObject(GetObject());
+	CAnimationComponent* p_animation_component = GetAnimationComponentFromObject(GetObj());
 	Dbg_Assert(p_animation_component);
 	p_animation_component->SetAnimSpeed(GetBashFactor(), true);
 }
@@ -3089,7 +3093,7 @@ float CTrickComponent::GetBashFactor()
 // but you can pass in anything you like.	
 void CTrickComponent::InitFromStructure( Script::CStruct* pParams )
 {
-	Dbg_MsgAssert(GetObject()->GetType() == SKATE_TYPE_SKATER, ("CTrickComponent added to non-skater composite object"));
+	Dbg_MsgAssert(GetObj()->GetType() == SKATE_TYPE_SKATER, ("CTrickComponent added to non-skater composite object"));
 }
 
 /******************************************************************/
@@ -3660,7 +3664,7 @@ CBaseComponent::EMemberFunctionResult CTrickComponent::CallMemberFunction( uint3
 						if (mpTrickName[0])
 						{
 							// tell any observers to do the chicken dance:
-							GetObject()->BroadcastEvent(CRCD(0x11d8bc9e, "SkaterTrickDisplayed"));
+							GetObj()->BroadcastEvent(CRCD(0x11d8bc9e, "SkaterTrickDisplayed"));
 							
 							if (mp_skater_core_physics_component->GetFlag(VERT_AIR) || mp_skater_core_physics_component->GetTrueLandedFromVert())
 							{
@@ -3753,8 +3757,8 @@ CBaseComponent::EMemberFunctionResult CTrickComponent::CallMemberFunction( uint3
 				if (pScore->GetScorePotValue() != 0)
 				{
 					Script::CStruct* p_params = new Script::CStruct;
-					p_params->AddChecksum(CRCD(0x5b24faaa, "SkaterId"), GetObject()->GetID());
-					GetObject()->BroadcastEvent(CRCD(0x4b3ce1fe, "SkaterExitCombo"), p_params);
+					p_params->AddChecksum(CRCD(0x5b24faaa, "SkaterId"), GetObj()->GetID());
+					GetObj()->BroadcastEvent(CRCD(0x4b3ce1fe, "SkaterExitCombo"), p_params);
 					delete p_params;
 				}
 
@@ -3765,7 +3769,7 @@ CBaseComponent::EMemberFunctionResult CTrickComponent::CallMemberFunction( uint3
 				// Possible alternative solution in case this causes problems: Modify the c-code of
 				// StartGap so that it detects if the gap is part of a created goal, and if so sets the
 				// tricktext according to the trick required by the goal. 
-				GetSkaterGapComponentFromObject(GetObject())->AwardPendingGaps();
+				GetSkaterGapComponentFromObject(GetObj())->AwardPendingGaps();
                 
 				pScore->Land();
 				mTallyAngles=0.0f;		// Mick: Cleared, so a manual will not get it
@@ -3776,7 +3780,7 @@ CBaseComponent::EMemberFunctionResult CTrickComponent::CallMemberFunction( uint3
 			}
 			
 			// tell any observers to cheer if they want:
-			GetObject()->BroadcastEvent( CRCD(0xc98ba111,"skaterLanded"));
+			GetObj()->BroadcastEvent( CRCD(0xc98ba111,"skaterLanded"));
 
 			// allows us to end the run if we're in horse mode
 			if ( m_first_trick_started )
@@ -3801,8 +3805,8 @@ CBaseComponent::EMemberFunctionResult CTrickComponent::CallMemberFunction( uint3
 				if (GetScoreObject()->GetScorePotValue() != 0)
 				{
 					Script::CStruct* p_params = new Script::CStruct;
-					p_params->AddChecksum(CRCD(0x5b24faaa, "SkaterId"), GetObject()->GetID());
-					GetObject()->BroadcastEvent(CRCD(0x4b3ce1fe, "SkaterExitCombo"), p_params);
+					p_params->AddChecksum(CRCD(0x5b24faaa, "SkaterId"), GetObj()->GetID());
+					GetObj()->BroadcastEvent(CRCD(0x4b3ce1fe, "SkaterExitCombo"), p_params);
 					delete p_params;
 				}
 				
@@ -3810,7 +3814,7 @@ CBaseComponent::EMemberFunctionResult CTrickComponent::CallMemberFunction( uint3
 			}
 
 			// tell any observers to balk if they want:
-			GetObject()->BroadcastEvent( CRCD(0x6045a960,"skaterBailed"));
+			GetObj()->BroadcastEvent( CRCD(0x6045a960,"skaterBailed"));
 		   
  
 			m_first_trick_started = true;
@@ -3832,7 +3836,7 @@ CBaseComponent::EMemberFunctionResult CTrickComponent::CallMemberFunction( uint3
 			mp_skater_core_physics_component->ResetSpecialFrictionIndex();
 			m_pending_tricks.FlushTricks();
 			
-			GetSkaterGapComponentFromObject(GetObject())->ClearPendingGaps();
+			GetSkaterGapComponentFromObject(GetObj())->ClearPendingGaps();
 
             mp_stats_manager_component->Bail();
 
@@ -3963,7 +3967,7 @@ void CTrickComponent::IncrementNumTricksInCombo()
 	if ( mNumTricksInCombo > 3 )
 	{
 		// tell any observers to start taking notice:
-		GetObject()->BroadcastEvent(CRCD(0x94182a08,"skaterStartingRun"));
+		GetObj()->BroadcastEvent(CRCD(0x94182a08,"skaterStartingRun"));
 	}
 }
 

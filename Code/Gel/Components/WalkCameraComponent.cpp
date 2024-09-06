@@ -78,7 +78,7 @@ void CWalkCameraComponent::InitFromStructure( Script::CStruct* pParams )
 	m_last_dot = 1.0f;
 	m_current_zoom = 1.0f;
 	
-	m_last_actual_matrix = GetObject()->GetMatrix();
+	m_last_actual_matrix = GetObj()->GetMatrix();
 }
 
 /******************************************************************/
@@ -98,9 +98,9 @@ void CWalkCameraComponent::RefreshFromStructure( Script::CStruct* pParams )
 
 void CWalkCameraComponent::Finalize()
 {
-	mp_lookaround_component = GetCameraLookAroundComponentFromObject(GetObject());
-	mp_camera_component = GetCameraComponentFromObject(GetObject());
-	mp_skater_camera_component = GetSkaterCameraComponentFromObject(GetObject());
+	mp_lookaround_component = GetCameraLookAroundComponentFromObject(GetObj());
+	mp_camera_component = GetCameraComponentFromObject(GetObj());
+	mp_skater_camera_component = GetSkaterCameraComponentFromObject(GetObj());
 	
 	Dbg_Assert(mp_lookaround_component);
 	Dbg_Assert(mp_camera_component);
@@ -119,7 +119,7 @@ void CWalkCameraComponent::Update()
 	// optimization KLUDGE
 	if (mp_target_physics_control_component && mp_target_physics_control_component->IsDriving())
 	{
-		GetObject()->Pause(true);
+		GetObj()->Pause(true);
 		return;
 	}
 	
@@ -148,12 +148,12 @@ void CWalkCameraComponent::Update()
 	float frame_length = Tmr::FrameLength();
 	
 	// get input
-	float horiz_control = GetInputComponentFromObject(GetObject())->GetControlPad().m_scaled_rightX;
+	float horiz_control = GetInputComponentFromObject(GetObj())->GetControlPad().m_scaled_rightX;
 
 	// restore camera position from last frame, previous to refocusing and collision detection
-	GetObject()->GetMatrix() = m_last_actual_matrix;
+	GetObj()->GetMatrix() = m_last_actual_matrix;
 
-	Mth::Vector	target_facing = -GetObject()->GetMatrix()[Z];
+	Mth::Vector	target_facing = -GetObj()->GetMatrix()[Z];
 	target_facing[Y] = 0.0f;
 	target_facing.Normalize();
 	
@@ -250,9 +250,9 @@ void CWalkCameraComponent::Update()
 	
 	if (!instantly)
 	{
-		if (Mth::DotProduct(target_matrix[X], GetObject()->GetMatrix()[X]) > CAMERA_SLERP_STOP
-			&& Mth::DotProduct(target_matrix[Y], GetObject()->GetMatrix()[Y]) > CAMERA_SLERP_STOP
-			&& Mth::DotProduct(target_matrix[Z], GetObject()->GetMatrix()[Z]) > CAMERA_SLERP_STOP)
+		if (Mth::DotProduct(target_matrix[X], GetObj()->GetMatrix()[X]) > CAMERA_SLERP_STOP
+			&& Mth::DotProduct(target_matrix[Y], GetObj()->GetMatrix()[Y]) > CAMERA_SLERP_STOP
+			&& Mth::DotProduct(target_matrix[Z], GetObj()->GetMatrix()[Z]) > CAMERA_SLERP_STOP)
 		{
 			// we're already at our target, so don't do anything
 			
@@ -267,7 +267,7 @@ void CWalkCameraComponent::Update()
 		{
 			// slerp to the target matrix
 			
-			Mth::SlerpInterpolator slerper(&GetObject()->GetMatrix(), &target_matrix);
+			Mth::SlerpInterpolator slerper(&GetObj()->GetMatrix(), &target_matrix);
 			
 			// standard slerp rate
 			float slerp = s_get_param(CRCD(0xc39b639, "matrix_slerp_rate"));
@@ -311,19 +311,19 @@ void CWalkCameraComponent::Update()
 			}
 			
 			// apply the slerping
-			slerper.getMatrix(&GetObject()->GetMatrix(), GetTimeAdjustedSlerp(slerp, frame_length));
+			slerper.getMatrix(&GetObj()->GetMatrix(), GetTimeAdjustedSlerp(slerp, frame_length));
 
 			// calculate for the skater camera
-			m_last_dot = Mth::DotProduct(m_last_actual_matrix[Z], GetObject()->GetMatrix()[Z]);
+			m_last_dot = Mth::DotProduct(m_last_actual_matrix[Z], GetObj()->GetMatrix()[Z]);
 		}
 	}
 	else
 	{
-		GetObject()->GetMatrix() = target_matrix;
+		GetObj()->GetMatrix() = target_matrix;
 	}
 	
-	// At this point, GetObject()->GetMatrix() is valid to store.
-	m_last_actual_matrix = GetObject()->GetMatrix();
+	// At this point, GetObj()->GetMatrix() is valid to store.
+	m_last_actual_matrix = GetObj()->GetMatrix();
 	
 	// Set camera position to be the same as the skater.
 	Mth::Vector	camera_pos = get_tripod_pos(instantly);
@@ -332,7 +332,7 @@ void CWalkCameraComponent::Update()
 	float above, behind;
 	calculate_zoom(above, behind);
 	
-	camera_pos += GetObject()->GetMatrix()[Z] * behind + up * above;
+	camera_pos += GetObj()->GetMatrix()[Z] * behind + up * above;
 	
 	Mth::Vector	focus_pos = mp_target->GetPos() + up * above;
 	
@@ -342,7 +342,7 @@ void CWalkCameraComponent::Update()
 	target_matrix[Z].Normalize();
 
 	// Read back the Y from the current matrix.
-	target_matrix[Y] = GetObject()->GetMatrix()[Y];
+	target_matrix[Y] = GetObj()->GetMatrix()[Y];
 
 	// Generate new orthonormal X and Y axes.
 	target_matrix[X] = Mth::CrossProduct(target_matrix[Y], target_matrix[Z]);
@@ -352,21 +352,21 @@ void CWalkCameraComponent::Update()
 
 	// Write back into camera matrix.
 	// Since camera points in -Z, but player in +Z, we must negate the X and Z axes
-	GetObject()->GetMatrix()[X]	= -target_matrix[X];
-	GetObject()->GetMatrix()[Y] = target_matrix[Y];
-	GetObject()->GetMatrix()[Z] = -target_matrix[Z];
+	GetObj()->GetMatrix()[X]	= -target_matrix[X];
+	GetObj()->GetMatrix()[Y] = target_matrix[Y];
+	GetObj()->GetMatrix()[Z] = -target_matrix[Z];
 	
 	// clean up matrix
-	GetObject()->GetMatrix()[X][W] = 0.0f;
-	GetObject()->GetMatrix()[Y][W] = 0.0f;
-	GetObject()->GetMatrix()[Z][W] = 0.0f;
-	GetObject()->GetMatrix()[W].Set(0.0f, 0.0f, 0.0f, 1.0f);
+	GetObj()->GetMatrix()[X][W] = 0.0f;
+	GetObj()->GetMatrix()[Y][W] = 0.0f;
+	GetObj()->GetMatrix()[Z][W] = 0.0f;
+	GetObj()->GetMatrix()[W].Set(0.0f, 0.0f, 0.0f, 1.0f);
 	
 	// Now do collision detection.
 	ApplyCameraCollisionDetection(
 		camera_pos,
-		GetObject()->GetMatrix(),
-		camera_pos - GetObject()->GetMatrix()[Z] * behind + mp_target_walk_component->GetCameraCollisionTargetOffset(),
+		GetObj()->GetMatrix(),
+		camera_pos - GetObj()->GetMatrix()[Z] * behind + mp_target_walk_component->GetCameraCollisionTargetOffset(),
 		focus_pos
 	);
 	
@@ -378,7 +378,7 @@ void CWalkCameraComponent::Update()
 	#endif
 	
 	camera_pos[W] = 1.0f;
-	GetObject()->SetPos(camera_pos);
+	GetObj()->SetPos(camera_pos);
 	
 	// reset old position if in instant update
 	if (instantly)
@@ -433,7 +433,7 @@ void CWalkCameraComponent::GetDebugInfo(Script::CStruct *p_info)
 
 void CWalkCameraComponent::ReadyForActivation ( const SCameraState& state )
 {
-	Dbg_MsgAssert(mp_target, ("Walk camera (%s) has NULL target", Script::FindChecksumName(GetObject()->GetID())));
+	Dbg_MsgAssert(mp_target, ("Walk camera (%s) has NULL target", Script::FindChecksumName(GetObj()->GetID())));
 	
 	m_last_tripod_pos = state.lastTripodPos;
 	m_last_actual_matrix = state.lastActualMatrix;

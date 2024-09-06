@@ -112,7 +112,7 @@ class CTrickComponent : public CBaseComponent
 	Script::CStruct*				get_alternate_trigger_structure(Script::CStruct *p_struct);
 	
 public:
-	CSkater*						GetSkater (   ) { return static_cast< CSkater* >(GetObject()); }
+	CSkater*						GetSkater (   ) { return static_cast< CSkater* >(GetObj()); }
 	
 	void UpdateTrickMappings( Obj::CSkaterProfile* pSkaterProfile );
 

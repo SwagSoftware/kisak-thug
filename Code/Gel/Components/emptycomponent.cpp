@@ -106,7 +106,7 @@ void CEmptyComponent::Finalize()
 	// and BEFORE the CCompositeObject::Update function is called
 	
 	// Example:
-	// mp_suspend_component =  GetSuspendComponentFromObject( GetObject() );
+	// mp_suspend_component =  GetSuspendComponentFromObject( GetObj() );
 										
 										
 }

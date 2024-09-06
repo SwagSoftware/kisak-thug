@@ -157,7 +157,7 @@ public:
 								CTracker();
 	virtual						~CTracker();
 
-	CObject *					GetObject(uint32 id);
+	CObject *					GetObj(uint32 id); // lwss: fucking renamed because Win32 has a Macro for GetObjectA
 	
 	// See the menu document for a description of aliases
 	CObject *					GetObjectByAlias(uint32 aliasId);

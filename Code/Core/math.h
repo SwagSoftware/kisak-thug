@@ -32,6 +32,7 @@
 // a trig function with a float argument, then it will simply call the float version
 // (double precision is very very slow on the PS2)
 #ifndef __PLAT_XBOX__
+#ifndef __PLAT_WN32__ // lwss add
 inline  float  acos( float x ) {return acosf( x );}          
 inline  float  asin( float x ) {return asinf( x );}          
 inline  float  atan( float x ) {return atanf( x );}          
@@ -39,7 +40,8 @@ inline  float  atan2( float x, float y){return  atan2f( x , y );}
 inline  float   cos( float x ) {return cosf( x );}           
 inline  float   sin( float x ) {return sinf( x );}           
 inline  float   tan( float x ) {return tanf( x );}           
-inline  float   fabs( float x ) {return fabsf( x );}           
+inline  float   fabs( float x ) {return fabsf( x );}         
+#endif
 #endif // ifndef __PLAT_XBOX__
 
 

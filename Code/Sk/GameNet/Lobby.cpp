@@ -36,12 +36,17 @@
 
 #include <sk/gamenet/gamenet.h>
 #include <sk/gamenet/lobby.h>
-#include <sk/gamenet/ngps/p_buddy.h>
-#include <sk/gamenet/ngps/p_stats.h>
+//#include <sk/gamenet/ngps/p_buddy.h> // lwss: why are playstation things in here?
+//#include <sk/gamenet/ngps/p_stats.h>
 #include <sk/modules/skate/gamemode.h>                                       
 #include <sk/scripting/cfuncs.h>
 
-#include <peer/peer.h>
+#include <GameNet/GameSpy/Peer/peer.h>
+//#include <peer/peer.h>
+
+#ifdef __PLAT_WN32__
+#include <GameNet/XBox/p_buddy.h>
+#endif
 
 
 /*****************************************************************************
@@ -177,56 +182,58 @@ void		LobbyMan::add_player_to_menu( LobbyPlayerInfo* player )
 	p_item_params->AddString( "text", PlayerName( player->m_Name ));
 	p_colors->SetSizeAndType( 4, ESYMBOLTYPE_INTEGER );
 
-	if( ( player->m_Profile ) && 
-		( gamenet_man->mpBuddyMan->IsLoggedIn()))
-	{           
-		//Dbg_Printf( "Adding Player %s of %d to list\n", player->m_Name, player->m_Profile );
-		
-		// If it's me (or a buddy), color it differently and don't let me add myself to my own buddy list
-		if( player->m_Profile == gamenet_man->mpBuddyMan->GetProfile() || gamenet_man->mpBuddyMan->IsAlreadyMyBuddy( player->m_Profile ))
-		{
-			if( gamenet_man->mpBuddyMan->GetProfile() == player->m_Profile )
-			{
-				p_colors->SetInteger( 0, 0 );
-				p_colors->SetInteger( 1, 0 );
-				p_colors->SetInteger( 2, 128 );
-				p_colors->SetInteger( 3, 128 );
+	// lwss: Disable. Buddyman is incomplete
 
-				p_item_params->AddChecksum( "pad_choose_script",Script::GenerateCRC("cant_add_self_to_buddy_prompt"));
-			}
-			else
-			{
-				p_colors->SetInteger( 0, 128 );
-				p_colors->SetInteger( 1, 128 );
-				p_colors->SetInteger( 2, 0 );
-				p_colors->SetInteger( 3, 128 );
-
-				p_item_params->AddChecksum( "pad_choose_script",Script::GenerateCRC("already_buddy_prompt"));
-			}
-		}
-		else
-		{
-			p_colors->SetInteger( 0, 0 );
-			p_colors->SetInteger( 1, 128 );
-			p_colors->SetInteger( 2, 0 );
-			p_colors->SetInteger( 3, 128 );
-
-			p_script_params->AddInteger( "profile", player->m_Profile );	
-			p_script_params->AddString( "nick", player->m_Name );	
-			p_script_params->AddString( "net_name", PlayerName( player->m_Name ));  
-			p_item_params->AddStructure( "pad_choose_params", p_script_params );
-
-			if( gamenet_man->mpBuddyMan->NumBuddies() < vMAX_BUDDIES )
-			{
-				p_item_params->AddChecksum( "pad_choose_script", Script::GenerateCRC( "add_buddy_prompt" ));
-			}
-			else
-			{
-				p_item_params->AddChecksum( "pad_choose_script", Script::GenerateCRC( "cant_add_buddy_prompt_3" ));
-			}
-		}
-	}
-	else
+	//if( ( player->m_Profile ) && 
+	//	( gamenet_man->mpBuddyMan->IsLoggedIn()))
+	//{           
+	//	//Dbg_Printf( "Adding Player %s of %d to list\n", player->m_Name, player->m_Profile );
+	//	
+	//	// If it's me (or a buddy), color it differently and don't let me add myself to my own buddy list
+	//	if( player->m_Profile == gamenet_man->mpBuddyMan->GetProfile() || gamenet_man->mpBuddyMan->IsAlreadyMyBuddy( player->m_Profile ))
+	//	{
+	//		if( gamenet_man->mpBuddyMan->GetProfile() == player->m_Profile )
+	//		{
+	//			p_colors->SetInteger( 0, 0 );
+	//			p_colors->SetInteger( 1, 0 );
+	//			p_colors->SetInteger( 2, 128 );
+	//			p_colors->SetInteger( 3, 128 );
+	//
+	//			p_item_params->AddChecksum( "pad_choose_script",Script::GenerateCRC("cant_add_self_to_buddy_prompt"));
+	//		}
+	//		else
+	//		{
+	//			p_colors->SetInteger( 0, 128 );
+	//			p_colors->SetInteger( 1, 128 );
+	//			p_colors->SetInteger( 2, 0 );
+	//			p_colors->SetInteger( 3, 128 );
+	//
+	//			p_item_params->AddChecksum( "pad_choose_script",Script::GenerateCRC("already_buddy_prompt"));
+	//		}
+	//	}
+	//	else
+	//	{
+	//		p_colors->SetInteger( 0, 0 );
+	//		p_colors->SetInteger( 1, 128 );
+	//		p_colors->SetInteger( 2, 0 );
+	//		p_colors->SetInteger( 3, 128 );
+	//
+	//		p_script_params->AddInteger( "profile", player->m_Profile );	
+	//		p_script_params->AddString( "nick", player->m_Name );	
+	//		p_script_params->AddString( "net_name", PlayerName( player->m_Name ));  
+	//		p_item_params->AddStructure( "pad_choose_params", p_script_params );
+	//
+	//		if( gamenet_man->mpBuddyMan->NumBuddies() < vMAX_BUDDIES )
+	//		{
+	//			p_item_params->AddChecksum( "pad_choose_script", Script::GenerateCRC( "add_buddy_prompt" ));
+	//		}
+	//		else
+	//		{
+	//			p_item_params->AddChecksum( "pad_choose_script", Script::GenerateCRC( "cant_add_buddy_prompt_3" ));
+	//		}
+	//	}
+	//}
+	//else
 	{
 		//Dbg_Printf( "Adding Player %s, no profile\n", player->m_Name );
 
@@ -235,11 +242,13 @@ void		LobbyMan::add_player_to_menu( LobbyPlayerInfo* player )
 		p_colors->SetInteger( 2, 128 );
 		p_colors->SetInteger( 3, 128 );
 		
-		if( gamenet_man->mpBuddyMan->IsLoggedIn())
-		{
-			p_item_params->AddChecksum( "pad_choose_script",Script::GenerateCRC("cant_add_buddy_prompt_1"));
-		}
-		else
+		// lwss: Disable. Buddyman is incomplete
+
+		//if( gamenet_man->mpBuddyMan->IsLoggedIn())
+		//{
+		//	p_item_params->AddChecksum( "pad_choose_script",Script::GenerateCRC("cant_add_buddy_prompt_1"));
+		//}
+		//else
 		{
 			p_item_params->AddChecksum( "pad_choose_script",Script::GenerateCRC("cant_add_buddy_prompt_2"));
 		}
@@ -365,25 +374,27 @@ void		LobbyMan::add_buddy_to_menu( LobbyPlayerInfo* player )
 
 void		LobbyMan::fill_prospective_buddy_list( void )
 {
-	GameNet::Manager * gamenet_man = GameNet::Manager::Instance();
-	Lst::Search< LobbyPlayerInfo > sh;
-	LobbyPlayerInfo* player;
+	// lwss: Disable. Buddyman is incomplete
 
-	Script::RunScript( "destroy_lobby_buddy_list_children" );
-
-	for( player = sh.FirstItem( m_players ); player; player = sh.NextItem())
-	{
-		if( player->m_Profile == gamenet_man->mpBuddyMan->GetProfile())
-		{
-			continue;
-		}
-
-		if(	( player->m_Profile > 0 ) && 
-			( gamenet_man->mpBuddyMan->IsAlreadyMyBuddy( player->m_Profile ) == false ))
-		{
-			add_buddy_to_menu( player );
-		}
-	}
+	//GameNet::Manager * gamenet_man = GameNet::Manager::Instance();
+	//Lst::Search< LobbyPlayerInfo > sh;
+	//LobbyPlayerInfo* player;
+	//
+	//Script::RunScript( "destroy_lobby_buddy_list_children" );
+	//
+	//for( player = sh.FirstItem( m_players ); player; player = sh.NextItem())
+	//{
+	//	if( player->m_Profile == gamenet_man->mpBuddyMan->GetProfile())
+	//	{
+	//		continue;
+	//	}
+	//
+	//	if(	( player->m_Profile > 0 ) && 
+	//		( gamenet_man->mpBuddyMan->IsAlreadyMyBuddy( player->m_Profile ) == false ))
+	//	{
+	//		add_buddy_to_menu( player );
+	//	}
+	//}
 }
 
 /******************************************************************/
@@ -397,7 +408,10 @@ void		LobbyMan::s_threaded_peer_connect( LobbyMan* lobby_man )
 	Mem::Manager::sHandle().PushContext(Mem::Manager::sHandle().InternetBottomUpHeap());
 
 	// Register this thread with the sockets API
+	// LWSS: this is an SN_SYSTEMS only function, idk where from exactly
+#ifdef SN_SYSTEMS
 	sockAPIregthr();
+#endif
 
 	Prefs::Preferences* prefs;
 	char lobby_name[128];
@@ -406,20 +420,24 @@ void		LobbyMan::s_threaded_peer_connect( LobbyMan* lobby_man )
     const char* network_name = prefs->GetPreferenceString( Script::GenerateCRC( "network_id" ), Script::GenerateCRC( "ui_string" ));
     
 	// Use our unique Gamespy profile ID as our "unique number", if one is available
-	if( gamenet_man->mpBuddyMan->IsLoggedIn())
-	{
-		sprintf( lobby_name, "a%d_%s", gamenet_man->mpBuddyMan->GetProfile(), network_name );
-	}
-	else
+	// lwss: Disable. Buddyman is incomplete
+	//if( gamenet_man->mpBuddyMan->IsLoggedIn())
+	//{
+	//	sprintf( lobby_name, "a%d_%s", gamenet_man->mpBuddyMan->GetProfile(), network_name );
+	//}
+	//else
 	{
 		sprintf( lobby_name, "a%d_%s", (int) Tmr::GetTime(), network_name );
 	}
 
 	lobby_man->m_connection_in_progress = true;
-    peerConnect( lobby_man->m_peer, lobby_name, gamenet_man->mpBuddyMan->GetProfile(), s_nick_error_callback, s_connect_callback, lobby_man, false );
+	// lwss: Disable. Buddyman is incomplete
+    //peerConnect( lobby_man->m_peer, lobby_name, gamenet_man->mpBuddyMan->GetProfile(), s_nick_error_callback, s_connect_callback, lobby_man, false );
 
 	// Deregister this thread with the sockets API
+#ifdef SN_SYSTEMS
 	sockAPIderegthr();
+#endif
 	Mem::Manager::sHandle().PopContext();
 }
 
@@ -840,91 +858,93 @@ void LobbyMan::s_nat_negotiate_callback( PEER peer, int cookie, void * param )
 
 void LobbyMan::s_server_key_callback( PEER peer, int key, qr2_buffer_t buffer, void * param )
 {
-	Mdl::Skate * skate_mod = Mdl::Skate::Instance();
-	GameNet::Manager * gamenet_man = GameNet::Manager::Instance();
-	const char* server_name;
-	Prefs::Preferences* pPreferences;
-	Script::CScriptStructure* pStructure;
-    char* password;
-	
-	//Dbg_Printf( "***** SERVER KEY CALLBACK\n" );
-	pPreferences = gamenet_man->GetNetworkPreferences();
+	// lwss: Disable. BuddyMan is incomplete 
 
-    switch(key)
-	{
-		case HOSTNAME_KEY:
-			pStructure = pPreferences->GetPreference( Script::GenerateCRC("server_name") );
-			pStructure->GetText( "ui_string", &server_name, true );
-			//Dbg_Printf( "Server name is %s\n", server_name );
-			qr2_buffer_add(buffer, server_name );
-			break;
-		case GAMENAME_KEY:
-			qr2_buffer_add(buffer, "thps5ps2" );
-			break;
-		case GAMEMODE_KEY:
-			qr2_buffer_add(buffer, gamenet_man->GetGameModeName());
-			break;
-		case HOSTPORT_KEY:
-			qr2_buffer_add_int(buffer, vHOST_PORT );
-			break;
-		case MAPNAME_KEY:
-			qr2_buffer_add(buffer, gamenet_man->GetLevelName());
-			break;
-		case GAMETYPE_KEY:
-			qr2_buffer_add(buffer, gamenet_man->GetGameModeName());
-			break;
-		case TEAMPLAY_KEY:
-			qr2_buffer_add_int(buffer, 0);
-			break;
-		case NUMPLAYERS_KEY:
-			qr2_buffer_add_int(buffer, gamenet_man->GetNumPlayers());
-			break;
-		case MAXPLAYERS_KEY:
-			qr2_buffer_add_int(buffer, gamenet_man->GetMaxPlayers());
-			break;
-		case PASSWORD_KEY:
-			password = gamenet_man->GetPassword();
-			if( password[0] == '\0' )
-			{
-				qr2_buffer_add_int(buffer, 0 );
-			}
-			else
-			{
-				qr2_buffer_add_int(buffer, 1 );
-			}
-			break;
-			
-		case NUMOBSERVERS_KEY:
-			qr2_buffer_add_int(buffer, gamenet_man->GetNumObservers());
-			break;
-		case MAXOBSERVERS_KEY:
-			qr2_buffer_add_int(buffer, gamenet_man->GetMaxObservers());
-			break;
-		case SKILLLEVEL_KEY:
-			qr2_buffer_add_int(buffer, gamenet_man->GetSkillLevel());
-			break;
-		case STARTED_KEY:
-			if( skate_mod->GetGameMode()->GetNameChecksum() == Script::GenerateCRC( "netlobby" ))
-			{
-				qr2_buffer_add_int(buffer, 0 );
-			}
-			else
-			{
-				qr2_buffer_add_int(buffer, 1 );
-			}
-			break;
-		case HOSTED_MODE_KEY:
-			qr2_buffer_add_int(buffer, gamenet_man->GetHostMode());
-			break;
-		case RANKED_KEY:
-			qr2_buffer_add_int(buffer, gamenet_man->mpBuddyMan->IsLoggedIn());
-			break;
-		default:
-			qr2_buffer_add(buffer, "");
-			break;
-	}
-
-	s_got_gamespy_callback = true;
+	//Mdl::Skate * skate_mod = Mdl::Skate::Instance();
+	//GameNet::Manager * gamenet_man = GameNet::Manager::Instance();
+	//const char* server_name;
+	//Prefs::Preferences* pPreferences;
+	//Script::CScriptStructure* pStructure;
+    //char* password;
+	//
+	////Dbg_Printf( "***** SERVER KEY CALLBACK\n" );
+	//pPreferences = gamenet_man->GetNetworkPreferences();
+	//
+    //switch(key)
+	//{
+	//	case HOSTNAME_KEY:
+	//		pStructure = pPreferences->GetPreference( Script::GenerateCRC("server_name") );
+	//		pStructure->GetText( "ui_string", &server_name, true );
+	//		//Dbg_Printf( "Server name is %s\n", server_name );
+	//		qr2_buffer_add(buffer, server_name );
+	//		break;
+	//	case GAMENAME_KEY:
+	//		qr2_buffer_add(buffer, "thps5ps2" );
+	//		break;
+	//	case GAMEMODE_KEY:
+	//		qr2_buffer_add(buffer, gamenet_man->GetGameModeName());
+	//		break;
+	//	case HOSTPORT_KEY:
+	//		qr2_buffer_add_int(buffer, vHOST_PORT );
+	//		break;
+	//	case MAPNAME_KEY:
+	//		qr2_buffer_add(buffer, gamenet_man->GetLevelName());
+	//		break;
+	//	case GAMETYPE_KEY:
+	//		qr2_buffer_add(buffer, gamenet_man->GetGameModeName());
+	//		break;
+	//	case TEAMPLAY_KEY:
+	//		qr2_buffer_add_int(buffer, 0);
+	//		break;
+	//	case NUMPLAYERS_KEY:
+	//		qr2_buffer_add_int(buffer, gamenet_man->GetNumPlayers());
+	//		break;
+	//	case MAXPLAYERS_KEY:
+	//		qr2_buffer_add_int(buffer, gamenet_man->GetMaxPlayers());
+	//		break;
+	//	case PASSWORD_KEY:
+	//		password = gamenet_man->GetPassword();
+	//		if( password[0] == '\0' )
+	//		{
+	//			qr2_buffer_add_int(buffer, 0 );
+	//		}
+	//		else
+	//		{
+	//			qr2_buffer_add_int(buffer, 1 );
+	//		}
+	//		break;
+	//		
+	//	case NUMOBSERVERS_KEY:
+	//		qr2_buffer_add_int(buffer, gamenet_man->GetNumObservers());
+	//		break;
+	//	case MAXOBSERVERS_KEY:
+	//		qr2_buffer_add_int(buffer, gamenet_man->GetMaxObservers());
+	//		break;
+	//	case SKILLLEVEL_KEY:
+	//		qr2_buffer_add_int(buffer, gamenet_man->GetSkillLevel());
+	//		break;
+	//	case STARTED_KEY:
+	//		if( skate_mod->GetGameMode()->GetNameChecksum() == Script::GenerateCRC( "netlobby" ))
+	//		{
+	//			qr2_buffer_add_int(buffer, 0 );
+	//		}
+	//		else
+	//		{
+	//			qr2_buffer_add_int(buffer, 1 );
+	//		}
+	//		break;
+	//	case HOSTED_MODE_KEY:
+	//		qr2_buffer_add_int(buffer, gamenet_man->GetHostMode());
+	//		break;
+	//	case RANKED_KEY:
+	//		qr2_buffer_add_int(buffer, gamenet_man->mpBuddyMan->IsLoggedIn());
+	//		break;
+	//	default:
+	//		qr2_buffer_add(buffer, "");
+	//		break;
+	//}
+	//
+	//s_got_gamespy_callback = true;
 }
 
 void LobbyMan::s_player_key_callback( PEER peer, int key, int index, qr2_buffer_t buffer, void * param )
@@ -1038,33 +1058,35 @@ void LobbyMan::s_player_key_callback( PEER peer, int key, int index, qr2_buffer_
 void LobbyMan::s_public_address_callback( PEER peer, unsigned int ip, unsigned short port, 
 											   void * param )
 {
-	char location[1024];
-	const char *server_name;
-	Script::CScriptStructure* pStructure;
-	Prefs::Preferences* pPreferences;
-	Manager * gamenet_man = Manager::Instance();
-	BuddyMan* buddy_man;
-	LobbyMan* lobby_man;
+	// lwss: Disable. BuddyMan is incomplete 
 
-	lobby_man = (LobbyMan*) param;
-	buddy_man = gamenet_man->mpBuddyMan;
-
-	Dbg_Printf( "***** Got public address: %s : %d\n", inet_ntoa(*(struct in_addr *) &ip ), port );
-	if( gamenet_man->OnServer() && lobby_man->GetPeer())
-	{
-		gamenet_man->SetJoinPort( port );
-		gamenet_man->SetJoinIP( ip );
-		gamenet_man->SetJoinPrivateIP( peerGetPrivateIP( lobby_man->GetPeer()) );
-		pPreferences = gamenet_man->GetNetworkPreferences();
-		pStructure = pPreferences->GetPreference( Script::GenerateCRC("server_name") );
-		pStructure->GetText( "ui_string", &server_name, true );
-	
-		sprintf( location, "%d:%d:%d:%s (%s)", ip, peerGetPrivateIP( lobby_man->GetPeer()), port, server_name, lobby_man->GetLobbyName());
-		if( buddy_man->IsLoggedIn())
-		{
-			buddy_man->SetStatusAndLocation( GP_PLAYING, (char*) Script::GetString( "homie_status_hosting" ), location );
-		}
-	}	
+	//char location[1024];
+	//const char *server_name;
+	//Script::CScriptStructure* pStructure;
+	//Prefs::Preferences* pPreferences;
+	//Manager * gamenet_man = Manager::Instance();
+	//BuddyMan* buddy_man;
+	//LobbyMan* lobby_man;
+	//
+	//lobby_man = (LobbyMan*) param;
+	//buddy_man = gamenet_man->mpBuddyMan;
+	//
+	//Dbg_Printf( "***** Got public address: %s : %d\n", inet_ntoa(*(struct in_addr *) &ip ), port );
+	//if( gamenet_man->OnServer() && lobby_man->GetPeer())
+	//{
+	//	gamenet_man->SetJoinPort( port );
+	//	gamenet_man->SetJoinIP( ip );
+	//	gamenet_man->SetJoinPrivateIP( peerGetPrivateIP( lobby_man->GetPeer()) );
+	//	pPreferences = gamenet_man->GetNetworkPreferences();
+	//	pStructure = pPreferences->GetPreference( Script::GenerateCRC("server_name") );
+	//	pStructure->GetText( "ui_string", &server_name, true );
+	//
+	//	sprintf( location, "%d:%d:%d:%s (%s)", ip, peerGetPrivateIP( lobby_man->GetPeer()), port, server_name, lobby_man->GetLobbyName());
+	//	if( buddy_man->IsLoggedIn())
+	//	{
+	//		buddy_man->SetStatusAndLocation( GP_PLAYING, (char*) Script::GetString( "homie_status_hosting" ), location );
+	//	}
+	//}	
 }
 
 void LobbyMan::s_add_error_callback( PEER peer, qr2_error_t error, char * errorString, void * param )
@@ -1216,72 +1238,74 @@ void	LobbyMan::s_group_rooms_callback( PEER peer, PEERBool success, int groupID,
 									const char * name, int numWaiting, int maxWaiting, int numGames, int numPlaying,
 									void* param )
 {
-	GameNet::Manager * gamenet_man = GameNet::Manager::Instance();
-	LobbyMan* lobby_man = (LobbyMan*) param;
-	// Check for the terminator
-	if( success )
-	{
-		if( groupID == 0 )
-		{   
-			gamenet_man->SetServerListState( vSERVER_LIST_STATE_GOT_LOBBY_LIST );
-		}
-		else
-		{
-			int max_players, official_key;
-			Mem::Manager::sHandle().PushContext(Mem::Manager::sHandle().InternetBottomUpHeap());
+	// lwss: Disable. BuddyMan is incomplete 
 
-			LobbyInfo* lobby_info;
-			lobby_info = new LobbyInfo;
-			strncpy( lobby_info->m_Name, name, 63 );
-			lobby_info->m_Name[63] = '\0';
-			lobby_info->m_NumServers = numGames;
-			lobby_info->m_GroupId = groupID;
-			lobby_info->m_MaxServers = maxWaiting;
-            max_players = SBServerGetIntValue( server, "maxplayers", 0 );
-			if( numWaiting >= max_players )
-			{
-				lobby_info->m_Full = true;
-			}
-
-			lobby_info->m_MaxRating = SBServerGetIntValue( server, "maxrating", 100000 );
-			lobby_info->m_MinRating = SBServerGetIntValue( server, "minrating", 0 );
-
-			Dbg_Printf( "Got lobby: %s, max: %d min: %d, rating: %d\n", name, lobby_info->m_MaxRating, lobby_info->m_MinRating, gamenet_man->mpStatsMan->GetStats()->GetRating());
-
-			if( gamenet_man->mpStatsMan->GetStats()->GetRating() > lobby_info->m_MaxRating )
-			{
-				lobby_info->m_OffLimits = true;
-			}
-
-			if( gamenet_man->mpStatsMan->GetStats()->GetRating() < lobby_info->m_MinRating )
-			{
-				lobby_info->m_OffLimits = true;
-			}
-
-			official_key = 0;
-			official_key = SBServerGetIntValue( server, "neversoft", 0 );
-			if( official_key )
-			{
-				lobby_info->m_Official = true;
-			}
-            
-			//printf( "Got lobby %d: %s\n", groupID, name );
-			//printf( "Max Servers of lobby %d: %d\n", lobby_info->m_GroupId, lobby_info->m_MaxServers );
-			if( lobby_info->m_NumServers > lobby_info->m_MaxServers )
-			{
-				lobby_info->m_MaxServers = lobby_info->m_NumServers;
-			}
-	
-			lobby_info->SetPri( -groupID );
-			lobby_man->m_lobbies.AddNode( lobby_info );
-
-			Mem::Manager::sHandle().PopContext();
-		}
-	}
-	else
-	{
-		gamenet_man->SetServerListState( vSERVER_LIST_STATE_FAILED_LOBBY_LIST );
-	}
+	//GameNet::Manager * gamenet_man = GameNet::Manager::Instance();
+	//LobbyMan* lobby_man = (LobbyMan*) param;
+	//// Check for the terminator
+	//if( success )
+	//{
+	//	if( groupID == 0 )
+	//	{   
+	//		gamenet_man->SetServerListState( vSERVER_LIST_STATE_GOT_LOBBY_LIST );
+	//	}
+	//	else
+	//	{
+	//		int max_players, official_key;
+	//		Mem::Manager::sHandle().PushContext(Mem::Manager::sHandle().InternetBottomUpHeap());
+	//
+	//		LobbyInfo* lobby_info;
+	//		lobby_info = new LobbyInfo;
+	//		strncpy( lobby_info->m_Name, name, 63 );
+	//		lobby_info->m_Name[63] = '\0';
+	//		lobby_info->m_NumServers = numGames;
+	//		lobby_info->m_GroupId = groupID;
+	//		lobby_info->m_MaxServers = maxWaiting;
+    //        max_players = SBServerGetIntValue( server, "maxplayers", 0 );
+	//		if( numWaiting >= max_players )
+	//		{
+	//			lobby_info->m_Full = true;
+	//		}
+	//
+	//		lobby_info->m_MaxRating = SBServerGetIntValue( server, "maxrating", 100000 );
+	//		lobby_info->m_MinRating = SBServerGetIntValue( server, "minrating", 0 );
+	//
+	//		Dbg_Printf( "Got lobby: %s, max: %d min: %d, rating: %d\n", name, lobby_info->m_MaxRating, lobby_info->m_MinRating, gamenet_man->mpStatsMan->GetStats()->GetRating());
+	//
+	//		if( gamenet_man->mpStatsMan->GetStats()->GetRating() > lobby_info->m_MaxRating )
+	//		{
+	//			lobby_info->m_OffLimits = true;
+	//		}
+	//
+	//		if( gamenet_man->mpStatsMan->GetStats()->GetRating() < lobby_info->m_MinRating )
+	//		{
+	//			lobby_info->m_OffLimits = true;
+	//		}
+	//
+	//		official_key = 0;
+	//		official_key = SBServerGetIntValue( server, "neversoft", 0 );
+	//		if( official_key )
+	//		{
+	//			lobby_info->m_Official = true;
+	//		}
+    //        
+	//		//printf( "Got lobby %d: %s\n", groupID, name );
+	//		//printf( "Max Servers of lobby %d: %d\n", lobby_info->m_GroupId, lobby_info->m_MaxServers );
+	//		if( lobby_info->m_NumServers > lobby_info->m_MaxServers )
+	//		{
+	//			lobby_info->m_MaxServers = lobby_info->m_NumServers;
+	//		}
+	//
+	//		lobby_info->SetPri( -groupID );
+	//		lobby_man->m_lobbies.AddNode( lobby_info );
+	//
+	//		Mem::Manager::sHandle().PopContext();
+	//	}
+	//}
+	//else
+	//{
+	//	gamenet_man->SetServerListState( vSERVER_LIST_STATE_FAILED_LOBBY_LIST );
+	//}
 }
 
 /******************************************************************/
@@ -1292,70 +1316,72 @@ void	LobbyMan::s_group_rooms_callback( PEER peer, PEERBool success, int groupID,
 void	LobbyMan::s_join_room_callback( PEER peer, PEERBool success, PEERJoinResult result, RoomType roomType, 
 										void* param )
 {
-	GameNet::Manager * gamenet_man = GameNet::Manager::Instance();
-	LobbyMan* lobby_man = (LobbyMan*) param;
+	// lwss: Disable. BuddyMan is incomplete 
 
-	
-	Dbg_Assert( roomType == GroupRoom );
-
-	if( success )
-	{
-		//printf( "Entered group room\n" );
-		Script::RunScript( "dialog_box_exit" );
-		Script::RunScript( "create_network_select_games_menu" );
-		lobby_man->m_in_group_room = true;
-
-		lobby_man->refresh_player_list();
-		if( gamenet_man->mpBuddyMan->IsLoggedIn())
-		{
-			char rating_str[64];
-			char key[64];
-			const char* keys;
-			const char* values;
-
-			gamenet_man->mpBuddyMan->SetStatusAndLocation( GP_CHATTING, (char*) Script::GetString( "homie_status_chatting" ), 
-																		lobby_man->GetLobbyName());
-			sprintf( key, "b_rating" );
-			sprintf( rating_str, "%d", gamenet_man->mpStatsMan->GetStats()->GetRating());
-			keys = key;
-			values = rating_str;
-			peerSetRoomKeys(peer, roomType, peerGetNick( peer ), 1, &keys, &values );
-			peerGetRoomKeys( peer, roomType, "*", 1, &keys, s_get_room_keys_callback, 
-							 lobby_man, false );
-		}
-	}
-	else
-	{
-		switch( result )
-		{
-			case PEERFullRoom:
-				//printf( "Full Room\n" );
-				break;
-			case PEERInviteOnlyRoom:
-				//printf( "Invite Only\n" );
-				break;
-			case PEERBannedFromRoom:
-				//printf( "Banned from room\n" );
-				break;
-			case PEERBadPassword:
-				//printf( "Bad Password\n" );
-				break;
-			case PEERAlreadyInRoom:
-				//printf( "Already in Room\n" );
-				break;
-			case PEERNoTitleSet:
-				//printf( "No Title Set\n" );
-				break;
-			case PEERJoinFailed:
-				//printf( "Generic: Join Failed\n" );
-				break;
-			default:
-				break;
-
-		};
-		
-		Script::RunScript( "CreateJoinLobbyFailedDialog" );
-	}
+	//GameNet::Manager * gamenet_man = GameNet::Manager::Instance();
+	//LobbyMan* lobby_man = (LobbyMan*) param;
+	//
+	//
+	//Dbg_Assert( roomType == GroupRoom );
+	//
+	//if( success )
+	//{
+	//	//printf( "Entered group room\n" );
+	//	Script::RunScript( "dialog_box_exit" );
+	//	Script::RunScript( "create_network_select_games_menu" );
+	//	lobby_man->m_in_group_room = true;
+	//
+	//	lobby_man->refresh_player_list();
+	//	if( gamenet_man->mpBuddyMan->IsLoggedIn())
+	//	{
+	//		char rating_str[64];
+	//		char key[64];
+	//		const char* keys;
+	//		const char* values;
+	//
+	//		gamenet_man->mpBuddyMan->SetStatusAndLocation( GP_CHATTING, (char*) Script::GetString( "homie_status_chatting" ), 
+	//																	lobby_man->GetLobbyName());
+	//		sprintf( key, "b_rating" );
+	//		sprintf( rating_str, "%d", gamenet_man->mpStatsMan->GetStats()->GetRating());
+	//		keys = key;
+	//		values = rating_str;
+	//		peerSetRoomKeys(peer, roomType, peerGetNick( peer ), 1, &keys, &values );
+	//		peerGetRoomKeys( peer, roomType, "*", 1, &keys, s_get_room_keys_callback, 
+	//						 lobby_man, false );
+	//	}
+	//}
+	//else
+	//{
+	//	switch( result )
+	//	{
+	//		case PEERFullRoom:
+	//			//printf( "Full Room\n" );
+	//			break;
+	//		case PEERInviteOnlyRoom:
+	//			//printf( "Invite Only\n" );
+	//			break;
+	//		case PEERBannedFromRoom:
+	//			//printf( "Banned from room\n" );
+	//			break;
+	//		case PEERBadPassword:
+	//			//printf( "Bad Password\n" );
+	//			break;
+	//		case PEERAlreadyInRoom:
+	//			//printf( "Already in Room\n" );
+	//			break;
+	//		case PEERNoTitleSet:
+	//			//printf( "No Title Set\n" );
+	//			break;
+	//		case PEERJoinFailed:
+	//			//printf( "Generic: Join Failed\n" );
+	//			break;
+	//		default:
+	//			break;
+	//
+	//	};
+	//	
+	//	Script::RunScript( "CreateJoinLobbyFailedDialog" );
+	//}
 }
 
 /******************************************************************/
@@ -1599,20 +1625,22 @@ bool		LobbyMan::ReportedGame( void )
 
 void		LobbyMan::StartLobbyList( void )
 {
-	Manager * gamenet_man = Manager::Instance();
-	//Thread::PerThreadStruct	net_thread_data;
+	// lwss: Disable. BuddyMan is incomplete 
 
-	Mem::Manager::sHandle().PushContext(Mem::Manager::sHandle().InternetBottomUpHeap());
-
-    gamenet_man->SetServerListState( vSERVER_LIST_STATE_GETTING_LOBBY_LIST );
-
-	// Reset the server list refresh time so that the 1-second minimum rule for refreshing server
-	// lists won't apply when going back and forth really quickly to/from lobby/server lists
-	s_last_refresh_time = 0;
-
-	peerListGroupRooms( m_peer, "\\maxplayers\\neversoft\\maxrating\\minrating", s_group_rooms_callback, this, false );
-    
-	Mem::Manager::sHandle().PopContext();
+	//Manager * gamenet_man = Manager::Instance();
+	////Thread::PerThreadStruct	net_thread_data;
+	//
+	//Mem::Manager::sHandle().PushContext(Mem::Manager::sHandle().InternetBottomUpHeap());
+	//
+    //gamenet_man->SetServerListState( vSERVER_LIST_STATE_GETTING_LOBBY_LIST );
+	//
+	//// Reset the server list refresh time so that the 1-second minimum rule for refreshing server
+	//// lists won't apply when going back and forth really quickly to/from lobby/server lists
+	//s_last_refresh_time = 0;
+	//
+	//peerListGroupRooms( m_peer, "\\maxplayers\\neversoft\\maxrating\\minrating", s_group_rooms_callback, this, false );
+    //
+	//Mem::Manager::sHandle().PopContext();
 }
 
 /******************************************************************/
@@ -1978,7 +2006,9 @@ bool	LobbyMan::ScriptRejoinLobby(Script::CScriptStructure *pParams, Script::CScr
 	
 	Mem::Manager::sHandle().PushContext(Mem::Manager::sHandle().InternetTopDownHeap());
 
-	peerJoinGroupRoom( gamenet_man->mpLobbyMan->m_peer, gamenet_man->mpLobbyMan->GetLobbyId(), s_join_room_callback, gamenet_man->mpLobbyMan, false );
+		// lwss: Disable. BuddyMan is incomplete 
+
+	//peerJoinGroupRoom( gamenet_man->mpLobbyMan->m_peer, gamenet_man->mpLobbyMan->GetLobbyId(), s_join_room_callback, gamenet_man->mpLobbyMan, false );
 
 	Mem::Manager::sHandle().PopContext();
 	return true;
@@ -1991,30 +2021,32 @@ bool	LobbyMan::ScriptRejoinLobby(Script::CScriptStructure *pParams, Script::CScr
 
 bool	LobbyMan::ScriptChooseLobby(Script::CScriptStructure *pParams, Script::CScript *pScript)
 {
-	LobbyInfo* p_lobby;
-	Manager* gamenet_man = Manager::Instance();
-	int index = 0;
+	// lwss: Disable. BuddyMan is incomplete 
 
-	Mem::Manager::sHandle().PushContext(Mem::Manager::sHandle().InternetTopDownHeap());
-
-	pParams->GetInteger( Script::GenerateCRC("index"), &index );
-				
-	p_lobby = gamenet_man->mpLobbyMan->GetLobbyInfo( index );
-	Dbg_Assert( p_lobby );
-								
-	//Dbg_Printf( "Choosing lobby %d\n", p_lobby->m_GroupId );
-	gamenet_man->mpLobbyMan->SetLobbyId( p_lobby->m_GroupId );
-	gamenet_man->mpLobbyMan->SetLobbyNumServers( p_lobby->m_NumServers );
-	gamenet_man->mpLobbyMan->SetLobbyMaxServers( p_lobby->m_MaxServers );
-	gamenet_man->mpLobbyMan->SetLobbyName( p_lobby->m_Name );
-	gamenet_man->mpLobbyMan->SetOfficialLobby( p_lobby->m_Official );
-	
-    peerJoinGroupRoom( gamenet_man->mpLobbyMan->m_peer, gamenet_man->mpLobbyMan->GetLobbyId(), s_join_room_callback, gamenet_man->mpLobbyMan, false );
-
-	// Don't need the lobby list anymore. We have recorded all its data
-	gamenet_man->mpLobbyMan->StopLobbyList();
-
-	Mem::Manager::sHandle().PopContext();
+	//LobbyInfo* p_lobby;
+	//Manager* gamenet_man = Manager::Instance();
+	//int index = 0;
+	//
+	//Mem::Manager::sHandle().PushContext(Mem::Manager::sHandle().InternetTopDownHeap());
+	//
+	//pParams->GetInteger( Script::GenerateCRC("index"), &index );
+	//			
+	//p_lobby = gamenet_man->mpLobbyMan->GetLobbyInfo( index );
+	//Dbg_Assert( p_lobby );
+	//							
+	////Dbg_Printf( "Choosing lobby %d\n", p_lobby->m_GroupId );
+	//gamenet_man->mpLobbyMan->SetLobbyId( p_lobby->m_GroupId );
+	//gamenet_man->mpLobbyMan->SetLobbyNumServers( p_lobby->m_NumServers );
+	//gamenet_man->mpLobbyMan->SetLobbyMaxServers( p_lobby->m_MaxServers );
+	//gamenet_man->mpLobbyMan->SetLobbyName( p_lobby->m_Name );
+	//gamenet_man->mpLobbyMan->SetOfficialLobby( p_lobby->m_Official );
+	//
+    //peerJoinGroupRoom( gamenet_man->mpLobbyMan->m_peer, gamenet_man->mpLobbyMan->GetLobbyId(), s_join_room_callback, gamenet_man->mpLobbyMan, false );
+	//
+	//// Don't need the lobby list anymore. We have recorded all its data
+	//gamenet_man->mpLobbyMan->StopLobbyList();
+	//
+	//Mem::Manager::sHandle().PopContext();
 	return true;
 }
 
@@ -2040,32 +2072,34 @@ bool	LobbyMan::ScriptGetNumPlayersInLobby(Script::CScriptStructure *pParams, Scr
 
 bool	LobbyMan::ScriptLeaveLobby(Script::CScriptStructure *pParams, Script::CScript* pScript )
 {
-	Manager* gamenet_man = Manager::Instance();
-	LobbyMan* lobby_man;
-	BuddyMan* buddy_man;
+	// lwss: Disable. BuddyMan is incomplete 
 
-	Mem::Manager::sHandle().PushContext(Mem::Manager::sHandle().InternetTopDownHeap());
-
-	lobby_man = gamenet_man->mpLobbyMan;
-	buddy_man = gamenet_man->mpBuddyMan;
-
-	peerLeaveRoom( lobby_man->m_peer, GroupRoom, NULL );
-	lobby_man->m_in_group_room = false;
-
-	if( buddy_man->IsLoggedIn())
-	{
-		if( !pParams->ContainsComponentNamed( CRCD(0xb2ab4dab,"preserve_status")))
-		{
-			buddy_man->SetStatusAndLocation( GP_ONLINE, 	(char*) Script::GetString( "homie_status_online" ), 
-														(char*) Script::GetString( "homie_status_logging_in" ));
-		}
-	}
-
-	// Maintain our association with our group room so that, if we're hosting a game, it will
-	// report it to the correct group room
-	peerSetGroupID( lobby_man->m_peer, lobby_man->GetLobbyId());
-
-	Mem::Manager::sHandle().PopContext();
+	//Manager* gamenet_man = Manager::Instance();
+	//LobbyMan* lobby_man;
+	//BuddyMan* buddy_man;
+	//
+	//Mem::Manager::sHandle().PushContext(Mem::Manager::sHandle().InternetTopDownHeap());
+	//
+	//lobby_man = gamenet_man->mpLobbyMan;
+	//buddy_man = gamenet_man->mpBuddyMan;
+	//
+	//peerLeaveRoom( lobby_man->m_peer, GroupRoom, NULL );
+	//lobby_man->m_in_group_room = false;
+	//
+	//if( buddy_man->IsLoggedIn())
+	//{
+	//	if( !pParams->ContainsComponentNamed( CRCD(0xb2ab4dab,"preserve_status")))
+	//	{
+	//		buddy_man->SetStatusAndLocation( GP_ONLINE, 	(char*) Script::GetString( "homie_status_online" ), 
+	//													(char*) Script::GetString( "homie_status_logging_in" ));
+	//	}
+	//}
+	//
+	//// Maintain our association with our group room so that, if we're hosting a game, it will
+	//// report it to the correct group room
+	//peerSetGroupID( lobby_man->m_peer, lobby_man->GetLobbyId());
+	//
+	//Mem::Manager::sHandle().PopContext();
 
 	return true;
 }
@@ -2077,42 +2111,44 @@ bool	LobbyMan::ScriptLeaveLobby(Script::CScriptStructure *pParams, Script::CScri
 
 bool	LobbyMan::ScriptLobbyConnect(Script::CScriptStructure *pParams, Script::CScript *pScript)
 {
-	Mlp::Manager * mlp_man = Mlp::Manager::Instance();
-	GameNet::Manager * gamenet_man = GameNet::Manager::Instance();
-	PEERBool ping_rooms[NumRooms] = {false, true, false};
-	PEERBool x_ping_rooms[NumRooms] = {false, false, false};
-	PEER peer;
-	Thread::PerThreadStruct	net_thread_data;
-    
-	Mem::Manager::sHandle().PushContext(Mem::Manager::sHandle().InternetBottomUpHeap());
-	
-	gamenet_man->mpLobbyMan->Initialize();
-	
-	peer = gamenet_man->mpLobbyMan->m_peer;
-	peerSetTitle( peer, 
-				  "thps5ps2", 
-				  "G2k8cF", 
-				  "thps5ps2", 
-				  "G2k8cF", 
-				  vGAME_VERSION,
-				  15, 
-				  true,
-				  ping_rooms, 
-				  x_ping_rooms );
+	// lwss: Disable. BuddyMan is incomplete 
 
-	Dbg_Printf( "Connecting to lobby 1\n" );
-	net_thread_data.m_pEntry = s_threaded_peer_connect;
-	net_thread_data.m_iInitialPriority = vSOCKET_THREAD_PRIORITY;
-	net_thread_data.m_pStackBase = gamenet_man->GetNetThreadStack();
-	net_thread_data.m_iStackSize = vNET_THREAD_STACK_SIZE;
-	net_thread_data.m_utid = 0x152;
-	Thread::CreateThread( &net_thread_data );
-	gamenet_man->SetNetThreadId( net_thread_data.m_osId );
-	StartThread( gamenet_man->GetNetThreadId(), gamenet_man->mpLobbyMan );
-	Dbg_Printf( "Connecting to lobby 2\n" );
-	mlp_man->AddLogicTask( *gamenet_man->mpLobbyMan->m_lobby_logic_task );
-	
-	Mem::Manager::sHandle().PopContext();
+	//Mlp::Manager * mlp_man = Mlp::Manager::Instance();
+	//GameNet::Manager * gamenet_man = GameNet::Manager::Instance();
+	//PEERBool ping_rooms[NumRooms] = {false, true, false};
+	//PEERBool x_ping_rooms[NumRooms] = {false, false, false};
+	//PEER peer;
+	//Thread::PerThreadStruct	net_thread_data;
+    //
+	//Mem::Manager::sHandle().PushContext(Mem::Manager::sHandle().InternetBottomUpHeap());
+	//
+	//gamenet_man->mpLobbyMan->Initialize();
+	//
+	//peer = gamenet_man->mpLobbyMan->m_peer;
+	//peerSetTitle( peer, 
+	//			  "thps5ps2", 
+	//			  "G2k8cF", 
+	//			  "thps5ps2", 
+	//			  "G2k8cF", 
+	//			  vGAME_VERSION,
+	//			  15, 
+	//			  true,
+	//			  ping_rooms, 
+	//			  x_ping_rooms );
+	//
+	//Dbg_Printf( "Connecting to lobby 1\n" );
+	//net_thread_data.m_pEntry = s_threaded_peer_connect;
+	//net_thread_data.m_iInitialPriority = vSOCKET_THREAD_PRIORITY;
+	//net_thread_data.m_pStackBase = gamenet_man->GetNetThreadStack();
+	//net_thread_data.m_iStackSize = vNET_THREAD_STACK_SIZE;
+	//net_thread_data.m_utid = 0x152;
+	//Thread::CreateThread( &net_thread_data );
+	//gamenet_man->SetNetThreadId( net_thread_data.m_osId );
+	//StartThread( gamenet_man->GetNetThreadId(), gamenet_man->mpLobbyMan );
+	//Dbg_Printf( "Connecting to lobby 2\n" );
+	//mlp_man->AddLogicTask( *gamenet_man->mpLobbyMan->m_lobby_logic_task );
+	//
+	//Mem::Manager::sHandle().PopContext();
 	return true;
 }
 
@@ -2163,18 +2199,20 @@ bool	LobbyMan::ScriptLobbyDisconnect(Script::CScriptStructure *pParams, Script::
 
 bool	LobbyMan::ScriptSetQuietMode( Script::CScriptStructure* pParams, Script::CScript* pScript )
 {
-	GameNet::Manager * gamenet_man = GameNet::Manager::Instance();
+	// lwss: Disable. BuddyMan is incomplete 
 
-	Mem::Manager::sHandle().PushContext(Mem::Manager::sHandle().InternetTopDownHeap());
-	if( pParams->ContainsFlag( "off" ))
-	{
-		peerSetQuietMode( gamenet_man->mpLobbyMan->m_peer, false );
-	}
-	else
-	{
-		peerSetQuietMode( gamenet_man->mpLobbyMan->m_peer, true );
-	}
-	Mem::Manager::sHandle().PopContext();
+	//GameNet::Manager * gamenet_man = GameNet::Manager::Instance();
+	//
+	//Mem::Manager::sHandle().PushContext(Mem::Manager::sHandle().InternetTopDownHeap());
+	//if( pParams->ContainsFlag( "off" ))
+	//{
+	//	peerSetQuietMode( gamenet_man->mpLobbyMan->m_peer, false );
+	//}
+	//else
+	//{
+	//	peerSetQuietMode( gamenet_man->mpLobbyMan->m_peer, true );
+	//}
+	//Mem::Manager::sHandle().PopContext();
 
 	return true;
 }
@@ -2217,36 +2255,37 @@ bool	LobbyMan::ScriptCanHostGame( Script::CScriptStructure* pParams, Script::CSc
 {
 	GameNet::Manager * gamenet_man = GameNet::Manager::Instance();
 
-	if( gamenet_man->mpLobbyMan->IsLobbyOfficial())
-	{
-		if( gamenet_man->mpBuddyMan->IsLoggedIn())
-		{
-			int profile;
-
-			profile = gamenet_man->mpBuddyMan->GetProfile();
-			if(	( profile == 27747931 ) ||
-				( profile == 27747977 ) ||
-				( profile == 27748011 ) ||
-				( profile == 27748097 ) ||
-				( profile == 27748044 ) ||
-				( profile == 27748142 ) ||
-				( profile == 27748187 ) ||
-				( profile == 27748211 ) ||
-				( profile == 27748244 ) ||
-				( profile == 27748273 ))
-			{
-				return true;
-			}
-			else
-			{
-				return false;
-			}
-		}
-		else
-		{
-			return false;
-		}
-	}
+	// lwss: Disable. BuddyMan is incomplete 
+	//if( gamenet_man->mpLobbyMan->IsLobbyOfficial())
+	//{
+	//	if( gamenet_man->mpBuddyMan->IsLoggedIn())
+	//	{
+	//		int profile;
+	//
+	//		profile = gamenet_man->mpBuddyMan->GetProfile();
+	//		if(	( profile == 27747931 ) ||
+	//			( profile == 27747977 ) ||
+	//			( profile == 27748011 ) ||
+	//			( profile == 27748097 ) ||
+	//			( profile == 27748044 ) ||
+	//			( profile == 27748142 ) ||
+	//			( profile == 27748187 ) ||
+	//			( profile == 27748211 ) ||
+	//			( profile == 27748244 ) ||
+	//			( profile == 27748273 ))
+	//		{
+	//			return true;
+	//		}
+	//		else
+	//		{
+	//			return false;
+	//		}
+	//	}
+	//	else
+	//	{
+	//		return false;
+	//	}
+	//}
 
 	return( gamenet_man->mpLobbyMan->GetLobbyNumServers() < gamenet_man->mpLobbyMan->GetLobbyMaxServers());
 }

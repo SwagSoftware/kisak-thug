@@ -720,7 +720,7 @@ static void s_insert_game_save_info(uint32 fileType, CStruct *p_struct)
 
 		case 0x62896edf: // CreatedGoals
 		{
-			Obj::CCompositeObject *p_obj=(Obj::CCompositeObject*)Obj::CTracker::Instance()->GetObject(CRCD(0x81f01058,"GoalEditor"));
+			Obj::CCompositeObject *p_obj=(Obj::CCompositeObject*)Obj::CTracker::Instance()->GetObj(CRCD(0x81f01058,"GoalEditor"));
 			Dbg_MsgAssert(p_obj,("No GoalEditor object"));
 			Obj::CGoalEditorComponent *p_goal_editor=GetGoalEditorComponentFromObject(p_obj);
 			Dbg_MsgAssert(p_goal_editor,("No goal editor component ???"));
@@ -961,7 +961,7 @@ static void s_generate_summary_info(CStruct *p_summaryInfo, uint32 fileType, CSt
 			case 0x3bf882cc: // Park
 			case 0x62896edf: // CreatedGoals
 			{
-				Obj::CCompositeObject *p_obj=(Obj::CCompositeObject*)Obj::CTracker::Instance()->GetObject(CRCD(0x81f01058,"GoalEditor"));
+				Obj::CCompositeObject *p_obj=(Obj::CCompositeObject*)Obj::CTracker::Instance()->GetObj(CRCD(0x81f01058,"GoalEditor"));
 				Dbg_MsgAssert(p_obj,("No GoalEditor object"));
 				Obj::CGoalEditorComponent *p_goal_editor=GetGoalEditorComponentFromObject(p_obj);
 				Dbg_MsgAssert(p_goal_editor,("No goal editor component ???"));
@@ -1357,7 +1357,7 @@ static void s_read_game_save_info(uint32 fileType, CStruct *p_struct, CScript *p
 
 		case 0x62896edf: // CreatedGoals
 		{
-			Obj::CCompositeObject *p_obj=(Obj::CCompositeObject*)Obj::CTracker::Instance()->GetObject(CRCD(0x81f01058,"GoalEditor"));
+			Obj::CCompositeObject *p_obj=(Obj::CCompositeObject*)Obj::CTracker::Instance()->GetObj(CRCD(0x81f01058,"GoalEditor"));
 			Dbg_MsgAssert(p_obj,("No GoalEditor object"));
 			Obj::CGoalEditorComponent *p_goal_editor=GetGoalEditorComponentFromObject(p_obj);
 			Dbg_MsgAssert(p_goal_editor,("No goal editor component ???"));
@@ -1478,6 +1478,12 @@ static int s_get_platforms_block_size()
 		case Config::HARDWARE_NGC:
 			return 8192;
 			break;
+
+		// lwss add
+		case Config::HARDWARE_WIN32:
+			return 1024;
+			break;
+		// lwss end
 			
 		case Config::HARDWARE_XBOX:
 			return 16384;
@@ -2590,6 +2596,7 @@ bool ScriptMemCardFileExists(Script::CStruct *pParams, Script::CScript *pScript)
 	switch (Config::GetHardware())
 	{
 		case Config::HARDWARE_XBOX:
+		case Config::HARDWARE_WIN32: // lwss add
 		{
 			p_xbox_directory_name=s_generate_xbox_directory_name(file_type,p_name);
 			p_xbox_converted_directory_name=p_card->ConvertDirectory(p_xbox_directory_name);
@@ -2720,6 +2727,7 @@ bool ScriptDeleteMemCardFile(Script::CStruct *pParams, Script::CScript *pScript)
 		}
 		
 		case Config::HARDWARE_XBOX:
+		case Config::HARDWARE_WIN32: // lwss add
 		{
 			if (!p_xbox_directory_name)
 			{
@@ -3103,30 +3111,31 @@ bool ScriptSaveToMemoryCard(Script::CStruct *pParams, Script::CScript *pScript)
 	// If the special pools exist, switch to them so that the components & structs etc get allocated off them.
 	// The special pools use the space freed by unloading the skater anims, and are for preventing memory
 	// overflows when the save size gets large.
-	Dbg_MsgAssert(CComponent::SGetCurrentPoolIndex()==0,("Bad current CComponent pool"));
-	Dbg_MsgAssert(CStruct::SGetCurrentPoolIndex()==0,("Bad current CStruct pool"));
-	Dbg_MsgAssert(CVector::SGetCurrentPoolIndex()==0,("Bad current CVector pool"));
-	bool got_special_pools=false;
-	CComponent::SSwitchToNextPool();
-	if (CComponent::SPoolExists())
-	{
-		CStruct::SSwitchToNextPool();
-		Dbg_MsgAssert(CStruct::SPoolExists(),("No special CStruct pool ?"));
-		CVector::SSwitchToNextPool();
-		Dbg_MsgAssert(CVector::SPoolExists(),("No special CVector pool ?"));
-		
-		got_special_pools=true;
-	}
-	else
-	{
-		CComponent::SSwitchToPreviousPool();
-	}	
+	// LWSS: comment out
+	//Dbg_MsgAssert(CComponent::SGetCurrentPoolIndex()==0,("Bad current CComponent pool"));
+	//Dbg_MsgAssert(CStruct::SGetCurrentPoolIndex()==0,("Bad current CStruct pool"));
+	//Dbg_MsgAssert(CVector::SGetCurrentPoolIndex()==0,("Bad current CVector pool"));
+	//bool got_special_pools=false;
+	//CComponent::SSwitchToNextPool();
+	//if (CComponent::SPoolExists())
+	//{
+	//	CStruct::SSwitchToNextPool();
+	//	Dbg_MsgAssert(CStruct::SPoolExists(),("No special CStruct pool ?"));
+	//	CVector::SSwitchToNextPool();
+	//	Dbg_MsgAssert(CVector::SPoolExists(),("No special CVector pool ?"));
+	//	
+	//	got_special_pools=true;
+	//}
+	//else
+	//{
+	//	CComponent::SSwitchToPreviousPool();
+	//}	
 
 	
 	#ifdef	__NOPT_ASSERT__
-	int initial_ccomponent_num_used_items=CComponent::SGetNumUsedItems();
-	int initial_cstruct_num_used_items=CStruct::SGetNumUsedItems();
-	int initial_cvector_num_used_items=CVector::SGetNumUsedItems();
+	//int initial_ccomponent_num_used_items=CComponent::SGetNumUsedItems();
+	//int initial_cstruct_num_used_items=CStruct::SGetNumUsedItems();
+	//int initial_cvector_num_used_items=CVector::SGetNumUsedItems();
 	#endif
 
 	// WARNING !		WARNING !		WARNING !		WARNING !		WARNING !
@@ -3157,10 +3166,10 @@ bool ScriptSaveToMemoryCard(Script::CStruct *pParams, Script::CScript *pScript)
 	pSummaryInfo->AddString("filename",p_name);
 
 	#ifdef	__NOPT_ASSERT__
-	printf("Save type = '%s'\n",Script::FindChecksumName(file_type));
-	printf("Num CComponents used by save = %d\n",CComponent::SGetNumUsedItems()-initial_ccomponent_num_used_items);
-	printf("Num CStructs used by game save = %d\n",CStruct::SGetNumUsedItems()-initial_cstruct_num_used_items);
-	printf("Num CVectors used by game save = %d\n",CVector::SGetNumUsedItems()-initial_cvector_num_used_items);
+	//printf("Save type = '%s'\n",Script::FindChecksumName(file_type));
+	//printf("Num CComponents used by save = %d\n",CComponent::SGetNumUsedItems()-initial_ccomponent_num_used_items);
+	//printf("Num CStructs used by game save = %d\n",CStruct::SGetNumUsedItems()-initial_cstruct_num_used_items);
+	//printf("Num CVectors used by game save = %d\n",CVector::SGetNumUsedItems()-initial_cvector_num_used_items);
 	#endif
 
 
@@ -3227,7 +3236,7 @@ bool ScriptSaveToMemoryCard(Script::CStruct *pParams, Script::CScript *pScript)
 	printf("required_size=%d, fixed_size=%d, %d percent\n",required_size,fixed_size,(100*required_size)/fixed_size);
 	if (required_size > fixed_size)
 	{
-		goto ERROR;
+		goto ERRORGOTO;
 	}	
 	#endif
 
@@ -3245,12 +3254,12 @@ bool ScriptSaveToMemoryCard(Script::CStruct *pParams, Script::CScript *pScript)
 	p_card=mc_man->GetCard(0,0);
 	if (!p_card)
 	{
-		goto ERROR;
+		goto ERRORGOTO;
 	}
 	// GameCube often crashes if try to do card operations on a bad card, so do this check first.
 	if (!p_card->IsFormatted())
 	{
-		goto ERROR;
+		goto ERRORGOTO;
 	}
 	
 	char p_card_file_name[MAX_CARD_FILE_NAME_CHARS+1];
@@ -3264,7 +3273,7 @@ bool ScriptSaveToMemoryCard(Script::CStruct *pParams, Script::CScript *pScript)
 										  p_card_file_name,
 										  &s_insufficient_space))
 			{
-				goto ERROR;
+				goto ERRORGOTO;
 			}
 			break;
 			
@@ -3288,12 +3297,12 @@ bool ScriptSaveToMemoryCard(Script::CStruct *pParams, Script::CScript *pScript)
 										   p_card_file_name,
 										   &s_insufficient_space))
 			{
-				goto ERROR;
+				goto ERRORGOTO;
 			}
 			break;
 		default:
 			{
-				goto ERROR;
+				goto ERRORGOTO;
 			}
 			break;
 	}
@@ -3306,7 +3315,7 @@ bool ScriptSaveToMemoryCard(Script::CStruct *pParams, Script::CScript *pScript)
 
 	if (!pFile)
 	{
-		goto ERROR;
+		goto ERRORGOTO;
 	}
 		
 	pTemp=(uint8*)Mem::Malloc(header_and_structures_size);
@@ -3324,7 +3333,7 @@ bool ScriptSaveToMemoryCard(Script::CStruct *pParams, Script::CScript *pScript)
 	{
 		if (!s_insert_ngc_icon(p_file_header,p_card,pFile,file_type,p_name))
 		{
-			goto ERROR;
+			goto ERRORGOTO;
 		}
 	}
 	
@@ -3406,7 +3415,7 @@ bool ScriptSaveToMemoryCard(Script::CStruct *pParams, Script::CScript *pScript)
 	s_insufficient_space=p_card->GetLastError()==Mc::Card::vINSUFFICIENT_SPACE;
 	if (CardBytesWritten!=header_and_structures_size)
 	{
-		goto ERROR;
+		goto ERRORGOTO;
 	}
 
 
@@ -3427,7 +3436,7 @@ bool ScriptSaveToMemoryCard(Script::CStruct *pParams, Script::CScript *pScript)
 		s_insufficient_space=p_card->GetLastError()==Mc::Card::vINSUFFICIENT_SPACE;
 		if (CardBytesWritten!=sizeof(Replay::SReplayDataHeader))
 		{
-			goto ERROR;
+			goto ERRORGOTO;
 		}
 	
 		replay_data_checksum=Crc::UpdateCRC((const char *)&replay_data_header,sizeof(Replay::SReplayDataHeader),replay_data_checksum);
@@ -3445,7 +3454,7 @@ bool ScriptSaveToMemoryCard(Script::CStruct *pParams, Script::CScript *pScript)
 			s_insufficient_space=p_card->GetLastError()==Mc::Card::vINSUFFICIENT_SPACE;
 			if (CardBytesWritten!=sizeof(Replay::SSavedDummy))
 			{
-				goto ERROR;
+				goto ERRORGOTO;
 			}
 			replay_data_checksum=Crc::UpdateCRC((const char *)&saved_dummy,sizeof(Replay::SSavedDummy),replay_data_checksum);
 			
@@ -3475,7 +3484,7 @@ bool ScriptSaveToMemoryCard(Script::CStruct *pParams, Script::CScript *pScript)
 			s_insufficient_space=p_card->GetLastError()==Mc::Card::vINSUFFICIENT_SPACE;
 			if (CardBytesWritten!=REPLAY_BUFFER_CHUNK_SIZE)
 			{
-				goto ERROR;
+				goto ERRORGOTO;
 			}
 		}
 		
@@ -3484,7 +3493,7 @@ bool ScriptSaveToMemoryCard(Script::CStruct *pParams, Script::CScript *pScript)
 		s_insufficient_space=p_card->GetLastError()==Mc::Card::vINSUFFICIENT_SPACE;
 		if (CardBytesWritten!=4)
 		{
-			goto ERROR;
+			goto ERRORGOTO;
 		}
 	}
 #endif
@@ -3508,14 +3517,15 @@ bool ScriptSaveToMemoryCard(Script::CStruct *pParams, Script::CScript *pScript)
 			s_insufficient_space=p_card->GetLastError()==Mc::Card::vINSUFFICIENT_SPACE;
 			if (CardBytesWritten != pad_size)
 			{
-				goto ERROR;
+				goto ERRORGOTO;
 			}
 		}	
 	}	
 	
 	SavedOK=true;
 	
-ERROR:	
+//ERROR:	
+ERRORGOTO:	// lwss: fcking MSVC macro
 	if (p_pad)
 	{
 		Mem::Free(p_pad);
@@ -3541,15 +3551,16 @@ ERROR:
 	delete pMemCardStuff;
 
 	
-	if (got_special_pools)
-	{
-		Dbg_MsgAssert(CComponent::SGetNumUsedItems()==0,("Expected the special mem card CComponent pool to be empty at this point, but got %d items",CComponent::SGetNumUsedItems()));
-		Dbg_MsgAssert(CStruct::SGetNumUsedItems()==0,("Expected the special mem card CStruct pool to be empty at this point, but got %d items",CStruct::SGetNumUsedItems()));
-		Dbg_MsgAssert(CVector::SGetNumUsedItems()==0,("Expected the special mem card CVector pool to be empty at this point, but got %d items",CVector::SGetNumUsedItems()));
-		CComponent::SSwitchToPreviousPool();
-		CStruct::SSwitchToPreviousPool();
-		CVector::SSwitchToPreviousPool();
-	}
+	// LWSS: Comment out
+	//if (got_special_pools)
+	//{
+	//	Dbg_MsgAssert(CComponent::SGetNumUsedItems()==0,("Expected the special mem card CComponent pool to be empty at this point, but got %d items",CComponent::SGetNumUsedItems()));
+	//	Dbg_MsgAssert(CStruct::SGetNumUsedItems()==0,("Expected the special mem card CStruct pool to be empty at this point, but got %d items",CStruct::SGetNumUsedItems()));
+	//	Dbg_MsgAssert(CVector::SGetNumUsedItems()==0,("Expected the special mem card CVector pool to be empty at this point, but got %d items",CVector::SGetNumUsedItems()));
+	//	CComponent::SSwitchToPreviousPool();
+	//	CStruct::SSwitchToPreviousPool();
+	//	CVector::SSwitchToPreviousPool();
+	//}
 	
 	if ( Config::GetHardware() != Config::HARDWARE_XBOX)
 	{
@@ -3660,12 +3671,12 @@ bool ScriptLoadFromMemoryCard(Script::CStruct *pParams, Script::CScript *pScript
 	Mc::Card* p_card=mc_man->GetCard(0,0);
 	if (!p_card)
 	{
-		goto ERROR;
+		goto ERRORGOTO;
 	}
 	// GameCube often crashes if try to do card operations on a bad card, so do this check first.
 	if (!p_card->IsFormatted())
 	{
-		goto ERROR;
+		goto ERRORGOTO;
 	}
 		
 		
@@ -3706,7 +3717,7 @@ bool ScriptLoadFromMemoryCard(Script::CStruct *pParams, Script::CScript *pScript
 		
 			if (!p_low_level_directory_name)
 			{
-				goto ERROR;
+				goto ERRORGOTO;
 			}
 						
 			// Calculate the low-level file name.
@@ -3715,7 +3726,7 @@ bool ScriptLoadFromMemoryCard(Script::CStruct *pParams, Script::CScript *pScript
 		}	
 		default:
 		{
-			goto ERROR;
+			goto ERRORGOTO;
 			break;
 		}	
 	}
@@ -3735,7 +3746,7 @@ bool ScriptLoadFromMemoryCard(Script::CStruct *pParams, Script::CScript *pScript
 	if (!p_file)
 	{
 		// File could not be opened
-		goto ERROR;
+		goto ERRORGOTO;
 	}	
 	
 	// File opened OK
@@ -3760,7 +3771,7 @@ bool ScriptLoadFromMemoryCard(Script::CStruct *pParams, Script::CScript *pScript
 	if (p_file->Read(p_temp, file_size) != file_size)
 	{
 		// Some sort of read error.
-		goto ERROR;
+		goto ERRORGOTO;
 	}		
 	
 	// Seemed to read into memory OK
@@ -3906,7 +3917,8 @@ bool ScriptLoadFromMemoryCard(Script::CStruct *pParams, Script::CScript *pScript
 		}	
 	}
 
-ERROR:	
+//ERROR:	
+ERRORGOTO:	
 	// Cleanup and unpause the music.
 	if (p_file)
 	{
@@ -4141,24 +4153,25 @@ bool ScriptGetMemCardDirectoryListing(Script::CStruct *pParams, Script::CScript 
 	Lst::Head< Mc::File > file_list;
 	p_card->GetFileList( "*", file_list );
 
+	// LWSS: Comment out
 	// If the special pools exist, switch to them so that the components & structs etc get allocated off them.
 	// The special pools use the space freed by unloading the skater anims, and are for preventing memory
 	// overflows when the save size gets large.
-	Dbg_MsgAssert(CComponent::SGetCurrentPoolIndex()==0,("Bad current CComponent pool"));
-	Dbg_MsgAssert(CStruct::SGetCurrentPoolIndex()==0,("Bad current CStruct pool"));
-	bool got_special_pools=false;
-	
-	CComponent::SSwitchToNextPool();
-	if (CComponent::SPoolExists())
-	{
-		CStruct::SSwitchToNextPool();
-		Dbg_MsgAssert(CStruct::SPoolExists(),("No special CStruct pool ?"));
-		got_special_pools=true;
-	}
-	else
-	{
-		CComponent::SSwitchToPreviousPool();
-	}	
+	//Dbg_MsgAssert(CComponent::SGetCurrentPoolIndex()==0,("Bad current CComponent pool"));
+	//Dbg_MsgAssert(CStruct::SGetCurrentPoolIndex()==0,("Bad current CStruct pool"));
+	//bool got_special_pools=false;
+	//
+	//CComponent::SSwitchToNextPool();
+	//if (CComponent::SPoolExists())
+	//{
+	//	CStruct::SSwitchToNextPool();
+	//	Dbg_MsgAssert(CStruct::SPoolExists(),("No special CStruct pool ?"));
+	//	got_special_pools=true;
+	//}
+	//else
+	//{
+	//	CComponent::SSwitchToPreviousPool();
+	//}	
 
 	
 	int num_files_added=0;
@@ -4214,10 +4227,12 @@ bool ScriptGetMemCardDirectoryListing(Script::CStruct *pParams, Script::CScript 
 			file_type=s_determine_file_type(p_file->m_Filename[header_len+8-1]);
 			break;
 		case Config::HARDWARE_XBOX:
+		case Config::HARDWARE_WIN32: // LWSS ADD
 		{
+			// KISAKTODO: are these file extensions wrong?
 			// TODO: Remove this ifdef somehow, needed currently because m_DisplayFilename
 			// is only defined for XBox. Shouldn't really have any platform ifdefs in this file.
-			#ifdef __PLAT_XBOX__
+			#if defined(__PLAT_XBOX__) || defined(__PLAT_WN32__)
 			int length = strlen( p_file->m_DisplayFilename );
 			if( stricmp( &p_file->m_DisplayFilename[length - 15], "NetworkSettings" ) == 0 )
 			{
@@ -4250,8 +4265,8 @@ bool ScriptGetMemCardDirectoryListing(Script::CStruct *pParams, Script::CScript 
 			#endif // #ifdef __PLAT_XBOX__
 			break;
 		}	
-		case Config::HARDWARE_WIN32:
-			break;
+		//case Config::HARDWARE_WIN32:
+		//	break;
 		default:
 			break;
 		}
@@ -4285,6 +4300,7 @@ bool ScriptGetMemCardDirectoryListing(Script::CStruct *pParams, Script::CScript 
 				else
 				{
 					sprintf(p_card_file_name,"/%s/%s",p_file->m_Filename,p_file->m_Filename);
+					//sprintf(p_card_file_name,"Save/%s",p_file->m_Filename); // lwss change
 				}	
 				Dbg_MsgAssert(strlen(p_card_file_name)<100,("Oops"));
 				
@@ -4295,7 +4311,7 @@ bool ScriptGetMemCardDirectoryListing(Script::CStruct *pParams, Script::CScript 
 				// so in that case it would not be possible to delete it.
 				p_struct->AddString("actual_file_name",p_card_file_name);
 				
-				#ifdef __PLAT_XBOX__
+				#if defined(__PLAT_XBOX__) || defined(__PLAT_WN32__)
 				p_struct->AddString("xbox_directory_name",p_file->m_DisplayFilename);
 				#endif
 
@@ -4397,13 +4413,14 @@ bool ScriptGetMemCardDirectoryListing(Script::CStruct *pParams, Script::CScript 
 		}
 	}	
 
-	if (got_special_pools)
-	{
-		// Note: The pools will contain stuff at this point. The script will delete them
-		// when it does its cleanup.
-		CComponent::SSwitchToPreviousPool();
-		CStruct::SSwitchToPreviousPool();
-	}
+	// LWSS: Comment out
+	//if (got_special_pools)
+	//{
+	//	// Note: The pools will contain stuff at this point. The script will delete them
+	//	// when it does its cleanup.
+	//	CComponent::SSwitchToPreviousPool();
+	//	CStruct::SSwitchToPreviousPool();
+	//}
 	
 	// The file_list will probably get cleaned up when it goes out of scope, but just to be sure ...
 	file_list.DestroyAllNodes();
@@ -4576,22 +4593,22 @@ bool ScriptGetSaveInfo(Script::CStruct *pParams, Script::CScript *pScript)
 bool ScriptCreateTemporaryMemCardPools(Script::CStruct *pParams, Script::CScript *pScript)
 {
 	// If the pools exist already, do nothing.
-	CComponent::SSwitchToNextPool();
-	if (CComponent::SPoolExists())
-	{
-		CComponent::SSwitchToPreviousPool();
-		
-		CStruct::SSwitchToNextPool();								 
-		Dbg_MsgAssert(CStruct::SPoolExists(),("Expected CStruct pool to exist"));
-		CStruct::SSwitchToPreviousPool();
-
-		CVector::SSwitchToNextPool();								 
-		Dbg_MsgAssert(CVector::SPoolExists(),("Expected CVector pool to exist"));
-		CVector::SSwitchToPreviousPool();
-		
-		return true;
-	}	
-	CComponent::SSwitchToPreviousPool();
+	//CComponent::SSwitchToNextPool();
+	//if (CComponent::SPoolExists())
+	//{
+	//	CComponent::SSwitchToPreviousPool();
+	//	
+	//	CStruct::SSwitchToNextPool();								 
+	//	Dbg_MsgAssert(CStruct::SPoolExists(),("Expected CStruct pool to exist"));
+	//	CStruct::SSwitchToPreviousPool();
+	//
+	//	CVector::SSwitchToNextPool();								 
+	//	Dbg_MsgAssert(CVector::SPoolExists(),("Expected CVector pool to exist"));
+	//	CVector::SSwitchToPreviousPool();
+	//	
+	//	return true;
+	//}	
+	//CComponent::SSwitchToPreviousPool();
 	
 #ifdef __PLAT_NGC__
 #define NUM_COM 16000
@@ -4619,31 +4636,31 @@ bool ScriptCreateTemporaryMemCardPools(Script::CStruct *pParams, Script::CScript
 #endif		// __PLAT_NGC__
 
 		
-	Mem::Manager::sHandle().PushContext(Mem::Manager::sHandle().TopDownHeap());
-
-	Mem::PushMemProfile("Mem card CComponent");
-	Dbg_MsgAssert(CComponent::SGetCurrentPoolIndex()==0,("Bad current CComponent pool"));
-	CComponent::SSwitchToNextPool();
-	CComponent::SCreatePool(NUM_COM, "Reserve CComponent");
-	CComponent::SSwitchToPreviousPool();
-	Mem::PopMemProfile();
-										 
-	Mem::PushMemProfile("Mem card CStruct");
-	Dbg_MsgAssert(CStruct::SGetCurrentPoolIndex()==0,("Bad current CStruct pool"));
-	CStruct::SSwitchToNextPool();
-	CStruct::SCreatePool(NUM_STR, "Reserve CStruct");
-	CStruct::SSwitchToPreviousPool();
-	Mem::PopMemProfile();
-	
-	// 12 bytes each  (Actually 16)
-	Mem::PushMemProfile("Mem card CVector");
-	Dbg_MsgAssert(CVector::SGetCurrentPoolIndex()==0,("Bad current CVector pool"));
-	CVector::SSwitchToNextPool();
-	CVector::SCreatePool(NUM_VEC, "Reserve CVector");
-	CVector::SSwitchToPreviousPool();
-	Mem::PopMemProfile();
-
-	Mem::Manager::sHandle().PopContext();
+	//Mem::Manager::sHandle().PushContext(Mem::Manager::sHandle().TopDownHeap());
+	//
+	//Mem::PushMemProfile("Mem card CComponent");
+	//Dbg_MsgAssert(CComponent::SGetCurrentPoolIndex()==0,("Bad current CComponent pool"));
+	//CComponent::SSwitchToNextPool();
+	//CComponent::SCreatePool(NUM_COM, "Reserve CComponent");
+	//CComponent::SSwitchToPreviousPool();
+	//Mem::PopMemProfile();
+	//									 
+	//Mem::PushMemProfile("Mem card CStruct");
+	//Dbg_MsgAssert(CStruct::SGetCurrentPoolIndex()==0,("Bad current CStruct pool"));
+	//CStruct::SSwitchToNextPool();
+	//CStruct::SCreatePool(NUM_STR, "Reserve CStruct");
+	//CStruct::SSwitchToPreviousPool();
+	//Mem::PopMemProfile();
+	//
+	//// 12 bytes each  (Actually 16)
+	//Mem::PushMemProfile("Mem card CVector");
+	//Dbg_MsgAssert(CVector::SGetCurrentPoolIndex()==0,("Bad current CVector pool"));
+	//CVector::SSwitchToNextPool();
+	//CVector::SCreatePool(NUM_VEC, "Reserve CVector");
+	//CVector::SSwitchToPreviousPool();
+	//Mem::PopMemProfile();
+	//
+	//Mem::Manager::sHandle().PopContext();
 
 	return true;
 }
@@ -4651,20 +4668,20 @@ bool ScriptCreateTemporaryMemCardPools(Script::CStruct *pParams, Script::CScript
 // It is safe to call this multiple times.
 bool ScriptRemoveTemporaryMemCardPools(Script::CStruct *pParams, Script::CScript *pScript)
 {
-	Dbg_MsgAssert(CComponent::SGetCurrentPoolIndex()==0,("Bad current CComponent pool"));
-	CComponent::SSwitchToNextPool();
-	CComponent::SRemovePool(); // Does nothing if the pool does not exist.
-	CComponent::SSwitchToPreviousPool();
-	
-	Dbg_MsgAssert(CStruct::SGetCurrentPoolIndex()==0,("Bad current CStruct pool"));
-	CStruct::SSwitchToNextPool();
-	CStruct::SRemovePool();
-	CStruct::SSwitchToPreviousPool();
-		
-	Dbg_MsgAssert(CVector::SGetCurrentPoolIndex()==0,("Bad current CVector pool"));
-	CVector::SSwitchToNextPool();
-	CVector::SRemovePool();
-	CVector::SSwitchToPreviousPool();
+	//Dbg_MsgAssert(CComponent::SGetCurrentPoolIndex()==0,("Bad current CComponent pool"));
+	//CComponent::SSwitchToNextPool();
+	//CComponent::SRemovePool(); // Does nothing if the pool does not exist.
+	//CComponent::SSwitchToPreviousPool();
+	//
+	//Dbg_MsgAssert(CStruct::SGetCurrentPoolIndex()==0,("Bad current CStruct pool"));
+	//CStruct::SSwitchToNextPool();
+	//CStruct::SRemovePool();
+	//CStruct::SSwitchToPreviousPool();
+	//	
+	//Dbg_MsgAssert(CVector::SGetCurrentPoolIndex()==0,("Bad current CVector pool"));
+	//CVector::SSwitchToNextPool();
+	//CVector::SRemovePool();
+	//CVector::SSwitchToPreviousPool();
 	
 #ifdef __PLAT_NGC__
 	if ( g_hack_address )
@@ -4682,33 +4699,33 @@ bool ScriptRemoveTemporaryMemCardPools(Script::CStruct *pParams, Script::CScript
 
 bool ScriptSwitchToTempPoolsIfTheyExist(Script::CStruct *pParams, Script::CScript *pScript)
 {
-	Dbg_MsgAssert(CComponent::SGetCurrentPoolIndex()==0 && CStruct::SGetCurrentPoolIndex()==0 && CVector::SGetCurrentPoolIndex()==0, ("Expected current pools to be 0"));
-	CComponent::SSwitchToNextPool();
-	CStruct::SSwitchToNextPool();
-	CVector::SSwitchToNextPool();
-	if (CComponent::SPoolExists() && CStruct::SPoolExists() && CVector::SPoolExists())
-	{
-		return true;
-	}
-	CComponent::SSwitchToPreviousPool();
-	CStruct::SSwitchToPreviousPool();
-	CVector::SSwitchToPreviousPool();
+	//Dbg_MsgAssert(CComponent::SGetCurrentPoolIndex()==0 && CStruct::SGetCurrentPoolIndex()==0 && CVector::SGetCurrentPoolIndex()==0, ("Expected current pools to be 0"));
+	//CComponent::SSwitchToNextPool();
+	//CStruct::SSwitchToNextPool();
+	//CVector::SSwitchToNextPool();
+	//if (CComponent::SPoolExists() && CStruct::SPoolExists() && CVector::SPoolExists())
+	//{
+	//	return true;
+	//}
+	//CComponent::SSwitchToPreviousPool();
+	//CStruct::SSwitchToPreviousPool();
+	//CVector::SSwitchToPreviousPool();
 
 	return false;
 }
 
 bool ScriptSwitchToRegularPools(Script::CStruct *pParams, Script::CScript *pScript)
 {
-	if (CComponent::SGetCurrentPoolIndex()==0 && 
-		CStruct::SGetCurrentPoolIndex()==0 &&
-		CVector::SGetCurrentPoolIndex()==0)
-	{
-		return true;
-	}
-		
-	CComponent::SSwitchToPreviousPool();
-	CStruct::SSwitchToPreviousPool();
-	CVector::SSwitchToPreviousPool();
+	//if (CComponent::SGetCurrentPoolIndex()==0 && 
+	//	CStruct::SGetCurrentPoolIndex()==0 &&
+	//	CVector::SGetCurrentPoolIndex()==0)
+	//{
+	//	return true;
+	//}
+	//	
+	//CComponent::SSwitchToPreviousPool();
+	//CStruct::SSwitchToPreviousPool();
+	//CVector::SSwitchToPreviousPool();
 	return true;
 }
 
@@ -4750,7 +4767,7 @@ bool SaveDataFile(const char *p_name, uint8 *p_data, uint32 size)
 	Mc::Card* p_card=mc_man->GetCard(0,0);
 	if (!p_card)
 	{
-		goto ERROR;
+		goto ERRORGOTO;
 	}
 
 	while (true)
@@ -4786,7 +4803,7 @@ bool SaveDataFile(const char *p_name, uint8 *p_data, uint32 size)
 								  p_card_file_name,
 								  &s_insufficient_space))
 	{
-		goto ERROR;
+		goto ERRORGOTO;
 	}
 
 	// Open a file big enough to hold all data
@@ -4795,19 +4812,20 @@ bool SaveDataFile(const char *p_name, uint8 *p_data, uint32 size)
 
 	if (!pFile)
 	{
-		goto ERROR;
+		goto ERRORGOTO;
 	}
 
 	CardBytesWritten=pFile->Write( p_data, size );
 	s_insufficient_space=p_card->GetLastError()==Mc::Card::vINSUFFICIENT_SPACE;
 	if (CardBytesWritten!=size)
 	{
-		goto ERROR;
+		goto ERRORGOTO;
 	}
 
 	SavedOK=true;
 	
-ERROR:	
+//ERROR:	
+ERRORGOTO:
 	if (pFile)
 	{
 		if (!pFile->Flush())

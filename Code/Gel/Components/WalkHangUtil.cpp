@@ -85,7 +85,7 @@ bool CWalkComponent::maybe_hop_to_hang (   )
 			p_rail_manager_component = static_cast< CRailManagerComponent* >(p_rail_manager_component->GetNextSameType()))
 		{
 			// only hop to moving hangs below a threshold velocity
-			if (p_rail_manager_component->GetObject()->GetVel().LengthSqr() > max_hop_to_movable_hang_vel_sqr) continue;
+			if (p_rail_manager_component->GetObj()->GetVel().LengthSqr() > max_hop_to_movable_hang_vel_sqr) continue;
 			
 			Mth::Matrix obj_matrix_inv = p_rail_manager_component->UpdateRailManager();
 			obj_matrix_inv.Invert();
@@ -106,7 +106,7 @@ bool CWalkComponent::maybe_hop_to_hang (   )
 			))
 			{
 				mp_rail_manager = p_rail_manager_component->GetRailManager();
-				mp_movable_contact_component->ObtainContact(p_rail_manager_component->GetObject());
+				mp_movable_contact_component->ObtainContact(p_rail_manager_component->GetObj());
 			}
 		}
 	}
@@ -218,7 +218,7 @@ bool CWalkComponent::maybe_drop_to_hang (   )
 				Script::GetFloat(CRCD(0xa8276303, "Drop_To_Climb_Max_Snap"))
 			))
 			{
-				mp_movable_contact_component->ObtainContact(p_rail_manager_component->GetObject());
+				mp_movable_contact_component->ObtainContact(p_rail_manager_component->GetObj());
 			}
 		}
 	}
@@ -337,7 +337,7 @@ bool CWalkComponent::maybe_grab_to_hang ( Mth::Vector start_pos, Mth::Vector end
 				Script::GetFloat(CRCD(0x30ce7f2c, "Climb_Max_Snap"))
 			))
 			{
-				mp_movable_contact_component->ObtainContact(p_rail_manager_component->GetObject());
+				mp_movable_contact_component->ObtainContact(p_rail_manager_component->GetObj());
 			}
 		}
 	}
@@ -734,7 +734,7 @@ void CWalkComponent::go_hang_state (   )
 	
 	if (mp_movable_contact_component->UpdateContact(m_pos))
 	{
-		CRailManagerComponent* p_rail_manager_component = GetRailManagerComponentFromObject(mp_movable_contact_component->GetContact()->GetObject());
+		CRailManagerComponent* p_rail_manager_component = GetRailManagerComponentFromObject(mp_movable_contact_component->GetContact()->GetObj());
 		Dbg_Assert(p_rail_manager_component);
 
 		p_rail_manager_component->UpdateRailManager();

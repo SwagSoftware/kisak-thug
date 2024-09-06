@@ -104,9 +104,9 @@ void CMovableContactComponent::GetDebugInfo(Script::CStruct *p_info)
 #ifdef	__DEBUG_CODE__
 	Dbg_MsgAssert(p_info,("NULL p_info sent to CMovableContactComponent::GetDebugInfo"));
 	
-	if (mp_contact && mp_contact->GetObject())
+	if (mp_contact && mp_contact->GetObj())
 	{
-		p_info->AddChecksum(CRCD(0xb39d19c7, "contact"), mp_contact->GetObject()->GetID());
+		p_info->AddChecksum(CRCD(0xb39d19c7, "contact"), mp_contact->GetObj()->GetID());
 	}
 
 	CBaseComponent::GetDebugInfo(p_info);	  
@@ -125,7 +125,7 @@ bool CMovableContactComponent::CheckForMovableContact ( CFeeler& feeler )
 	{
 		if (HaveContact())
 		{
-			if (mp_contact->GetObject() != feeler.GetMovingObject())
+			if (mp_contact->GetObj() != feeler.GetMovingObject())
 			{
 				LoseAnyContact();
 			}

@@ -25,8 +25,14 @@
 
 #include <core/defines.h>
 
-#include <peer/peer.h>
-#include <natneg/natneg.h>
+//#include <peer/peer.h>
+//#include <natneg/natneg.h>
+// LWSS: IGN has kindly open-sourced the GameSpy SDK, hooray
+#include "GameSpy/Peer/peer.h"
+#include "GameSpy/natneg/natneg.h"
+
+#include <Sk/GameNet/GameNet.h>
+#include <Gel/Scripting/struct.h>
 
 namespace GameNet
 {

@@ -72,7 +72,7 @@ void CSkaterRunTimerComponent::RefreshFromStructure( Script::CStruct* pParams )
 
 void CSkaterRunTimerComponent::Finalize()
 {
-	mp_walk_component = GetWalkComponentFromObject(GetObject());
+	mp_walk_component = GetWalkComponentFromObject(GetObj());
 	
 	Dbg_Assert(mp_walk_component);
 }
@@ -102,12 +102,12 @@ void CSkaterRunTimerComponent::Update()
 		if (m_timer < 0.0f)
 		{
 			set_state(ACTIVE_TIME_UP);
-			GetObject()->SelfEvent(CRCD(0x9e22a8e9, "RunTimerUp"));
+			GetObj()->SelfEvent(CRCD(0x9e22a8e9, "RunTimerUp"));
 		}
 	}
 	else if (m_state == ACTIVE_TIME_UP)
 	{
-		GetObject()->SelfEvent(CRCD(0x9e22a8e9, "RunTimerUp"));
+		GetObj()->SelfEvent(CRCD(0x9e22a8e9, "RunTimerUp"));
 	}
 }
 
@@ -184,7 +184,7 @@ void CSkaterRunTimerComponent::ComboEnded (   )
 {
 	if (Script::FindSpawnedScriptWithID(get_run_timer_controller_id()))
 	{
-		CTracker::Instance()->LaunchEvent(CRCD(0x813cc576, "HideRunTimer"), get_run_timer_controller_id(), GetObject()->GetID());
+		CTracker::Instance()->LaunchEvent(CRCD(0x813cc576, "HideRunTimer"), get_run_timer_controller_id(), GetObj()->GetID());
 	}
 	
 	set_state(INACTIVE);
@@ -209,7 +209,7 @@ void CSkaterRunTimerComponent::unpause (   )
 	
 	m_unpause_count++;
 	
-	CTracker::Instance()->LaunchEvent(CRCD(0x47eec244, "ShowRunTimer"), get_run_timer_controller_id(), GetObject()->GetID());
+	CTracker::Instance()->LaunchEvent(CRCD(0x47eec244, "ShowRunTimer"), get_run_timer_controller_id(), GetObj()->GetID());
 }
 
 }

@@ -71,12 +71,12 @@ CRiderComponent::~CRiderComponent()
 	
 void CRiderComponent::Finalize()
 {
-	mp_input_component = GetInputComponentFromObject(GetObject());
-	mp_animation_component = GetAnimationComponentFromObject(GetObject());
-	mp_model_component = GetModelComponentFromObject(GetObject());
-	mp_trigger_component = GetTriggerComponentFromObject(GetObject());
-	mp_physics_control_component = GetSkaterPhysicsControlComponentFromObject(GetObject());
-	mp_movable_contact_component = GetMovableContactComponentFromObject(GetObject());
+	mp_input_component = GetInputComponentFromObject(GetObj());
+	mp_animation_component = GetAnimationComponentFromObject(GetObj());
+	mp_model_component = GetModelComponentFromObject(GetObj());
+	mp_trigger_component = GetTriggerComponentFromObject(GetObj());
+	mp_physics_control_component = GetSkaterPhysicsControlComponentFromObject(GetObj());
+	mp_movable_contact_component = GetMovableContactComponentFromObject(GetObj());
 	
 	Dbg_Assert(mp_input_component);
 	Dbg_Assert(mp_animation_component);
@@ -137,24 +137,24 @@ void CRiderComponent::Update()
 //    get_controller_input();
 	
 	// extract initial state for this frame from the object
-	m_frame_start_pos = m_pos = GetObject()->GetPos();
+	m_frame_start_pos = m_pos = GetObj()->GetPos();
 	
-	m_horizontal_vel = GetObject()->GetVel();
+	m_horizontal_vel = GetObj()->GetVel();
 	m_horizontal_vel[Y] = 0.0f;
-	m_vertical_vel = GetObject()->GetVel()[Y];
+	m_vertical_vel = GetObj()->GetVel()[Y];
 	
 	// note that m_facing and m_upward will often not be orthogonal, but will always span a plan
 	
 	// generally straight up, but now after a transition from skating
-	m_upward = GetObject()->GetMatrix()[Y];
+	m_upward = GetObj()->GetMatrix()[Y];
 	
-	m_facing = GetObject()->GetMatrix()[Z];
+	m_facing = GetObj()->GetMatrix()[Z];
 	m_facing[Y] = 0.0f;
 	float length = m_facing.Length();
 	if (length < 0.001f)
 	{
 		// upward facing orientation matrix
-		m_facing = -GetObject()->GetMatrix()[Y];
+		m_facing = -GetObj()->GetMatrix()[Y];
 		m_facing[Y] = 0.0f;
 		m_facing.Normalize();
 		
@@ -229,7 +229,7 @@ void CRiderComponent::Update()
 //	copy_state_into_object();
 	
 //	Dbg_Assert(m_frame_event);
-//	GetObject()->SelfEvent(m_frame_event);
+//	GetObj()->SelfEvent(m_frame_event);
 	
 	// set the animation speeds
 //	switch (m_anim_scale_speed)
@@ -496,9 +496,9 @@ bool CRiderComponent::ReadyRiderState( bool to_ground_state )
 	Obj::CHorseComponent* p_horse_component = static_cast<Obj::CHorseComponent*>( Obj::CCompositeObjectManager::Instance()->GetFirstComponentByType( CRC_HORSE ));
 	while( p_horse_component )
 	{
-		Obj::CCompositeObject*	p_horse		= p_horse_component->GetObject();
+		Obj::CCompositeObject*	p_horse		= p_horse_component->GetObj();
 		Mth::Vector				horse_pos	= p_horse->GetPos();
-		float					dist		= Mth::Distance( GetObject()->GetPos(), horse_pos );
+		float					dist		= Mth::Distance( GetObj()->GetPos(), horse_pos );
 		if( dist < 60.0f )
 		{
 			mp_horse_component				= p_horse_component;
@@ -516,7 +516,7 @@ bool CRiderComponent::ReadyRiderState( bool to_ground_state )
 	
 	printf( "ReadyRiderState() found horse\n" );
 
-	mp_horse_component->AcceptRiderMount( GetObject());
+	mp_horse_component->AcceptRiderMount( GetObj());
 
 	// always reset the state timestamp
     m_state_timestamp = Tmr::GetTime();
@@ -530,33 +530,33 @@ bool CRiderComponent::ReadyRiderState( bool to_ground_state )
 		
 		m_last_ground_feeler_valid = false;
 		
-		GetObject()->GetVel()[Y] = 0.0f;
+		GetObj()->GetVel()[Y] = 0.0f;
 	}
 	else
 	{
 		set_state(WALKING_AIR);
 		
 		// set primary air direction in the direction of velocity
-		m_primary_air_direction = GetObject()->GetVel();
+		m_primary_air_direction = GetObj()->GetVel();
 		m_primary_air_direction[Y] = 0.0f;
 		float length = m_primary_air_direction.Length();
 		if (length < 0.001f)
 		{
 			// or facing
-			m_primary_air_direction = GetObject()->GetMatrix()[Z];
+			m_primary_air_direction = GetObj()->GetMatrix()[Z];
 			m_primary_air_direction[Y] = 0.0f;
 			length = m_primary_air_direction.Length();
 			if (length < 0.001f)
 			{
 				// or future facing
-				m_primary_air_direction = -GetObject()->GetMatrix()[Y];
+				m_primary_air_direction = -GetObj()->GetMatrix()[Y];
 				m_primary_air_direction[Y] = 0.0f;
 				length = m_primary_air_direction.Length();
 			}
 		}
 		m_primary_air_direction /= length;
 		
-//		leave_movable_contact_for_air(GetObject()->GetVel(), GetObject()->GetVel()[Y]);
+//		leave_movable_contact_for_air(GetObj()->GetVel(), GetObj()->GetVel()[Y]);
 	}
 
 	m_curb_float_height = 0.0f;
@@ -581,9 +581,9 @@ void CRiderComponent::go_on_horse_state( void )
 	mat			= mp_horse_component->GetMatrix();
 	display_mat	= mp_horse_component->GetDisplayMatrix();
 
-	GetObject()->SetPos( pos );
-	GetObject()->SetMatrix( mat );
-	GetObject()->SetDisplayMatrix( display_mat );
+	GetObj()->SetPos( pos );
+	GetObj()->SetMatrix( mat );
+	GetObj()->SetDisplayMatrix( display_mat );
 
 	// Check for trying to dismount a horse, triggered on triangle.
 	if( mp_input_component->GetControlPad().m_triangle.GetTriggered())
@@ -591,17 +591,17 @@ void CRiderComponent::go_on_horse_state( void )
 		mp_input_component->GetControlPad().m_triangle.ClearTrigger();
 
 		// Get the control component.
-		CSkaterPhysicsControlComponent*	p_control_component = GetSkaterPhysicsControlComponentFromObject( GetObject());
+		CSkaterPhysicsControlComponent*	p_control_component = GetSkaterPhysicsControlComponentFromObject( GetObj());
 		p_control_component->CallMemberFunction( CRCD( 0x82604c1e, "SkaterPhysicsControl_SwitchRidingToWalking"), NULL, NULL );
 
-		mp_horse_component->AcceptRiderDismount( GetObject());
+		mp_horse_component->AcceptRiderDismount( GetObj());
 
 		m_frame_event = CRCD( 0x9b46e749, "Stand" );
-		GetObject()->SelfEvent( m_frame_event );
+		GetObj()->SelfEvent( m_frame_event );
 		return;
 	}
 
-	CAnimationComponent*	p_anim_component	= GetAnimationComponentFromObject( GetObject());
+	CAnimationComponent*	p_anim_component	= GetAnimationComponentFromObject( GetObj());
 
 	Script::CStruct* p_temp_struct = new Script::CStruct();
 

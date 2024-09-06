@@ -133,7 +133,7 @@ void CModelComponent::InitFromStructure( Script::CStruct* pParams )
 		{
 			mp_model->CreateModelLights();
 			Nx::CModelLights *p_lights = mp_model->GetModelLights();
-			p_lights->SetPositionPointer(&GetObject()->m_pos);
+			p_lights->SetPositionPointer(&GetObj()->m_pos);
 		}
 	}
 	else
@@ -150,7 +150,7 @@ void CModelComponent::InitFromStructure( Script::CStruct* pParams )
 	// not all models are initialized using InitFromStructure,
 	// so we should find someplace better to put the following 
 	// call to SetSkeleton()
-	CSkeletonComponent *p_skeleton_component = GetSkeletonComponentFromObject(GetObject());
+	CSkeletonComponent *p_skeleton_component = GetSkeletonComponentFromObject(GetObj());
 	if (p_skeleton_component)
 	{
 		GetModel()->SetSkeleton( p_skeleton_component->GetSkeleton() );
@@ -371,7 +371,7 @@ void CModelComponent::InitModel( Script::CStruct* pParams )
 	}
 
 	// update its position
-	if ( GetObject()->IsFinalized() )
+	if ( GetObj()->IsFinalized() )
 	{
 		FinalizeModelInitialization();
 	}
@@ -399,7 +399,7 @@ void CModelComponent::InitModelFromProfile( Gfx::CModelAppearance* pAppearance, 
 	//	pModel->ClearGeoms();
 
     Gfx::CSkeleton* pSkeleton = NULL;
-	Obj::CSkeletonComponent* pSkeletonComponent = GetSkeletonComponentFromObject( GetObject() );
+	Obj::CSkeletonComponent* pSkeletonComponent = GetSkeletonComponentFromObject( GetObj() );
 	if ( pSkeletonComponent )
 	{
 		pSkeleton = pSkeletonComponent->GetSkeleton();
@@ -416,7 +416,7 @@ void CModelComponent::InitModelFromProfile( Gfx::CModelAppearance* pAppearance, 
 	}
 
 	// update its position
-	if ( GetObject()->IsFinalized() )
+	if ( GetObj()->IsFinalized() )
 	{
 		FinalizeModelInitialization();
 	}
@@ -473,7 +473,7 @@ bool CModelComponent::HideGeom( uint32 geomName, bool hidden, bool propagate )
 		GameNet::Manager* gamenet_man = GameNet::Manager::Instance();
 		GameNet::PlayerInfo* player;
 
-		player = gamenet_man->GetPlayerByObjectID( GetObject()->GetID() );
+		player = gamenet_man->GetPlayerByObjectID( GetObj()->GetID() );
 		if( player && player->IsLocalPlayer())
 		{
 			Net::Client* client;
@@ -486,7 +486,7 @@ bool CModelComponent::HideGeom( uint32 geomName, bool hidden, bool propagate )
 			//msg.m_Time = client->m_Timestamp;
 			msg.m_Hide = hidden;
 			msg.m_AtomicName = geomName;
-			msg.m_ObjId = GetObject()->GetID();
+			msg.m_ObjId = GetObj()->GetID();
 
 			msg_desc.m_Data = &msg;
 			msg_desc.m_Length = sizeof( GameNet::MsgHideAtomic );
@@ -520,7 +520,7 @@ bool CModelComponent::GeomHidden( uint32 geomName )
 	
 void CModelComponent::GetDisplayMatrixWithExtraRotation( Mth::Matrix& displayMatrix )
 {
-    CCompositeObject* pObject = GetObject();
+    CCompositeObject* pObject = GetObj();
     Dbg_MsgAssert( pObject, ( "Couldn't find parent object" ) );
 	
 	displayMatrix = pObject->GetDisplayMatrix();
@@ -604,7 +604,7 @@ void CModelComponent::GetDisplayMatrixWithExtraRotation( Mth::Matrix& displayMat
 //	dodgy_test(); printf("%d: Setting display_matrix[Y][Y] to %f, [X][X] to %f\n",__LINE__,m_display_matrix[Y][Y],m_display_matrix[X][X]);
 //#endif
 
-	displayMatrix[Mth::POS] = GetObject()->GetPos();
+	displayMatrix[Mth::POS] = GetObj()->GetPos();
 	displayMatrix[Mth::POS] += off;
 	displayMatrix[Mth::POS] += mDisplayOffset;
 	displayMatrix[Mth::POS][W] = 1.0f;
@@ -630,7 +630,7 @@ void CModelComponent::Hide( bool shouldHide )
 
 void CModelComponent::Teleport()
 {
-	Dbg_MsgAssert( GetObject()->IsFinalized(), ( "Teleporting unfinalized component!" ) );
+	Dbg_MsgAssert( GetObj()->IsFinalized(), ( "Teleporting unfinalized component!" ) );
 
 	FinalizeModelInitialization();
 }
@@ -654,7 +654,7 @@ void CModelComponent::Update()
 		// variables referencing its own member vars.
 		// it's used for doing the create-a-trick skater
 		Obj::CModelComponent* pModelComponent = this;
-		Obj::CCompositeObject* pCompositeObject = GetObject();
+		Obj::CCompositeObject* pCompositeObject = GetObj();
 
 		uint32 refObjectName = pModelComponent->GetRefObjectName();
 		Obj::CCompositeObject* pRefObject = (Obj::CCompositeObject*)Obj::ResolveToObject( refObjectName );
@@ -672,7 +672,7 @@ void CModelComponent::Update()
 		
 		// the return matrix already takes the position (plus an additional offset)
 		// into account, so we don't have to do the following:
-		// theDisplayMatrix[Mth::POS] = GetObject()->GetPos();
+		// theDisplayMatrix[Mth::POS] = GetObj()->GetPos();
 		
 		pRefModel->Render( &theDisplayMatrix, !should_animate, pSkeletonComponent->GetSkeleton() );
 		pRefModel->SetBoneMatrixData( pSkeletonComponent->GetSkeleton() );
@@ -681,14 +681,14 @@ void CModelComponent::Update()
 	else if (mp_model && mp_model->GetActive())
 	{
 		
-		Dbg_MsgAssert(GetObject()->IsFinalized(),("Update() to UnFinalized Composite object %s",Script::FindChecksumName(GetObject()->GetID())));
+		Dbg_MsgAssert(GetObj()->IsFinalized(),("Update() to UnFinalized Composite object %s",Script::FindChecksumName(GetObj()->GetID())));
 	
 		Mth::Matrix theDisplayMatrix;
 
 		GetDisplayMatrixWithExtraRotation( theDisplayMatrix );
 			
-//			theDisplayMatrix = GetObject()->GetDisplayMatrix();
-//			theDisplayMatrix[Mth::POS] = GetObject()->GetPos();
+//			theDisplayMatrix = GetObj()->GetDisplayMatrix();
+//			theDisplayMatrix[Mth::POS] = GetObj()->GetPos();
 //			theDisplayMatrix[Mth::POS][W] = 1.0f;
 		
 		// TODO:  The interface between different components
@@ -756,9 +756,9 @@ void CModelComponent::Update()
 
 void CModelComponent::Finalize()
 {
-	mp_skeleton_component =  GetSkeletonComponentFromObject( GetObject() );
-	mp_animation_component =  GetAnimationComponentFromObject( GetObject() );
-	mp_suspend_component =  GetSuspendComponentFromObject( GetObject() );
+	mp_skeleton_component =  GetSkeletonComponentFromObject( GetObj() );
+	mp_animation_component =  GetAnimationComponentFromObject( GetObj() );
+	mp_suspend_component =  GetSuspendComponentFromObject( GetObj() );
 }
 
 /******************************************************************/
@@ -776,7 +776,7 @@ void CModelComponent::SetModelLODDistance( int lodIndex, float distance )
 
 	if ( m_numLODs == 0 )
 	{
-		Dbg_Message( "Model %s has no lods", Script::FindChecksumName(GetObject()->GetID()) );
+		Dbg_Message( "Model %s has no lods", Script::FindChecksumName(GetObj()->GetID()) );
 	}
 
 	if ( lodIndex < 1 || lodIndex > m_numLODs )
@@ -1453,7 +1453,7 @@ CBaseComponent::EMemberFunctionResult CModelComponent::CallMemberFunction( uint3
 				
 			// if our object is associated with a local player, send a MsgRotateDisplay message
 			GameNet::Manager* gamenet_man = GameNet::Manager::Instance();
-			GameNet::PlayerInfo* player = gamenet_man->GetPlayerByObjectID(GetObject()->GetID());
+			GameNet::PlayerInfo* player = gamenet_man->GetPlayerByObjectID(GetObj()->GetID());
 			if (player && player->IsLocalPlayer())
 			{
 				Net::Client* client;
@@ -1468,7 +1468,7 @@ CBaseComponent::EMemberFunctionResult CModelComponent::CallMemberFunction( uint3
 				msg.m_StartAngle = static_cast< short >( start_angle );
 				msg.m_DeltaAngle = static_cast< short >( end_angle - start_angle );
 				msg.m_SinePower = static_cast< int >( sine_power );
-				msg.m_ObjId = GetObject()->GetID();
+				msg.m_ObjId = GetObj()->GetID();
 				msg.m_HoldOnLastAngle = hold_on_last_angle;
 				msg.m_Flags = flags;
 	
@@ -1490,7 +1490,7 @@ CBaseComponent::EMemberFunctionResult CModelComponent::CallMemberFunction( uint3
 				
 			// if our object is associated with a local player, send a MsgRotateDisplay message
 			GameNet::Manager* gamenet_man = GameNet::Manager::Instance();
-			GameNet::PlayerInfo* player = gamenet_man->GetPlayerByObjectID(GetObject()->GetID());
+			GameNet::PlayerInfo* player = gamenet_man->GetPlayerByObjectID(GetObj()->GetID());
 			if (player && player->IsLocalPlayer())
 			{
 				Net::Client* client;
@@ -1501,7 +1501,7 @@ CBaseComponent::EMemberFunctionResult CModelComponent::CallMemberFunction( uint3
 				Dbg_Assert( client );
 	
 				//msg.m_Time = client->m_Timestamp;
-				msg.m_ObjId = GetObject()->GetID();
+				msg.m_ObjId = GetObj()->GetID();
 	
 				msg_desc.m_Data = &msg;
 				msg_desc.m_Length = sizeof( GameNet::MsgObjMessage );
@@ -1747,7 +1747,7 @@ float SDisplayRotation::CalculateNewAngle()
 
 uint32 CModelComponent::GetRefObjectName()
 {
-	Dbg_MsgAssert( m_hasRefObject, ( "Object %s doesn't have a ref object", Script::FindChecksumName(GetObject()->GetID()) ) );
+	Dbg_MsgAssert( m_hasRefObject, ( "Object %s doesn't have a ref object", Script::FindChecksumName(GetObj()->GetID()) ) );
 				  
 	return m_refObjectName;
 }

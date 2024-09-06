@@ -980,7 +980,7 @@ bool ScriptReplaceCarTextures( Script::CStruct *pParams, Script::CScript *pScrip
 	{
 		// GJ TODO:  somehow loop through all the
 		// skin assets in the asset manager
-		if ( p_component->GetObject()->GetType() == SKATE_TYPE_CAR )
+		if ( p_component->GetObj()->GetType() == SKATE_TYPE_CAR )
 		{
 			Nx::CModel* pModel = p_component->GetModel();
 

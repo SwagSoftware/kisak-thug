@@ -103,7 +103,7 @@ void CWeaponComponent::Finalize()
 	// and BEFORE the CCompositeObject::Update function is called
 	
 	// Example:
-	// mp_suspend_component =  GetSuspendComponentFromObject( GetObject() );
+	// mp_suspend_component =  GetSuspendComponentFromObject( GetObj() );
 										
 										
 }
@@ -405,7 +405,7 @@ CCompositeObject* CWeaponComponent::GetCurrentTarget( Mth::Vector& start_pos, Mt
 	Obj::CPedLogicComponent *p_ped_logic_component = static_cast<Obj::CPedLogicComponent*>( Obj::CCompositeObjectManager::Instance()->GetFirstComponentByType( CRC_PEDLOGIC ));
 	while( p_ped_logic_component )
 	{
-		Obj::CCompositeObject *p_ped = p_ped_logic_component->GetObject();
+		Obj::CCompositeObject *p_ped = p_ped_logic_component->GetObj();
 
 		// Have to hack in a height adjustment here - the default position appears to be at ground level.
 		Mth::Vector ped_pos		= p_ped->GetPos() + Mth::Vector( 0.0f, 36.0f, 0.0f );

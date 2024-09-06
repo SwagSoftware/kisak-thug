@@ -49,7 +49,7 @@ public:
 
 	static CBaseComponent*			s_create();
 	   	
-	CSkater*						GetSkater() { return static_cast< CSkater* >(GetObject()); }
+	CSkater*						GetSkater() { return static_cast< CSkater* >(GetObj()); }
 
 public:
 	void							Reset (   );

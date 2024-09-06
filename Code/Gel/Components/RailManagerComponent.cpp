@@ -92,7 +92,7 @@ CRailManagerComponent::~CRailManagerComponent()
 void CRailManagerComponent::InitFromStructure( Script::CStruct* pParams )
 {
 	// There needs to be a NodeArrayComponent attached for the RailManagerComponent to operate.
-	CNodeArrayComponent *p_nodearray_component = GetNodeArrayComponentFromObject( GetObject());
+	CNodeArrayComponent *p_nodearray_component = GetNodeArrayComponentFromObject( GetObj());
 	Dbg_MsgAssert( p_nodearray_component, ( "RailManagerComponent created without NodeArrayComponent" ));
 
 	// Remove any existing CRailManager.
@@ -207,11 +207,11 @@ Mth::Matrix CRailManagerComponent::UpdateRailManager (   )
 	Dbg_Assert(mp_rail_manager);
 
 	// form a transformation matrix
-	Mth::Matrix total_mat = GetObject()->GetMatrix();
+	Mth::Matrix total_mat = GetObj()->GetMatrix();
 	total_mat[X][W] = 0.0f;
 	total_mat[Y][W] = 0.0f;
 	total_mat[Z][W] = 0.0f;
-	total_mat[W] = GetObject()->GetPos();
+	total_mat[W] = GetObj()->GetPos();
 	total_mat[W][W] = 1.0f;
 
 	mp_rail_manager->UpdateTransform(total_mat);

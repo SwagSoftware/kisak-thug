@@ -155,7 +155,7 @@ CBaseAnimController* CBlendChannel::AddController( Script::CStruct* pParams )
 
 void CBlendChannel::add_controller( CBaseAnimController* pAnimController, int priority )
 {
-	Dbg_MsgAssert( m_numControllers < vMAX_CONTROLLERS, ( "Too many controllers for this channel on %s", Script::FindChecksumName( GetObject()->GetID() ) ) );	
+	Dbg_MsgAssert( m_numControllers < vMAX_CONTROLLERS, ( "Too many controllers for this channel on %s", Script::FindChecksumName( GetObj()->GetID() ) ) );	
 	Dbg_MsgAssert( pAnimController, ( "No controller" ) );
 		
 	int i = 0;
@@ -556,7 +556,7 @@ void CBlendChannel::delete_custom_keys()
 
 void CBlendChannel::add_custom_keys( uint32 animName )
 {
-	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObject() );
+	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObj() );
 	if ( !pAnimationComponent )
 	{
 		return;
@@ -655,7 +655,7 @@ void CBlendChannel::ProcessCustomKeys( float startTime, float endTime )
 			if ( pKey->WithinRange( startTime, endTime ) )
 			{
 //				printf( "Processing key at %f (%f %f)\n", 0.0f, startTime, endTime );
-				pKey->ProcessKey( GetObject() );
+				pKey->ProcessKey( GetObj() );
 			}
 			else
 			{
@@ -714,7 +714,7 @@ EAnimFunctionResult CBlendChannel::CallMemberFunction( uint32 Checksum, Script::
 /*                                                                */
 /******************************************************************/
 
-Obj::CCompositeObject* CBlendChannel::GetObject()
+Obj::CCompositeObject* CBlendChannel::GetObj()
 {
 	return mp_object;
 }

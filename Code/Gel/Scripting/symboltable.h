@@ -24,7 +24,7 @@ namespace Script
 // by scanning through all the scripts.
 // Uses a bit of memory so only define on debug builds.
 #ifdef __NOPT_ASSERT__
-//#define COUNT_USAGE
+#define COUNT_USAGE
 #endif
 
 #define NUM_HASH_BITS 12
@@ -35,7 +35,8 @@ class CArray;
 class CStruct;
 class CScript;
 
-#ifdef __PLAT_WN32__
+// #ifdef __PLAT_WN32__ // LWSS: undo this 
+#if 0
 class CSymbolTableEntry
 #else
 class CSymbolTableEntry : public Mem::CPoolable<CSymbolTableEntry>

@@ -46,7 +46,7 @@
 #include <sk/objects/skater.h>
 
 
-#define	FLAGEXCEPTION(X) GetObject()->SelfEvent(X)
+#define	FLAGEXCEPTION(X) GetObj()->SelfEvent(X)
 
 
 namespace Obj
@@ -156,7 +156,7 @@ void CSkaterProximityComponent::Update()
 		{
 			// If the local skater is in radius, then flag "SkaterInRadius"
 			FLAGEXCEPTION( CRCD(0xdb7413fb,"SkaterInRadius") );
-			if (!GetObject()->IsDead())
+			if (!GetObj()->IsDead())
 			{
 				FLAGEXCEPTION( CRCD(0x5e8eb123,"AnySkaterInRadius") );
 			}
@@ -181,7 +181,7 @@ void CSkaterProximityComponent::Update()
 		}
 		if ( distToSkaterSqr >= mOuterRadiusSqr )
 		{
-			if (!GetObject()->IsDead())
+			if (!GetObj()->IsDead())
 			{
 				FLAGEXCEPTION( CRCD(0xa41f5336,"SkaterOutOfRadius") ); 
 			}
@@ -196,7 +196,7 @@ void CSkaterProximityComponent::Update()
 		}
 		if ( distToSkaterSqr <= mInnerAvoidRadiusSqr )
 		{
-			if (!GetObject()->IsDead())
+			if (!GetObj()->IsDead())
 			{
 				FLAGEXCEPTION( CRCD(0xfaeec40f,"SkaterInAvoidRadius") );
 			}
@@ -211,7 +211,7 @@ void CSkaterProximityComponent::Update()
 		}
 		if ( distToSkaterSqr >= mOuterAvoidRadiusSqr )
 		{
-			if (!GetObject()->IsDead())
+			if (!GetObj()->IsDead())
 			{
 				FLAGEXCEPTION( CRCD(0x9c5af1a0,"SkaterOutOfAvoidRadius") );
 			}
@@ -333,9 +333,9 @@ float CSkaterProximityComponent::GetDistToLocalSkaterSquared()
 {
 	CCompositeObject* pObj = Mdl::Skate::Instance()->GetLocalSkater();
 	
-	if ( pObj && ( pObj != GetObject() ))
+	if ( pObj && ( pObj != GetObj() ))
 	{
-		return Mth::DistanceSqr( pObj->GetPos(), GetObject()->GetPos() );
+		return Mth::DistanceSqr( pObj->GetPos(), GetObj()->GetPos() );
 	}
 	
 	return ( HUGE_DISTANCE_SQUARED );
@@ -355,9 +355,9 @@ float CSkaterProximityComponent::GetDistToNearestSkaterSquared()
 	for( int i = 0; i < num_skaters; i++ )
 	{
 		CCompositeObject* pObj = Mdl::Skate::Instance()->GetSkater( i );
-		if ( pObj && ( pObj != GetObject() ))
+		if ( pObj && ( pObj != GetObj() ))
 		{
-			float this_dist = Mth::DistanceSqr( pObj->GetPos(), GetObject()->GetPos() );
+			float this_dist = Mth::DistanceSqr( pObj->GetPos(), GetObj()->GetPos() );
 			if( this_dist < nearest_distance )
 			{
 				nearest_distance = this_dist;

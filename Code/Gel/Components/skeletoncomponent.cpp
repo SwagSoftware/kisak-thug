@@ -236,8 +236,8 @@ CBaseComponent::EMemberFunctionResult CSkeletonComponent::CallMemberFunction( ui
 				}
 				else
 				{
-					pos = GetObject()->GetPos();
-					pos += forward * GetObject()->GetMatrix()[Z];
+					pos = GetObj()->GetPos();
+					pos += forward * GetObj()->GetMatrix()[Z];
 				}
 			}
 
@@ -309,8 +309,8 @@ bool CSkeletonComponent::GetBoneWorldPosition( uint32 boneName, Mth::Vector* pBo
 
 	// now tranform it by the position of the object
     Mth::Matrix rootMatrix;
-    rootMatrix = GetObject()->GetMatrix();
-    rootMatrix[Mth::POS] = GetObject()->GetPos();
+    rootMatrix = GetObj()->GetMatrix();
+    rootMatrix[Mth::POS] = GetObj()->GetPos();
 	rootMatrix[Mth::POS][W] = 1.0f;
 	Mth::Vector vec = rootMatrix.Transform(* pBonePos );
 	(*pBonePos) = vec;
@@ -347,11 +347,11 @@ void CSkeletonComponent::SpawnTextureSplat( Mth::Vector& pos, uint32 bone_name_c
 	}
 	else
 	{
-		end = bone_pos - ( GetObject()->GetMatrix().GetUp() * dropdown_length );
+		end = bone_pos - ( GetObj()->GetMatrix().GetUp() * dropdown_length );
 	}
 	
 	// In some cases, the bone can be beneath geometry (trucks during a revert), so move the start position up slightly.
-	bone_pos += ( GetObject()->GetMatrix().GetUp() * 12.0f );
+	bone_pos += ( GetObj()->GetMatrix().GetUp() * 12.0f );
 	
 	// Calculate radial offset for end position.
 	if( radius > 0.0f )
@@ -359,8 +359,8 @@ void CSkeletonComponent::SpawnTextureSplat( Mth::Vector& pos, uint32 bone_name_c
 		float x_offset = -radius + (( radius * 2.0f ) * (float)rand() / RAND_MAX );
 		float z_offset = -radius + (( radius * 2.0f ) * (float)rand() / RAND_MAX );
 
-		end += ( GetObject()->GetMatrix().GetRight() * x_offset );
-		end += ( GetObject()->GetMatrix().GetAt() * z_offset );
+		end += ( GetObj()->GetMatrix().GetRight() * x_offset );
+		end += ( GetObj()->GetMatrix().GetAt() * z_offset );
 	}
 	
 	Nx::TextureSplat( bone_pos, end, size, lifetime, p_texture_name, trail ? bone_name_checksum : 0 );
@@ -377,7 +377,7 @@ void CSkeletonComponent::SpawnCompositeObject ( uint32 bone_name, Script::CArray
 	Dbg_Assert(pArray);
 	Dbg_Assert(pParams);
 	
-	CSkeletonComponent* p_skeleton_component = GetSkeletonComponentFromObject(GetObject());
+	CSkeletonComponent* p_skeleton_component = GetSkeletonComponentFromObject(GetObj());
 	Dbg_Assert(p_skeleton_component);
 
 	// get the bone's matrix
@@ -385,8 +385,8 @@ void CSkeletonComponent::SpawnCompositeObject ( uint32 bone_name, Script::CArray
 	p_skeleton_component->GetSkeleton()->GetBoneMatrix(bone_name, &bone_matrix);
 	
 	// build the object's matrix
-	Mth::Matrix object_matrix = GetObject()->GetMatrix();
-	object_matrix[W] = GetObject()->GetPos();
+	Mth::Matrix object_matrix = GetObj()->GetMatrix();
+	object_matrix[W] = GetObj()->GetPos();
 	object_matrix[X][W] = 0.0f;
 	object_matrix[Y][W] = 0.0f;
 	object_matrix[Z][W] = 0.0f;
@@ -417,11 +417,11 @@ void CSkeletonComponent::SpawnCompositeObject ( uint32 bone_name, Script::CArray
 	}
 	
 	// setup rigidbody's initial velocity
-	Mth::Vector vel = object_vel_factor * GetObject()->GetVel() + GetObject()->GetMatrix().Rotate(relative_vel);
+	Mth::Vector vel = object_vel_factor * GetObj()->GetVel() + GetObj()->GetMatrix().Rotate(relative_vel);
 	pParams->AddVector(CRCD(0xc4c809e, "vel"), vel);
 	
 	// setup rigidbody's initial rotational velocity
-	Mth::Vector rotvel = GetObject()->GetMatrix().Rotate(relative_rotvel);
+	Mth::Vector rotvel = GetObj()->GetMatrix().Rotate(relative_rotvel);
 	pParams->AddVector(CRCD(0xfb1a83b2, "rotvel"), rotvel);
 	
 	CCompositeObjectManager::Instance()->CreateCompositeObjectFromNode(pArray, pParams);

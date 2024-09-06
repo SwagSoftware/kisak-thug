@@ -141,16 +141,16 @@ void CHorseComponent::InitFromStructure( Script::CStruct* pParams )
 		m_draw_debug_lines = 0;
 	}
 
-	m_pos = GetObject()->GetPos();
+	m_pos = GetObj()->GetPos();
 
 	if( pParams->ContainsComponentNamed(CRCD(0x7f261953, "pos" )))
 	{
 		pParams->GetVector(CRCD(0x7f261953, "pos"), &m_pos);
-		GetObject()->SetPos(m_pos);
+		GetObj()->SetPos(m_pos);
 	}
 
 	// Grab a pointer to the skeleton.
-	mp_skeleton_component = static_cast< CSkeletonComponent* >(GetObject()->GetComponent(CRC_SKELETON));
+	mp_skeleton_component = static_cast< CSkeletonComponent* >(GetObj()->GetComponent(CRC_SKELETON));
 	Dbg_MsgAssert(mp_skeleton_component, ("HorseComponent has no peer skeleton component."));
 }
 
@@ -171,10 +171,10 @@ void CHorseComponent::RefreshFromStructure( Script::CStruct* pParams )
 /******************************************************************/
 void CHorseComponent::Finalize( void )
 {
-	mp_model_component				= GetModelComponentFromObject( GetObject());
-	mp_input_component				= GetInputComponentFromObject( GetObject());
-	mp_animation_component			= GetAnimationComponentFromObject( GetObject());
-	mp_movable_contact_component	= GetMovableContactComponentFromObject( GetObject());
+	mp_model_component				= GetModelComponentFromObject( GetObj());
+	mp_input_component				= GetInputComponentFromObject( GetObj());
+	mp_animation_component			= GetAnimationComponentFromObject( GetObj());
+	mp_movable_contact_component	= GetMovableContactComponentFromObject( GetObj());
 
 	Dbg_Assert( mp_model_component );
 	Dbg_Assert( mp_input_component );
@@ -184,7 +184,7 @@ void CHorseComponent::Finalize( void )
 	// Enable blending for the Horse by default.
 	mp_animation_component->EnableBlending( true );
 
-	m_display_slerp_matrix = GetObject()->GetMatrix();
+	m_display_slerp_matrix = GetObj()->GetMatrix();
 }
 
 
@@ -203,24 +203,24 @@ void CHorseComponent::Update( void )
     get_controller_input();
 	
 	// extract initial state for this frame from the object
-	m_frame_start_pos = m_pos = GetObject()->GetPos();
+	m_frame_start_pos = m_pos = GetObj()->GetPos();
 	
-	m_horizontal_vel = GetObject()->GetVel();
+	m_horizontal_vel = GetObj()->GetVel();
 	m_horizontal_vel[Y] = 0.0f;
-	m_vertical_vel = GetObject()->GetVel()[Y];
+	m_vertical_vel = GetObj()->GetVel()[Y];
 	
 	// note that m_facing and m_upward will often not be orthogonal, but will always span a plan
 	
 	// generally straight up, but now after a transition from skating
-	m_upward = GetObject()->GetMatrix()[Y];
+	m_upward = GetObj()->GetMatrix()[Y];
 	
-	m_facing = GetObject()->GetMatrix()[Z];
+	m_facing = GetObj()->GetMatrix()[Z];
 	m_facing[Y] = 0.0f;
 	float length = m_facing.Length();
 	if (length < 0.001f)
 	{
 		// upward facing orientation matrix
-		m_facing = -GetObject()->GetMatrix()[Y];
+		m_facing = -GetObj()->GetMatrix()[Y];
 		m_facing[Y] = 0.0f;
 		m_facing.Normalize();
 		
@@ -296,7 +296,7 @@ void CHorseComponent::Update( void )
 	position_rider();
 
 	Dbg_Assert(m_frame_event);
-	GetObject()->SelfEvent(m_frame_event);
+	GetObj()->SelfEvent(m_frame_event);
 	
 	// set the animation speeds
 /*	switch (m_anim_scale_speed)
@@ -455,12 +455,12 @@ CBaseComponent::EMemberFunctionResult CHorseComponent::CallMemberFunction( uint3
 				m_pos = cam_pos;
 				m_pos += cam_mat[Y] * 12.0f * 12.0f;
 				m_pos -= cam_mat[Z] * 12.0f * 12.0f;
-				GetObject()->SetPos(m_pos);
+				GetObj()->SetPos(m_pos);
 				
 				m_orientation_matrix[X] = -cam_mat[X];
 				m_orientation_matrix[Y] = cam_mat[Y];
 				m_orientation_matrix[Z] = -cam_mat[Z];
-				GetObject()->SetMatrix( m_orientation_matrix );
+				GetObj()->SetMatrix( m_orientation_matrix );
 			}
 			break;
 		}
@@ -531,7 +531,7 @@ uint32 CHorseComponent::GetAnimation( void )
 bool CHorseComponent::AcceptRiderMount( CCompositeObject* p_rider )
 {
 	// This is where we want to enable the associated camera.
-	CHorseCameraComponent*	p_cam_component = GetHorseCameraComponentFromObject( GetObject());
+	CHorseCameraComponent*	p_cam_component = GetHorseCameraComponentFromObject( GetObj());
 	if( p_cam_component )
 	{
 		p_cam_component->Suspend( false );
@@ -568,7 +568,7 @@ bool CHorseComponent::ShouldUpdateCamera( void )
 bool CHorseComponent::AcceptRiderDismount( CCompositeObject* p_rider )
 {
 	// This is where we want to disable the associated camera.
-	CHorseCameraComponent*	p_cam_component = GetHorseCameraComponentFromObject( GetObject());
+	CHorseCameraComponent*	p_cam_component = GetHorseCameraComponentFromObject( GetObj());
 	if( p_cam_component )
 	{
 		p_cam_component->Suspend( true );
@@ -641,9 +641,9 @@ void CHorseComponent::jump( float strength )
 	m_primary_air_direction = m_facing;
 	
 	// Called by script from outside of the component update, so m_vertical_vel is not used.
-	GetObject()->GetVel()[Y] = strength * s_get_param( CRCD( 0x63d62a21, "jump_velocity" ));
+	GetObj()->GetVel()[Y] = strength * s_get_param( CRCD( 0x63d62a21, "jump_velocity" ));
 	
-	leave_movable_contact_for_air( GetObject()->GetVel(), GetObject()->GetVel()[Y] );
+	leave_movable_contact_for_air( GetObj()->GetVel(), GetObj()->GetVel()[Y] );
 	
 	set_state( WALKING_AIR );
 }
@@ -661,8 +661,8 @@ void CHorseComponent::setup_collision_cache( void )
 	float vertical_depth = 1.0f + s_get_param(CRCD(0xaf3e4251, "snap_down_height"));
 	
 	Mth::CBBox bbox(
-		GetObject()->GetPos() - Mth::Vector(horizontal_reach, vertical_depth, horizontal_reach, 0.0f),
-		GetObject()->GetPos() + Mth::Vector(horizontal_reach, vertical_height, horizontal_reach, 0.0f)
+		GetObj()->GetPos() - Mth::Vector(horizontal_reach, vertical_depth, horizontal_reach, 0.0f),
+		GetObj()->GetPos() + Mth::Vector(horizontal_reach, vertical_height, horizontal_reach, 0.0f)
 	);
 	
 	mp_collision_cache->Update(bbox);
@@ -949,7 +949,7 @@ bool CHorseComponent::adjust_horizontal_vel_for_environment( bool wall_push_acti
 		// if we're on the moving object, don't count its movement when doing collision detection, as the walker's velocity is already measured
 		// relative to its movable contact's
 		if (feeler.IsMovableCollision()
-			&& (!mp_movable_contact_component->HaveContact() || mp_movable_contact_component->GetContact()->GetObject() != feeler.GetMovingObject()))
+			&& (!mp_movable_contact_component->HaveContact() || mp_movable_contact_component->GetContact()->GetObj() != feeler.GetMovingObject()))
 		{
 			mp_contacts[n].movement = Mth::DotProduct(feeler.GetMovingObject()->GetVel(), mp_contacts[n].normal);
 		}
@@ -1515,8 +1515,8 @@ void CHorseComponent::copy_state_into_object( void )
 
 	matrix[W].Set( 0.0f, 0.0f, 0.0f, 1.0f );
 
-	GetObject()->SetPos( m_pos );
-	GetObject()->SetMatrix( matrix );
+	GetObj()->SetPos( m_pos );
+	GetObj()->SetMatrix( matrix );
 
 	// The display matrix is slerped towards the current matrix.
 	Mth::SlerpInterpolator slerper( &m_display_slerp_matrix, &matrix );
@@ -1524,11 +1524,11 @@ void CHorseComponent::copy_state_into_object( void )
 	// Apply the slerping.
 	slerper.getMatrix( &m_display_slerp_matrix, GetTimeAdjustedSlerp( 0.1f, m_frame_length ));
 	
-	GetObject()->SetDisplayMatrix( m_display_slerp_matrix );
+	GetObj()->SetDisplayMatrix( m_display_slerp_matrix );
 
 	// Construct the object's velocity.
-	GetObject()->SetVel( m_horizontal_vel );
-	GetObject()->GetVel()[Y] = m_vertical_vel;
+	GetObj()->SetVel( m_horizontal_vel );
+	GetObj()->GetVel()[Y] = m_vertical_vel;
 }
 
 
@@ -1663,7 +1663,7 @@ void CHorseComponent::respond_to_ground( void )
 	// no not send event for very small snaps
 	if (Mth::Abs(snap_distance) > s_get_param(CRCD(0xd3193d8e, "max_unnoticed_ground_snap")))
 	{
-		GetObject()->SelfEvent(snap_distance > 0.0f ? CRCD(0x93fcf3ed, "SnapUpEdge") : CRCD(0x56e21153, "SnapDownEdge"));
+		GetObj()->SelfEvent(snap_distance > 0.0f ? CRCD(0x93fcf3ed, "SnapUpEdge") : CRCD(0x56e21153, "SnapDownEdge"));
 	}
 	
 	// snap position to the ground
@@ -1706,7 +1706,7 @@ void CHorseComponent::leave_movable_contact_for_air( Mth::Vector& horizontal_vel
 	if (mp_movable_contact_component->HaveContact())
 	{
 		// keep track of the horizontal velocity due to our old contact
-		m_uncontrollable_air_horizontal_vel = mp_movable_contact_component->GetContact()->GetObject()->GetVel();
+		m_uncontrollable_air_horizontal_vel = mp_movable_contact_component->GetContact()->GetObj()->GetVel();
 
 		if (Mth::DotProduct(m_uncontrollable_air_horizontal_vel, horizontal_vel) > 0.0f)
 		{
@@ -1835,7 +1835,7 @@ void CHorseComponent::check_for_landing( const Mth::Vector& previous_pos, const 
 	mp_movable_contact_component->CheckForMovableContact(feeler);
 	if (mp_movable_contact_component->HaveContact())
 	{
-		m_horizontal_vel -= mp_movable_contact_component->GetContact()->GetObject()->GetVel();
+		m_horizontal_vel -= mp_movable_contact_component->GetContact()->GetObj()->GetVel();
 		m_horizontal_vel[Y] = 0.0f;
 	}
 	
@@ -1878,7 +1878,7 @@ void CHorseComponent::adjust_vertical_vel_for_ceiling( void )
 	// zero upward velocity
 	m_vertical_vel = 0.0f;
 	
-	GetObject()->SelfEvent(CRCD(0x6e84acf3, "HitCeiling"));
+	GetObj()->SelfEvent(CRCD(0x6e84acf3, "HitCeiling"));
 }
 
 
@@ -1891,7 +1891,7 @@ void CHorseComponent::position_rider( void )
 {
 	// HACK: get player proximity checks, triggers, and the like working
 //	CCompositeObject* p_skater = static_cast< CCompositeObject* >(CCompositeObjectManager::Instance()->GetObjectByID( 0 ));
-//	p_skater->SetPos( GetObject()->GetPos());
+//	p_skater->SetPos( GetObj()->GetPos());
 }
 
 

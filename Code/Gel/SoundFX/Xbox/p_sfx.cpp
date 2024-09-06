@@ -23,7 +23,9 @@
 **							  	  Includes									**
 *****************************************************************************/
 
+#ifdef __PLAT_XBOX__
 #include <xtl.h>
+#endif
 #include <dsound.h>
 //#include <dsstdfx.h>
 
@@ -33,6 +35,23 @@
 #include <gel/soundfx/xbox/p_sfx.h>
 #include <gel/soundfx/xbox/skate5fx.h>
 #include <gel/music/music.h>
+
+// LWSS Add
+#ifdef __PLAT_WN32__
+void DirectSoundDoWork()
+{
+	// Stub For PC, this function only exists on XBOX.
+	// Xbox Docs say:
+	//DirectSoundDoWork must be called if you are using any of the following features :
+	//
+	//Buffers that specified the DSBCAPS_LOCDEFER flag in the DSBUFFERDESC structure used to create the buffer
+	//	Buffer position and stop notifications
+	//	Streams
+	//	The DirectSoundDoWork function also checks for previous breakpoints due to errors.If DirectSound encounters an error, it cannot always break in the debugger immediately.DirectSoundDoWork will check for any missed breaks and display them.
+
+}
+#endif
+// LWSS End
 
 /*****************************************************************************
 **							  DBG Information								**
@@ -50,6 +69,11 @@ namespace Sfx
 /*****************************************************************************
 **								   Defines									**
 *****************************************************************************/
+
+//lwss add
+#define DWORD int
+#undef FOURCC_RIFF
+//lwss end
 
 #define RIFFCHUNK_FLAGS_VALID   0x00000001
 
@@ -1280,7 +1304,8 @@ void SetVoiceParameters( int voice, sVolume *p_vol, float pitch )
 		}
 		else
 		{
-			hr = VoiceSimulator[voice].p_buffer->SetVolume( DSBVOLUME_EFFECTIVE_MIN );
+			//hr = VoiceSimulator[voice].p_buffer->SetVolume( DSBVOLUME_EFFECTIVE_MIN );
+			hr = VoiceSimulator[voice].p_buffer->SetVolume(DSBVOLUME_MIN); // lwss: See note in p_sfx.h
 
 			// Pointless doing pitch calculation if volume is zero.
 			return;

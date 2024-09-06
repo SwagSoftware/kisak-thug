@@ -79,6 +79,7 @@ MicroSeconds			GetTimeInUSeconds( void );
 #endif
 
 void	OncePerRender();
+void	PreUpdateTimerInfo(); // lwss add
 uint64	GetRenderFrame();
 void 	Vblank();
 
@@ -223,7 +224,8 @@ inline	Time	Hours( Time time )
 	return ( time * ( vRESOLUTION * 60 * 60 ));
 }
 
-
 } // namespace Tmr
+
+extern int g_timerInfoCurrentRenderBuffer;
 
 #endif	// __SYS_TIMER_H

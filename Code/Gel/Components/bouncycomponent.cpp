@@ -235,12 +235,12 @@ void CBouncyComponent::InitFromStructure( Script::CStruct* pParams )
 	}
 	
 	
-//	((CMovingObject*)(GetObject()))->RunNodeScript(0x2d075f90/*BounceScript*/,0x346b0c03/*BounceScriptParams*/);
+//	((CMovingObject*)(GetObj()))->RunNodeScript(0x2d075f90/*BounceScript*/,0x346b0c03/*BounceScriptParams*/);
 	
 
 
-	m_pos = GetObject()->m_pos;
-	m_matrix = GetObject()->m_matrix;
+	m_pos = GetObj()->m_pos;
+	m_matrix = GetObj()->m_matrix;
 
 
 }
@@ -287,7 +287,7 @@ void CBouncyComponent::Update()
 						p_script->SetCommentString("CBouncyComponent collide script");
 						#endif
 						Dbg_MsgAssert(p_script,("NULL p_script"));
-						p_script->mpObject=GetObject();;
+						p_script->mpObject=GetObj();;
 						p_script->Update();
 					}
 					#endif			   
@@ -534,7 +534,7 @@ void CBouncyComponent::do_bounce( void )
 					#ifdef __NOPT_ASSERT__
 					p_script->SetCommentString("CBouncyComponent bounce script");
 					#endif
-					p_script->mpObject=GetObject();;
+					p_script->mpObject=GetObj();;
 					p_script->Update();
 				}
 				#endif
@@ -576,7 +576,7 @@ void CBouncyComponent::do_bounce( void )
 					SWITCH_STATE( BOUNCYOBJ_STATE_IDLE );
 					if ( m_destroy_when_done )
 					{
-						GetObject()->MarkAsDead( );
+						GetObj()->MarkAsDead( );
 					}
 					else
 					{
@@ -634,7 +634,7 @@ void CBouncyComponent::do_bounce( void )
 				SWITCH_STATE( BOUNCYOBJ_STATE_IDLE );
 				if ( m_destroy_when_done )
 				{
-					GetObject()->MarkAsDead( );
+					GetObj()->MarkAsDead( );
 				}
 			}
 			break;
@@ -648,9 +648,9 @@ void CBouncyComponent::do_bounce( void )
 //	printf ("%d: %s: (%.2f,%.2f,%.2f)\n",__LINE__,__PRETTY_FUNCTION__,m_pos[X],m_pos[Y],m_pos[Z]); 
 	#endif
 	
-	GetObject()->m_pos = m_pos;
-	GetObject()->m_matrix = m_matrix;
-	GetObject()->SetDisplayMatrix(m_matrix);
+	GetObj()->m_pos = m_pos;
+	GetObj()->m_matrix = m_matrix;
+	GetObj()->SetDisplayMatrix(m_matrix);
 	
 	
 }

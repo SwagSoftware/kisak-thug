@@ -105,12 +105,12 @@ void CPedLogicComponent::InitFromStructure( Script::CStruct* pParams )
 	// printf("m_node_from = %i\n", m_node_from);
 	SkateScript::GetPosition( m_node_from, &m_wp_from );
 	m_normal_lerp = 0.0f;
-	m_display_normal = m_last_display_normal = m_current_normal = GetObject()->m_matrix[Y];
+	m_display_normal = m_last_display_normal = m_current_normal = GetObj()->m_matrix[Y];
 
 	pParams->GetFloat( CRCD( 0x367c4a1b, "StickToGroundDistAbove" ), &m_col_dist_above );
 	pParams->GetFloat( CRCD( 0x86f46e7b, "StickToGroundDistBelow" ), &m_col_dist_below );
 
-	m_current_display_matrix = GetObject()->GetDisplayMatrix();
+	m_current_display_matrix = GetObj()->GetDisplayMatrix();
 }
 
 /******************************************************************/
@@ -144,9 +144,9 @@ void CPedLogicComponent::Update()
 		// Dbg_MsgAssert( 0, ( "PedLogicComponent has unknown state %s", Script::FindChecksumName( m_state ) ) );
 		break;
 	}
-	// Gfx::AddDebugArrow( GetObject()->GetDisplayMatrix()[X] + GetObject()->m_pos, GetObject()->GetDisplayMatrix()[X] * 48 + GetObject()->m_pos, MAKE_RGB( 0, 0, 128 ), MAKE_RGB( 0, 0, 128 ), 1 );
-	// Gfx::AddDebugArrow( GetObject()->GetDisplayMatrix()[Y] + GetObject()->m_pos, GetObject()->GetDisplayMatrix()[Y] * 48 + GetObject()->m_pos, MAKE_RGB( 0, 128, 0 ), MAKE_RGB( 0, 0, 128 ), 1 );
-	// Gfx::AddDebugArrow( GetObject()->GetDisplayMatrix()[Z] + GetObject()->m_pos, GetObject()->GetDisplayMatrix()[Z] * 48 + GetObject()->m_pos, MAKE_RGB( 128, 0, 0 ), MAKE_RGB( 0, 0, 128 ), 1 );
+	// Gfx::AddDebugArrow( GetObj()->GetDisplayMatrix()[X] + GetObj()->m_pos, GetObj()->GetDisplayMatrix()[X] * 48 + GetObj()->m_pos, MAKE_RGB( 0, 0, 128 ), MAKE_RGB( 0, 0, 128 ), 1 );
+	// Gfx::AddDebugArrow( GetObj()->GetDisplayMatrix()[Y] + GetObj()->m_pos, GetObj()->GetDisplayMatrix()[Y] * 48 + GetObj()->m_pos, MAKE_RGB( 0, 128, 0 ), MAKE_RGB( 0, 0, 128 ), 1 );
+	// Gfx::AddDebugArrow( GetObj()->GetDisplayMatrix()[Z] + GetObj()->m_pos, GetObj()->GetDisplayMatrix()[Z] * 48 + GetObj()->m_pos, MAKE_RGB( 128, 0, 0 ), MAKE_RGB( 0, 0, 128 ), 1 );
 }
 
 /******************************************************************/
@@ -171,28 +171,28 @@ CBaseComponent::EMemberFunctionResult CPedLogicComponent::CallMemberFunction( ui
 			
 			#ifdef __NOPT_ASSERT__
 			int numLinks = SkateScript::GetNumLinks( m_node_from );
-			Dbg_MsgAssert( numLinks, ( "Ped_InitPath called on %s, but path node %i has no links!", Script::FindChecksumName( GetObject()->GetID() ), m_node_from ) );
+			Dbg_MsgAssert( numLinks, ( "Ped_InitPath called on %s, but path node %i has no links!", Script::FindChecksumName( GetObj()->GetID() ), m_node_from ) );
 			#endif
 
 			m_node_to = SkateScript::GetLink( pNodeData, 0 );
 			SkateScript::GetPosition( m_node_to, &m_wp_to );
 			SelectNextWaypoint();
 			m_flags |= PEDLOGIC_MOVING_ON_PATH;
-			mp_path_object_tracker = Obj::CPathMan::Instance()->TrackPed( GetObject(), m_node_to );
+			mp_path_object_tracker = Obj::CPathMan::Instance()->TrackPed( GetObj(), m_node_to );
 			
-			Obj::CMotionComponent* pMotionComp = GetMotionComponentFromObject( GetObject() );
+			Obj::CMotionComponent* pMotionComp = GetMotionComponentFromObject( GetObj() );
 			Dbg_Assert( pMotionComp );
 			pMotionComp->m_movingobj_status |= MOVINGOBJ_STATUS_ON_PATH;
 
 			// turn the ped to face the right direction
 			Mth::Vector heading = ( m_wp_to - m_wp_from ).Normalize();
-			Mth::Matrix display_matrix = GetObject()->GetDisplayMatrix();
+			Mth::Matrix display_matrix = GetObj()->GetDisplayMatrix();
 			display_matrix[Z] = heading;
 			display_matrix.OrthoNormalizeAbout( Z );
-			GetObject()->SetDisplayMatrix( display_matrix );
+			GetObj()->SetDisplayMatrix( display_matrix );
 			m_current_display_matrix = display_matrix;
 
-			Mth::Vector current_pos = GetObject()->m_pos;
+			Mth::Vector current_pos = GetObj()->m_pos;
 			for ( int i = 0; i < vPOS_HISTORY_SIZE; i++ )
 				m_pos_history[i] = current_pos;
 
@@ -204,7 +204,7 @@ CBaseComponent::EMemberFunctionResult CPedLogicComponent::CallMemberFunction( ui
 			if ( m_flags & PEDLOGIC_STOPPED )
 			{
 				Script::CScript* pScript = Script::SpawnScript( CRCD( 0xbed339d4, "ped_skater_start_moving" ) );
-				pScript->mpObject = GetObject();
+				pScript->mpObject = GetObj();
 				m_flags &= ~PEDLOGIC_STOPPED;
 			}
 			m_flags |= PEDLOGIC_MOVING_ON_PATH;
@@ -246,7 +246,7 @@ CBaseComponent::EMemberFunctionResult CPedLogicComponent::CallMemberFunction( ui
 		// to achieve maximum velocity.
 		case CRCC( 0x13713760, "Ped_GetCurrentVelocity" ):
 		{
-			Obj::CMotionComponent* pMotionComp = GetMotionComponentFromObject( GetObject() );
+			Obj::CMotionComponent* pMotionComp = GetMotionComponentFromObject( GetObj() );
 			Dbg_Assert( pMotionComp );
 			pScript->GetParams()->AddFloat( CRCD( 0x41272956, "velocity" ), pMotionComp->m_vel_z );
 			break;
@@ -255,7 +255,7 @@ CBaseComponent::EMemberFunctionResult CPedLogicComponent::CallMemberFunction( ui
 		// change it and restore it later
 		case CRCC( 0xf5627596, "Ped_StoreMaxVelocity" ):
 		{
-			Obj::CMotionComponent* pMotionComp = GetMotionComponentFromObject( GetObject() );
+			Obj::CMotionComponent* pMotionComp = GetMotionComponentFromObject( GetObj() );
 			Dbg_Assert( pMotionComp );
 			m_original_max_vel = pMotionComp->m_max_vel;
 			break;
@@ -300,7 +300,7 @@ CBaseComponent::EMemberFunctionResult CPedLogicComponent::CallMemberFunction( ui
 			pParams->GetFloat( CRCD( 0xa5e2da58, "gravity" ), &gravity, Script::ASSERT );
 			Dbg_MsgAssert( gravity < 0.0f, ( "Ped_InitVertTrick given positive number for gravity" ) );
 
-			Mth::Vector pt = m_wp_to - GetObject()->m_pos;
+			Mth::Vector pt = m_wp_to - GetObj()->m_pos;
 			// adjust height to compensate for difference between ped height
 			// and height of waypoint
 			// height += pt[Y];
@@ -366,8 +366,8 @@ CBaseComponent::EMemberFunctionResult CPedLogicComponent::CallMemberFunction( ui
 			break;
 		case CRCC( 0x56d9f55f, "Ped_PlayJumpSound" ):
 		{
-			//Dbg_MsgAssert( m_state == CRCD(0xa85af587,"generic_skater"), ( "%s\nPed_PlayJumpSound called on a non-skater ped %s",pScript->GetScriptInfo(),Script::FindChecksumName(GetObject()->GetID()) ) );
-			Obj::CSkaterSoundComponent *pSoundComponent = GetSkaterSoundComponentFromObject( GetObject() );
+			//Dbg_MsgAssert( m_state == CRCD(0xa85af587,"generic_skater"), ( "%s\nPed_PlayJumpSound called on a non-skater ped %s",pScript->GetScriptInfo(),Script::FindChecksumName(GetObj()->GetID()) ) );
+			Obj::CSkaterSoundComponent *pSoundComponent = GetSkaterSoundComponentFromObject( GetObj() );
 			if ( pSoundComponent )
 				pSoundComponent->PlayJumpSound(m_speed_fraction);
 			break;
@@ -375,7 +375,7 @@ CBaseComponent::EMemberFunctionResult CPedLogicComponent::CallMemberFunction( ui
 		case CRCC( 0x749de914, "Ped_PlayLandSound" ):
 		{
 			Dbg_MsgAssert( m_state == CRCD(0xa85af587,"generic_skater"), ( "Ped_PlayLandSound called on a non-ped skater" ) );
-			Obj::CSkaterSoundComponent *pSoundComponent = GetSkaterSoundComponentFromObject( GetObject() );
+			Obj::CSkaterSoundComponent *pSoundComponent = GetSkaterSoundComponentFromObject( GetObj() );
 			if ( pSoundComponent )
 				pSoundComponent->PlayLandSound(m_speed_fraction);
 			break;
@@ -447,7 +447,7 @@ void CPedLogicComponent::GenericPedUpdate()
 	if ( !( m_flags & PEDLOGIC_MOVING_ON_PATH ) )
 		return;
 
-	Obj::CMotionComponent* pMotionComp = GetMotionComponentFromObject( GetObject() );
+	Obj::CMotionComponent* pMotionComp = GetMotionComponentFromObject( GetObj() );
 	Dbg_Assert( pMotionComp );
 	// Obj::CPathObjectTracker* p_path_object_tracker = pMotionComp->mp_path_object_tracker;
 
@@ -461,7 +461,7 @@ void CPedLogicComponent::GenericPedUpdate()
 	}
 	
 	// Gfx::AddDebugLine( m_wp_from, m_wp_to, MAKE_RGB( 128, 0, 0 ), MAKE_RGB( 128, 0, 0 ), 1 );
-	// Gfx::AddDebugLine( GetObject()->m_pos, m_wp_to, MAKE_RGB( 0, 0, 128 ), MAKE_RGB( 0, 0, 128 ), 1 );
+	// Gfx::AddDebugLine( GetObj()->m_pos, m_wp_to, MAKE_RGB( 0, 0, 128 ), MAKE_RGB( 0, 0, 128 ), 1 );
 
 	// move and decay
 	pMotionComp->DoPathPhysics();
@@ -477,16 +477,16 @@ void CPedLogicComponent::GenericPedUpdate()
 
 void CPedLogicComponent::GenericSkaterUpdate()
 {
-	Obj::CMotionComponent* pMotionComp = GetMotionComponentFromObject( GetObject() );
+	Obj::CMotionComponent* pMotionComp = GetMotionComponentFromObject( GetObj() );
 	Dbg_Assert( pMotionComp );
 	pMotionComp->DoPathPhysics();
 	float distance = m_time * pMotionComp->m_vel_z;
 	bool is_jumping = pMotionComp->m_movingobj_status & MOVINGOBJ_STATUS_JUMPING ? true : false;
 
 	// Gfx::AddDebugLine( m_wp_from, m_wp_to, MAKE_RGB( 128, 0, 0 ), MAKE_RGB( 128, 0, 0 ), 1 );
-	// Gfx::AddDebugLine( GetObject()->m_pos, m_wp_to, MAKE_RGB( 0, 0, 128 ), MAKE_RGB( 0, 0, 128 ), 1 );
+	// Gfx::AddDebugLine( GetObj()->m_pos, m_wp_to, MAKE_RGB( 0, 0, 128 ), MAKE_RGB( 0, 0, 128 ), 1 );
 	// Gfx::AddDebugLine( m_pos_history[vPOS_HISTORY_SIZE - 2] + Mth::Vector( 0, 5, 1 ), m_pos_history[vPOS_HISTORY_SIZE - 1] + Mth::Vector( 0, 5, 1 ), MAKE_RGB( 0, 128, 0 ), MAKE_RGB( 0, 128, 0 ) );
-	// Gfx::AddDebugArrow( GetObject()->GetDisplayMatrix()[Z] + GetObject()->m_pos, GetObject()->GetDisplayMatrix()[Z] * 24 + GetObject()->m_pos, MAKE_RGB( 0, 0, 128 ), MAKE_RGB( 0, 0, 128 ), 1 );
+	// Gfx::AddDebugArrow( GetObj()->GetDisplayMatrix()[Z] + GetObj()->m_pos, GetObj()->GetDisplayMatrix()[Z] * 24 + GetObj()->m_pos, MAKE_RGB( 0, 0, 128 ), MAKE_RGB( 0, 0, 128 ), 1 );
 	
 	// check for skater if we're grinding
 	if ( m_flags & PEDLOGIC_GRINDING )
@@ -496,7 +496,7 @@ void CPedLogicComponent::GenericSkaterUpdate()
 		Obj::CSkater* pSkater = skate_mod->GetLocalSkater();
 		if ( pSkater )
 		{
-			float d = Mth::DistanceSqr( GetObject()->m_pos, pSkater->GetPos() );
+			float d = Mth::DistanceSqr( GetObj()->m_pos, pSkater->GetPos() );
 			// printf("skater dist square = %f\n", d );
 			if ( d < Script::GetFloat( CRCD( 0xbc2e678a, "ped_skater_min_square_distance_to_skater" ), Script::ASSERT ) )
 			{
@@ -512,13 +512,13 @@ void CPedLogicComponent::GenericSkaterUpdate()
 		Mth::Vector pt;
 		if ( ( m_flags & PEDLOGIC_TO_NODE_IS_VERT ) || is_jumping )
 		{
-			pt = ( GetObject()->m_pos - m_wp_to );
+			pt = ( GetObj()->m_pos - m_wp_to );
 		}
 		else
 		{
 			Mth::Vector wp_to_no_y = m_wp_to;
 			wp_to_no_y[Y] = 0.0f;
-			Mth::Vector ped_pos_no_y = GetObject()->m_pos;
+			Mth::Vector ped_pos_no_y = GetObj()->m_pos;
 			ped_pos_no_y[Y] = 0.0f;
 			pt = ped_pos_no_y - wp_to_no_y;
 		}
@@ -542,7 +542,7 @@ void CPedLogicComponent::GenericSkaterUpdate()
 				m_flags &= ~PEDLOGIC_JUMP_AT_TO_NODE;
 
 				Script::CScript* pScript = Script::SpawnScript( CRCD( 0x9c7ab5f5, "ped_skater_crouch_for_jump" ) );
-				pScript->mpObject = GetObject();
+				pScript->mpObject = GetObj();
 			}
 		}
 	}
@@ -550,7 +550,7 @@ void CPedLogicComponent::GenericSkaterUpdate()
 	// move
 	if ( ( m_flags & PEDLOGIC_MOVING_ON_PATH ) && distance )
 	{
-		Mth::Vector original_pos = GetObject()->m_pos;
+		Mth::Vector original_pos = GetObj()->m_pos;
 		bool already_adjusted_heading = false;
 		if ( ShouldUseBiases() )
 		{
@@ -572,10 +572,10 @@ void CPedLogicComponent::GenericSkaterUpdate()
 		else
 		{
 			// figure the new position
-			Mth::Vector new_pos = original_pos + ( distance * ( m_wp_to - GetObject()->m_pos ).Normalize() );
+			Mth::Vector new_pos = original_pos + ( distance * ( m_wp_to - GetObj()->m_pos ).Normalize() );
 			UpdatePathBias();
 			UpdatePosition();			
-			GetObject()->m_pos = new_pos;
+			GetObj()->m_pos = new_pos;
 			AdjustHeading( original_pos );
 			already_adjusted_heading = true;
 		}
@@ -630,7 +630,7 @@ void CPedLogicComponent::GenericSkaterUpdate()
 	else
 		m_speed_fraction = 0.0f;
 	
-	Obj::CSkaterLoopingSoundComponent* pLoopingSoundComp = GetSkaterLoopingSoundComponentFromObject( GetObject() );
+	Obj::CSkaterLoopingSoundComponent* pLoopingSoundComp = GetSkaterLoopingSoundComponentFromObject( GetObj() );
 	if ( pLoopingSoundComp )
 	{
 		// reset bailing flag
@@ -650,10 +650,10 @@ bool CPedLogicComponent::CheckForOtherPeds()
 	if ( mp_path_object_tracker )
 	{		
 		const CSmtPtr<CCompositeObject>* pp_object_list = mp_path_object_tracker->GetObjectList();
-		Mth::Matrix display_matrix = GetObject()->GetDisplayMatrix();
+		Mth::Matrix display_matrix = GetObj()->GetDisplayMatrix();
 		float range = Script::GetFloat( CRCD( 0x7a78f471, "ped_avoid_ped_range" ) );
 		float avoid_ped_bias = Script::GetFloat( CRCD( 0xd1e6177b, "ped_avoid_ped_bias" ) );
-		Obj::CMotionComponent* pMotionComp = GetMotionComponentFromObject( GetObject() );
+		Obj::CMotionComponent* pMotionComp = GetMotionComponentFromObject( GetObj() );
 		Dbg_Assert( pMotionComp );
 
 		for ( int i = 0; i < CPathObjectTracker::MAX_OBJECTS_PER_PATH; ++i )
@@ -662,18 +662,18 @@ bool CPedLogicComponent::CheckForOtherPeds()
 			{
 				CCompositeObject* p_ob=pp_object_list[i].Convert();
 	
-				if ( p_ob != GetObject() )
+				if ( p_ob != GetObj() )
 				{
 					// ignore peds that are too far above or below
 					float max_y_dist = Script::GetFloat( CRCD(0x21b13ffc,"ped_max_y_distance_to_ignore"), Script::ASSERT );
-					if ( Mth::Abs( GetObject()->GetPos()[Y] - p_ob->GetPos()[Y] ) > max_y_dist )
+					if ( Mth::Abs( GetObj()->GetPos()[Y] - p_ob->GetPos()[Y] ) > max_y_dist )
 					{
 						continue;
 					}
 					
 					// ignore peds that are facing the opposite direction and walking away
 					float z_dot = Mth::DotProduct( display_matrix[Z], p_ob->GetDisplayMatrix()[Z] );
-					if ( z_dot <= 0.0f && Mth::DotProduct( display_matrix[Z], p_ob->GetPos() - GetObject()->GetPos() ) <= 0.0f )
+					if ( z_dot <= 0.0f && Mth::DotProduct( display_matrix[Z], p_ob->GetPos() - GetObj()->GetPos() ) <= 0.0f )
 					{
 						// printf("walking away from each other\n");
 						continue;
@@ -688,7 +688,7 @@ bool CPedLogicComponent::CheckForOtherPeds()
 						continue;
 					}
 
-					float d = Mth::Distance( GetObject()->GetPos(), p_ob->GetPos() );					
+					float d = Mth::Distance( GetObj()->GetPos(), p_ob->GetPos() );					
 					if ( d <= range )
 					{						
 						// adjust whisker
@@ -735,7 +735,7 @@ void CPedLogicComponent::UpdatePathBias()
 	wp_from_no_y[Y] = 0.0f;
 	Mth::Vector wp_to_no_y = m_wp_to;
 	wp_to_no_y[Y] = 0.0f;
-	Mth::Vector ped_pos_no_y = GetObject()->m_pos;
+	Mth::Vector ped_pos_no_y = GetObj()->m_pos;
 	ped_pos_no_y[Y] = 0.0f;
 
 	float max_dist_to_path = Script::GetFloat( CRCD( 0xa876aa2c, "ped_max_distance_to_path" ), Script::ASSERT );
@@ -751,10 +751,10 @@ void CPedLogicComponent::UpdatePathBias()
 	closest_pos_on_path[Y] = 0.0f;
 	Mth::Vector pos_to_path = closest_pos_on_path - ped_pos_no_y;
 
-	// Gfx::AddDebugArrow( GetObject()->m_pos, closest_pos_on_path, MAKE_RGB( 0, 128, 0 ), MAKE_RGB( 0, 128, 0 ), 1 );
+	// Gfx::AddDebugArrow( GetObj()->m_pos, closest_pos_on_path, MAKE_RGB( 0, 128, 0 ), MAKE_RGB( 0, 128, 0 ), 1 );
 
-	// Mth::Matrix ob_matrix = GetObject()->m_matrix;
-	Mth::Matrix display_matrix = GetObject()->GetDisplayMatrix();
+	// Mth::Matrix ob_matrix = GetObj()->m_matrix;
+	Mth::Matrix display_matrix = GetObj()->GetDisplayMatrix();
 	float angle_to_path = Mth::GetAngle( display_matrix[Z], pos_to_path );
 	if ( angle_to_path > 360.0f )
 		angle_to_path -= 360.0f * (int)( angle_to_path / 360.0f );
@@ -789,7 +789,7 @@ bool CPedLogicComponent::UpdateTargetBias()
 	bool is_turning = false;
 	Mth::Vector wp_to_no_y = m_wp_to;
 	wp_to_no_y[Y] = 0.0f;
-	Mth::Vector ped_pos_no_y = GetObject()->m_pos;
+	Mth::Vector ped_pos_no_y = GetObj()->m_pos;
 	ped_pos_no_y[Y] = 0.0f;
 	Mth::Vector pt = ped_pos_no_y - wp_to_no_y;
 	float distance_to_target_square = pt.LengthSqr();
@@ -823,7 +823,7 @@ bool CPedLogicComponent::UpdateTargetBias()
 			if ( !m_max_turn_frames )
 			{
 				// figure how long it will take to get there if we don't turn
-				Obj::CMotionComponent* pMotionComp = GetMotionComponentFromObject( GetObject() );
+				Obj::CMotionComponent* pMotionComp = GetMotionComponentFromObject( GetObj() );
 				Dbg_Assert( pMotionComp );
 				
 				Mth::Vector wp_from_no_y = m_wp_from;
@@ -876,14 +876,14 @@ bool CPedLogicComponent::UpdateTargetBias()
 
 void CPedLogicComponent::UpdatePosition()
 {
-	Obj::CMotionComponent* pMotionComp = GetMotionComponentFromObject( GetObject() );
+	Obj::CMotionComponent* pMotionComp = GetMotionComponentFromObject( GetObj() );
 	Dbg_Assert( pMotionComp );
 
 	float x_bias = GetTotalXBias();
 	float z_bias = GetTotalZBias();
 	// printf("x_bias = %f, z_bias = %f\n", x_bias, z_bias );
 
-	Mth::Vector last_pos = GetObject()->m_pos;
+	Mth::Vector last_pos = GetObj()->m_pos;
 	
 	RotatePosHistory();
 	
@@ -905,33 +905,33 @@ void CPedLogicComponent::UpdatePosition()
 		z_distance *= -1;
 */   
 	// printf("x_dist = %f, z_dist = %f\n", x_distance, z_distance);
-	// Mth::Matrix mat0 = GetObject()->m_matrix;
-	Mth::Matrix mat0 = GetObject()->GetDisplayMatrix();
+	// Mth::Matrix mat0 = GetObj()->m_matrix;
+	Mth::Matrix mat0 = GetObj()->GetDisplayMatrix();
 	Mth::Vector z_vect = mat0[Z] * z_distance;
 	Mth::Vector x_vect = mat0[X] * x_distance;
 	
-	// GetObject()->GetDisplayMatrix()[Z] = new_heading;
-	// GetObject()->GetDisplayMatrix().OrthoNormalizeAbout( Z );
-	GetObject()->m_pos += x_vect;
-	GetObject()->m_pos += z_vect;
+	// GetObj()->GetDisplayMatrix()[Z] = new_heading;
+	// GetObj()->GetDisplayMatrix().OrthoNormalizeAbout( Z );
+	GetObj()->m_pos += x_vect;
+	GetObj()->m_pos += z_vect;
 	
 	// skaters do their own headings
-	if ( last_pos != GetObject()->m_pos && !( m_flags & PEDLOGIC_IS_SKATER ) )
+	if ( last_pos != GetObj()->m_pos && !( m_flags & PEDLOGIC_IS_SKATER ) )
 		AdjustHeading( last_pos );
 
 /*
 	float angle_to_new_heading = atan2( x_distance, z_distance );
 	if ( fabs( angle_to_new_heading ) > Script::GetFloat( "ped_max_angle_to_heading", Script::ASSERT ) )
 	{
-		GetObject()->GetDisplayMatrix().Rotate( mat0[Y], angle_to_new_heading );
+		GetObj()->GetDisplayMatrix().Rotate( mat0[Y], angle_to_new_heading );
 		// mat0.Rotate( mat0[Y], angle_to_new_heading );
-		// GetObject()->m_matrix.Rotate( mat0[Y], angle_to_new_heading );
+		// GetObj()->m_matrix.Rotate( mat0[Y], angle_to_new_heading );
 		// printf( "angle_to_new_heading = %f\n", Mth::RadToDeg( angle_to_new_heading ) );
 	}
 */
-	// GetObject()->SetDisplayMatrix( mat0 );
-	// GetObject()->m_matrix = mat0;
-	// GetObject()->m_pos += adjustment;
+	// GetObj()->SetDisplayMatrix( mat0 );
+	// GetObj()->m_matrix = mat0;
+	// GetObj()->m_pos += adjustment;
 }
 
 
@@ -946,7 +946,7 @@ void CPedLogicComponent::RotatePosHistory()
 	{
 		m_pos_history[i] = m_pos_history[i + 1];
 	}
-	m_pos_history[vPOS_HISTORY_SIZE - 1] = GetObject()->m_pos;
+	m_pos_history[vPOS_HISTORY_SIZE - 1] = GetObj()->m_pos;
 }
 
 /******************************************************************/
@@ -956,13 +956,13 @@ void CPedLogicComponent::RotatePosHistory()
 
 void CPedLogicComponent::AddTargetBias( Mth::Vector target, float target_bias )
 {
-	Mth::Matrix display_matrix = GetObject()->GetDisplayMatrix();
+	Mth::Matrix display_matrix = GetObj()->GetDisplayMatrix();
 	
-	Mth::Vector ped_pos_no_y = GetObject()->m_pos;
+	Mth::Vector ped_pos_no_y = GetObj()->m_pos;
 	ped_pos_no_y[Y] = 0.0f;
 	target[Y] = 0.0f;
 
-	// Mth::Vector pt = GetObject()->m_pos - target;
+	// Mth::Vector pt = GetObj()->m_pos - target;
 	Mth::Vector pt = ped_pos_no_y - target;
 	float angle_to_target = Mth::GetAngle( display_matrix[Z], pt );
 	angle_to_target += 180.0f;
@@ -1196,7 +1196,7 @@ void CPedLogicComponent::HitWaypoint()
 	if ( !( m_flags & PEDLOGIC_IS_SKATER ) && old_from_node == m_node_to )
 	{
 		Script::CScript* pDeadEndScript = Script::SpawnScript( CRCD( 0xa80f965e, "ped_walker_hit_dead_end" ) );
-		pDeadEndScript->mpObject = GetObject();
+		pDeadEndScript->mpObject = GetObj();
 	}
 	
 	// update m_to_node_is_vert for distance checks
@@ -1338,7 +1338,7 @@ void CPedLogicComponent::DoGenericNodeActions( Script::CStruct* pNodeData )
 			uint32 script_name;
 			pNodeData->GetChecksum( CRCD( 0x64b4cd9d, "RunScriptName" ), &script_name, Script::ASSERT );
 			Script::CScript* pScript = Script::SpawnScript( script_name );
-			pScript->mpObject = GetObject();
+			pScript->mpObject = GetObj();
 		}
 	}
 }
@@ -1590,7 +1590,7 @@ bool CPedLogicComponent::ShouldExecuteAction( Script::CStruct* pNodeData, uint32
 {
 	float weight;
 	pNodeData->GetFloat( weight_name, &weight, Script::ASSERT );
-	Dbg_MsgAssert( weight > 0 && weight <= 1, ( "Waypoint %s has a bad action weight of %f\n", Script::FindChecksumName( GetObject()->GetID() ), weight ) );
+	Dbg_MsgAssert( weight > 0 && weight <= 1, ( "Waypoint %s has a bad action weight of %f\n", Script::FindChecksumName( GetObj()->GetID() ), weight ) );
 	if ( weight > 0.99f )
 		return true;
 	return ( Mth::Rnd( vACTION_WEIGHT_RESOLUTION ) < ( weight * vACTION_WEIGHT_RESOLUTION ) );
@@ -1604,7 +1604,7 @@ bool CPedLogicComponent::ShouldExecuteAction( Script::CStruct* pNodeData, uint32
 
 void CPedLogicComponent::AdjustSpeed( float percent )
 {
-	Obj::CMotionComponent* pMotionComp = GetMotionComponentFromObject( GetObject() );
+	Obj::CMotionComponent* pMotionComp = GetMotionComponentFromObject( GetObj() );
 	pMotionComp->m_max_vel *= percent;
 }
 
@@ -1616,7 +1616,7 @@ void CPedLogicComponent::AdjustSpeed( float percent )
 
 void CPedLogicComponent::AdjustNormal()
 {
-	Obj::CMotionComponent* pMotionComp = GetMotionComponentFromObject( GetObject() );
+	Obj::CMotionComponent* pMotionComp = GetMotionComponentFromObject( GetObj() );
 	Dbg_Assert( pMotionComp );
 	if ( pMotionComp )
 	{
@@ -1670,12 +1670,12 @@ void CPedLogicComponent::AdjustNormal()
 		// Now update the orientation matrix.
 		// We need our up (Y) vector to be this vector
 		// if it changes, rotate the X and Z vectors to match
-		Mth::Matrix display_matrix = GetObject()->GetDisplayMatrix();
+		Mth::Matrix display_matrix = GetObj()->GetDisplayMatrix();
 		if ( display_matrix[Y] != m_display_normal )
 		{
 			display_matrix[Y] = m_display_normal;
 			display_matrix.OrthoNormalizeAbout( Y );
-			GetObject()->SetDisplayMatrix( display_matrix );
+			GetObj()->SetDisplayMatrix( display_matrix );
 			m_current_display_matrix = display_matrix;
 		}
 	}	
@@ -1699,8 +1699,8 @@ void CPedLogicComponent::AdjustHeading()
 
 void CPedLogicComponent::AdjustHeading( Mth::Vector original_pos )
 {
-	Mth::Matrix mat0 = GetObject()->GetDisplayMatrix();
-	Mth::Vector new_pos = GetObject()->m_pos;
+	Mth::Matrix mat0 = GetObj()->GetDisplayMatrix();
+	Mth::Vector new_pos = GetObj()->m_pos;
 	if ( m_flags & PEDLOGIC_TO_NODE_IS_LIP )
 	{
 		original_pos = m_wp_from;
@@ -1714,7 +1714,7 @@ void CPedLogicComponent::AdjustHeading( Mth::Vector original_pos )
 	// get new X and Y vectors
 	mat0[X] = Mth::CrossProduct( mat0[Y], mat0[Z] );	
 	mat0[Y] = Mth::CrossProduct( mat0[Z], mat0[X] );
-	GetObject()->SetDisplayMatrix( mat0 );
+	GetObj()->SetDisplayMatrix( mat0 );
 	m_current_display_matrix = mat0;
 }
 
@@ -1725,7 +1725,7 @@ void CPedLogicComponent::AdjustHeading( Mth::Vector original_pos )
 
 void CPedLogicComponent::RefreshDisplayMatrix()
 {
-	GetObject()->SetDisplayMatrix( m_current_display_matrix );
+	GetObj()->SetDisplayMatrix( m_current_display_matrix );
 }
 
 /******************************************************************/
@@ -1770,24 +1770,24 @@ void CPedLogicComponent::StickToGround()
 {
 	// stick to ground modified from the motion component...uses
 	// the ped's normal instead of the world's Y
-	Obj::CMotionComponent* pMotionComp = GetMotionComponentFromObject( GetObject() );
+	Obj::CMotionComponent* pMotionComp = GetMotionComponentFromObject( GetObj() );
 	Dbg_Assert( pMotionComp );
 	
 	Mth::Vector v0, v1;
 
 	// make sure our X vector is correct (got Z from the nav matrix...)
-	GetObject()->m_matrix[X] = Mth::CrossProduct( GetObject()->m_matrix[Y], GetObject()->m_matrix[Z] );
-	GetObject()->m_matrix[X].Normalize();
+	GetObj()->m_matrix[X] = Mth::CrossProduct( GetObj()->m_matrix[Y], GetObj()->m_matrix[Z] );
+	GetObj()->m_matrix[X].Normalize();
 
-	Mth::Matrix display_matrix = GetObject()->GetDisplayMatrix();
-	v0 = GetObject()->m_pos + ( display_matrix[Y] * m_col_dist_above );
-	v1 = GetObject()->m_pos + ( -display_matrix[Y] * m_col_dist_below );
+	Mth::Matrix display_matrix = GetObj()->GetDisplayMatrix();
+	v0 = GetObj()->m_pos + ( display_matrix[Y] * m_col_dist_above );
+	v1 = GetObj()->m_pos + ( -display_matrix[Y] * m_col_dist_below );
 	
 	Mth::Vector collision_point;
 	if ( do_collision_check( &v0, &v1, &collision_point, &( pMotionComp->m_last_triangle ) ) )
 	{
-		GetObject()->m_pos = collision_point;
-		// GetObject()->GetDisplayMatrix()[Mth::POS] = collision_point;
+		GetObj()->m_pos = collision_point;
+		// GetObj()->GetDisplayMatrix()[Mth::POS] = collision_point;
 	}
 }
 
@@ -1800,11 +1800,11 @@ void CPedLogicComponent::UpdateSkaterSoundStates( EStateType state )
 {
 	Dbg_MsgAssert( m_state == CRCD( 0xa85af587, "generic_skater" ), ( "CPedLogicComponent::UpdateSkaterSoundStates called on a non-skater ped" ) );
 
-	Obj::CSkaterLoopingSoundComponent *pLoopingSoundComponent = GetSkaterLoopingSoundComponentFromObject( GetObject() );
+	Obj::CSkaterLoopingSoundComponent *pLoopingSoundComponent = GetSkaterLoopingSoundComponentFromObject( GetObj() );
 	if ( pLoopingSoundComponent )
 		pLoopingSoundComponent->SetState( state );
 
-	Obj::CSkaterSoundComponent *pSoundComponent = GetSkaterSoundComponentFromObject( GetObject() );
+	Obj::CSkaterSoundComponent *pSoundComponent = GetSkaterSoundComponentFromObject( GetObj() );
 	if ( pSoundComponent )
 		pSoundComponent->SetState( state );
 }
@@ -1819,11 +1819,11 @@ void CPedLogicComponent::UpdateSkaterSoundTerrain( ETerrainType terrain )
 	Dbg_MsgAssert( m_state == CRCD(0xa85af587,"generic_skater"), ( "CPedLogicComponent::UpdateSkaterSoundTerrain called on non-skater ped" ) );
 
 	// set the terrain type for looping sound
-	Obj::CSkaterLoopingSoundComponent* pLoopingSoundComp = GetSkaterLoopingSoundComponentFromObject( GetObject() );
+	Obj::CSkaterLoopingSoundComponent* pLoopingSoundComp = GetSkaterLoopingSoundComponentFromObject( GetObj() );
 	if ( pLoopingSoundComp )
 		pLoopingSoundComp->SetTerrain( terrain );
 
-	Obj::CSkaterSoundComponent *pSoundComponent = GetSkaterSoundComponentFromObject( GetObject() );
+	Obj::CSkaterSoundComponent *pSoundComponent = GetSkaterSoundComponentFromObject( GetObj() );
 	if ( pSoundComponent )
 	{
 		pSoundComponent->SetTerrain( terrain );
@@ -1863,7 +1863,7 @@ Script::CStruct* CPedLogicComponent::GetSkateActionParams( Script::CStruct* pNod
 	Script::CStruct* pScriptParams = new Script::CStruct();
 	// give higher priority to ped skater data - should this be reversed?	
 	pScriptParams->AppendStructure( pNodeData );
-	pScriptParams->AppendStructure( GetObject()->GetTags() );
+	pScriptParams->AppendStructure( GetObj()->GetTags() );
 	return pScriptParams;
 }
 
@@ -1891,7 +1891,7 @@ void CPedLogicComponent::DoGrind( Script::CStruct* pNodeData )
 
 	Script::CStruct* pScriptParams = GetSkateActionParams( pNodeData );
 	Script::CScript* pScript = Script::SpawnScript( CRCD( 0xb7fca430, "ped_skater_grind" ), pScriptParams );
-	pScript->mpObject = GetObject();
+	pScript->mpObject = GetObj();
 	delete pScriptParams;
 }
 
@@ -1907,7 +1907,7 @@ void CPedLogicComponent::GrindUpdate()
 	{
 		printf("setting the wobble target to %f\n", m_grind_wobble_target);
 		// set new wobble target
-		Obj::CAnimationComponent* pAnimComp = GetAnimationComponentFromObject( GetObject() );
+		Obj::CAnimationComponent* pAnimComp = GetAnimationComponentFromObject( GetObj() );
 		Dbg_Assert( pAnimComp );
 		pAnimComp->SetWobbleTarget( m_grind_wobble_target, false );
 		m_grind_wobble_target = -m_grind_wobble_target;
@@ -1929,7 +1929,7 @@ void CPedLogicComponent::DoGrindOff( Script::CStruct* pNodeData )
 		m_flags &= ~PEDLOGIC_GRINDING;
 	
 		Script::CScript* pScript = Script::SpawnScript( CRCD( 0x84c51e26, "ped_skater_grind_off" ) );
-		pScript->mpObject = GetObject();
+		pScript->mpObject = GetObj();
 		// delete pScriptParams;
 	}
 }
@@ -1966,7 +1966,7 @@ void CPedLogicComponent::DoJump( Script::CStruct* pNodeData, bool is_vert )
 		}
 		pScript = Script::SpawnScript( CRCD( 0x28be3d25, "ped_skater_jump" ), pScriptParams );
 	}
-	pScript->mpObject = GetObject();
+	pScript->mpObject = GetObj();
 	delete pScriptParams;
 }
 
@@ -1987,7 +1987,7 @@ void CPedLogicComponent::DoLipTrick( Script::CStruct* pNodeData )
 	
 	Script::CStruct* pScriptParams = GetSkateActionParams( pNodeData );
 	Script::CScript* pScript = Script::SpawnScript( CRCD( 0x2fd2b4b8, "ped_skater_lip_trick" ), pScriptParams );
-	pScript->mpObject = GetObject();
+	pScript->mpObject = GetObj();
 	delete pScriptParams;
 }
 
@@ -1999,7 +1999,7 @@ void CPedLogicComponent::DoLipTrick( Script::CStruct* pNodeData )
 void CPedLogicComponent::UpdateLipDisplayMatrix()
 {
 	// set the display matrix
-	Mth::Matrix mat0 = GetObject()->GetDisplayMatrix();	
+	Mth::Matrix mat0 = GetObj()->GetDisplayMatrix();	
 	
 	// change z vector
 	mat0[Z] = Mth::Vector(0, 1, 0);
@@ -2007,7 +2007,7 @@ void CPedLogicComponent::UpdateLipDisplayMatrix()
 	// get new X and Y vectors
 	mat0[X] = Mth::CrossProduct( mat0[Y], mat0[Z] ).Normalize();
 	mat0[Y] = Mth::CrossProduct( mat0[Z], mat0[X] ).Normalize();
-	GetObject()->SetDisplayMatrix( mat0 );
+	GetObj()->SetDisplayMatrix( mat0 );
 }
 
 /******************************************************************/
@@ -2021,7 +2021,7 @@ void CPedLogicComponent::DoManual( Script::CStruct* pNodeData )
 	
 	Script::CStruct* pScriptParams = GetSkateActionParams( pNodeData );
 	Script::CScript* pScript = Script::SpawnScript( CRCD( 0x1462af22, "ped_skater_manual" ), pScriptParams );
-	pScript->mpObject = GetObject();
+	pScript->mpObject = GetObj();
 	delete pScriptParams;
 }
 
@@ -2036,7 +2036,7 @@ void CPedLogicComponent::DoManualDown( Script::CStruct* pNodeData )
 	
 	Script::CStruct* pScriptParams = GetSkateActionParams( pNodeData );
 	Script::CScript* pScript = Script::SpawnScript( CRCD( 0x4c0caa11, "ped_skater_manual_down" ), pScriptParams );
-	pScript->mpObject = GetObject();
+	pScript->mpObject = GetObj();
 	delete pScriptParams;
 }
 
@@ -2070,12 +2070,12 @@ Script::CStruct* CPedLogicComponent::GetJumpParams( Script::CStruct* pNodeData, 
 
 	if ( is_vert || pNodeData->ContainsFlag( CRCD( 0xb02567ae, "JumpToNextNode" ) ) )
 	{
-		Mth::Vector pt = m_wp_to - GetObject()->m_pos;
+		Mth::Vector pt = m_wp_to - GetObj()->m_pos;
 		pt[Y] = 0.0f;
 		
-		if ( GetObject()->m_pos[Y] + height < m_wp_to[Y] )
+		if ( GetObj()->m_pos[Y] + height < m_wp_to[Y] )
 		{
-			height = m_wp_to[Y] - GetObject()->m_pos[Y] + Script::GetFloat( CRCD( 0x23f14b13, "ped_skater_jump_to_next_node_height_slop" ), Script::ASSERT );						
+			height = m_wp_to[Y] - GetObj()->m_pos[Y] + Script::GetFloat( CRCD( 0x23f14b13, "ped_skater_jump_to_next_node_height_slop" ), Script::ASSERT );						
 			// Script::PrintContents( pNodeData );
 			// Dbg_MsgAssert( 0, ( "JumpToNextNode selected but jumpHeight isn't enough to reach target node." ) );
 		}		
@@ -2091,7 +2091,7 @@ Script::CStruct* CPedLogicComponent::GetJumpParams( Script::CStruct* pNodeData, 
 		float time_to_rise = sqrtf( 2 * -height / gravity );
 	
 		// figure the time to fall
-		float time_to_fall = sqrtf( 2 * Mth::Abs( ( GetObject()->m_pos[Y] + height - m_wp_to[Y] ) / gravity ) );
+		float time_to_fall = sqrtf( 2 * Mth::Abs( ( GetObj()->m_pos[Y] + height - m_wp_to[Y] ) / gravity ) );
 	
 		// compute the inital y velocity
 		float vi = ( height / time_to_rise ) - ( 0.5f * gravity * time_to_rise );
@@ -2152,7 +2152,7 @@ Script::CStruct* CPedLogicComponent::GetJumpParams( Script::CStruct* pNodeData, 
 		uint32 spin_direction;
 		pNodeData->GetChecksum( CRCD( 0xef0b71a0, "SpinDirection" ), &spin_direction, Script::ASSERT );
 		
-		Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObject() );
+		Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObj() );
 		bool is_flipped = pAnimationComponent->IsFlipped();
 		
 		switch ( spin_direction )
@@ -2240,7 +2240,7 @@ void CPedLogicComponent::DoGrab( Script::CStruct* pNodeData, bool is_vert )
 	Script::CStruct* pScriptParams;
 	if ( is_vert )
 	{
-		// Obj::CAnimationComponent* pAnimComp = GetAnimationComponentFromObject( GetObject() );
+		// Obj::CAnimationComponent* pAnimComp = GetAnimationComponentFromObject( GetObj() );
 		// printf("flipped = %i\n", pAnimComp->IsFlipped() );
 
 		m_flags &= ~PEDLOGIC_MOVING_ON_PATH;
@@ -2252,7 +2252,7 @@ void CPedLogicComponent::DoGrab( Script::CStruct* pNodeData, bool is_vert )
 		pScriptParams = GetSkateActionParams( pNodeData );
 
 		// see if we're already jumping
-		Obj::CMotionComponent* pMotionComp = GetMotionComponentFromObject( GetObject() );
+		Obj::CMotionComponent* pMotionComp = GetMotionComponentFromObject( GetObj() );
 		if ( pMotionComp->m_movingobj_status & MOVINGOBJ_STATUS_JUMPING )
 			pScriptParams->AddInteger( CRCD( 0x65b5788d, "is_jumping" ), 1 );
 		else
@@ -2267,7 +2267,7 @@ void CPedLogicComponent::DoGrab( Script::CStruct* pNodeData, bool is_vert )
 	}
 		
 	Script::CScript* pScript = Script::SpawnScript( CRCD( 0x10585cb3, "ped_skater_grab_trick" ), pScriptParams );
-	pScript->mpObject = GetObject();
+	pScript->mpObject = GetObj();
 	
 	delete pScriptParams;
 }
@@ -2312,7 +2312,7 @@ void CPedLogicComponent::DoRotations()
 
 	Mth::Matrix temp = m_rot_start_matrix;
 	temp.RotateLocal( Mth::Vector( Mth::DegToRad( m_spine_current_angle ), Mth::DegToRad( m_rot_current_angle ), 0 ) );
-	GetObject()->SetDisplayMatrix( temp );
+	GetObj()->SetDisplayMatrix( temp );
 	m_current_display_matrix = temp;
 	m_display_normal = m_last_display_normal = m_current_normal = temp[Y];
 }
@@ -2331,7 +2331,7 @@ void CPedLogicComponent::Stop( Script::CStruct* pNodeData )
 	
 	Script::CStruct* pScriptParams = GetSkateActionParams( pNodeData );
 	Script::CScript* pScript = Script::SpawnScript( CRCD( 0x365b2d85, "ped_skater_stop" ), pScriptParams );
-	pScript->mpObject = GetObject();
+	pScript->mpObject = GetObj();
 	delete pScriptParams;
 }
 
@@ -2346,7 +2346,7 @@ void CPedLogicComponent::StopSkateActions()
 	// BB - I moved this from script because it was too damn slow!
 	Script::CArray* p_scripts_to_stop = Script::GetArray( CRCD( 0x2ecd9f57, "ped_skater_action_scripts" ), Script::ASSERT );
 	int array_size = p_scripts_to_stop->GetSize();
-	Obj::CObject* p_object = (Obj::CObject*)GetObject();
+	Obj::CObject* p_object = (Obj::CObject*)GetObj();
 	
 	for ( int i = 0; i < array_size; i++ )
 	{
@@ -2369,13 +2369,13 @@ void CPedLogicComponent::StopSkateActions()
 void CPedLogicComponent::Bail()
 {
 	// kill any running bail scripts
-	Script::StopScriptsUsingThisObject_Proper( GetObject(), CRCD(0xe630bf07,"ped_skater_grind_bail") );
-	Script::StopScriptsUsingThisObject_Proper( GetObject(), CRCD(0x78131e4f,"ped_skater_generic_bail") );
+	Script::StopScriptsUsingThisObject_Proper( GetObj(), CRCD(0xe630bf07,"ped_skater_grind_bail") );
+	Script::StopScriptsUsingThisObject_Proper( GetObj(), CRCD(0x78131e4f,"ped_skater_generic_bail") );
 
 	// restore the max current velocity before calling this script again!
 	if ( m_original_max_vel > 0 )
 	{
-		Obj::CMotionComponent* pMotionComp = GetMotionComponentFromObject( GetObject() );
+		Obj::CMotionComponent* pMotionComp = GetMotionComponentFromObject( GetObj() );
 		Dbg_Assert( pMotionComp );
 		pMotionComp->m_max_vel = m_original_max_vel;
 	}
@@ -2390,7 +2390,7 @@ void CPedLogicComponent::Bail()
 		pScript = Script::SpawnScript( CRCD(0x78131e4f,"ped_skater_generic_bail") );
 	}
 	StopSkateActions();
-	pScript->mpObject = GetObject();
+	pScript->mpObject = GetObj();
 }
 
 
@@ -2431,7 +2431,7 @@ void CPedLogicComponent::GrindBail()
 
 		// run script!
 		Script::CScript* pScript = Script::SpawnScript( CRCD( 0xe630bf07, "ped_skater_grind_bail" ) );
-		pScript->mpObject = GetObject();
+		pScript->mpObject = GetObj();
 	}
 }
 
@@ -2443,7 +2443,7 @@ void CPedLogicComponent::GrindBail()
 void CPedLogicComponent::DoRollOff( Script::CStruct* pNodeData )
 {
 	Script::CScript* pScript = Script::SpawnScript( CRCD( 0xb183d99e, "ped_skater_roll_off" ) );
-	pScript->mpObject = GetObject();
+	pScript->mpObject = GetObj();
 }
 
 /******************************************************************/
@@ -2456,7 +2456,7 @@ void CPedLogicComponent::DoFlipTrick( Script::CStruct* pNodeData, bool is_vert )
 	StopSkateActions();
 	
 	// jump if we need to
-	Obj::CMotionComponent* pMotionComp = GetMotionComponentFromObject( GetObject() );
+	Obj::CMotionComponent* pMotionComp = GetMotionComponentFromObject( GetObj() );
 	Dbg_Assert( pMotionComp );
 	Script::CStruct* pScriptParams = GetSkateActionParams( pNodeData );
 
@@ -2483,7 +2483,7 @@ void CPedLogicComponent::DoFlipTrick( Script::CStruct* pNodeData, bool is_vert )
 	}
 
 	Script::CScript *pScript = Script::SpawnScript( CRCD( 0xb83c383c, "ped_skater_flip_trick" ), pScriptParams );
-	pScript->mpObject = GetObject();
+	pScript->mpObject = GetObj();
 	delete pScriptParams;
 }
 

@@ -34,9 +34,11 @@
 
 #include <sk/modules/skate/skate.h>
 
+#ifndef __PLAT_WN32__
 #ifndef __PLAT_XBOX__
 #ifndef __PLAT_NGC__
     #include <sifdev.h>
+#endif
 #endif
 #endif
 
@@ -277,6 +279,11 @@ void		Skate::v_start_cb ( void )
     Script::RunScript("init_loading_bar");
     Script::RunScript("startup_loading_screen");
 
+	// lwss add
+#ifdef __PLAT_WN32__
+	Sleep(2000);
+#endif
+
 	// By default we are both client and server
 	//gamenet_manager->m_Flags.SetMask( GameNet::mSERVER | GameNet::mCLIENT );
     
@@ -305,7 +312,8 @@ void		Skate::v_start_cb ( void )
 		if ( !skip_startup )
 		{
 			// Run the personal startup script.
-			Script::RunScript("Call_Personal_StartUp_Script");
+			// lwss: this Loads from the levels/ folder that doesn't exist. With shit like WWW_Sky
+			//Script::RunScript("Call_Personal_StartUp_Script");
 		}
 	}
 }
@@ -388,31 +396,31 @@ int				Skate::GetNextUnusedSkaterHeapIndex( bool for_local_skater )
 	// We assume that these skater heaps are totally empty
 	// so if something is aleft on them, then assert
 
-#ifdef	__NOPT_ASSERT__	
-	Mem::Heap *skater_heap = Mem::Manager::sHandle().SkaterHeap(heap_index);
-	Dbg_MsgAssert( skater_heap != NULL, ( "Invalid skater heap : %d\n", heap_index ));
-	if (skater_heap->mUsedBlocks.m_count)
-	{
-		printf ("Skater heap has %d used blocks still on it, it should be empty\n",skater_heap->mUsedBlocks.m_count);
-#ifndef __PLAT_NGC__
-		MemView_AnalyzeHeap(skater_heap);
-		MemView_DumpHeap(skater_heap);
-#endif		// __PLAT_NGC__
-		Dbg_MsgAssert(0,("Skater heap has %d used blocks still on it, it should be empty\n",skater_heap->mUsedBlocks.m_count));
-	}
-
-	Mem::Heap *geom_heap = Mem::Manager::sHandle().SkaterGeomHeap(heap_index);
-	if (geom_heap->mUsedBlocks.m_count)
-	{
-		printf ("SkaterGeom heap has %d used blocks still on it, it should be empty\n",geom_heap->mUsedBlocks.m_count);
-#ifndef __PLAT_NGC__
-		MemView_AnalyzeHeap(geom_heap);
-		MemView_DumpHeap(geom_heap);
-#endif		// __PLAT_NGC__
-		Dbg_MsgAssert(0,("SkaterGeom heap has %d used blocks still on it, it should be empty\n",geom_heap->mUsedBlocks.m_count));
-	}
-	
-	#endif
+//#ifdef	__NOPT_ASSERT__	
+//	Mem::Heap *skater_heap = Mem::Manager::sHandle().SkaterHeap(heap_index);
+//	Dbg_MsgAssert( skater_heap != NULL, ( "Invalid skater heap : %d\n", heap_index ));
+//	if (skater_heap->mUsedBlocks.m_count)
+//	{
+//		printf ("Skater heap has %d used blocks still on it, it should be empty\n",skater_heap->mUsedBlocks.m_count);
+//#ifndef __PLAT_NGC__
+//		MemView_AnalyzeHeap(skater_heap);
+//		MemView_DumpHeap(skater_heap);
+//#endif		// __PLAT_NGC__
+//		Dbg_MsgAssert(0,("Skater heap has %d used blocks still on it, it should be empty\n",skater_heap->mUsedBlocks.m_count));
+//	}
+//
+//	Mem::Heap *geom_heap = Mem::Manager::sHandle().SkaterGeomHeap(heap_index);
+//	if (geom_heap->mUsedBlocks.m_count)
+//	{
+//		printf ("SkaterGeom heap has %d used blocks still on it, it should be empty\n",geom_heap->mUsedBlocks.m_count);
+//#ifndef __PLAT_NGC__
+//		MemView_AnalyzeHeap(geom_heap);
+//		MemView_DumpHeap(geom_heap);
+//#endif		// __PLAT_NGC__
+//		Dbg_MsgAssert(0,("SkaterGeom heap has %d used blocks still on it, it should be empty\n",geom_heap->mUsedBlocks.m_count));
+//	}
+//	
+//#endif
 	
 
 	return heap_index;
@@ -3436,7 +3444,7 @@ void			Rail_DebugRender()
 		p_rail_manager_component;
 		p_rail_manager_component = static_cast< Obj::CRailManagerComponent* >(p_rail_manager_component->GetNextSameType()))
 	{
-		Obj::CCompositeObject* p_movable_object = p_rail_manager_component->GetObject();
+		Obj::CCompositeObject* p_movable_object = p_rail_manager_component->GetObj();
 
 		// form a transformation matrix
 		Mth::Matrix total_mat = p_movable_object->GetMatrix();

@@ -89,7 +89,7 @@ void CVelocityComponent::InitFromStructure( Script::CStruct* pParams )
 	Mth::Vector vel;
 	
 	pParams->GetVector(CRCD(0xc4c809e, "vel"), &vel, Script::ASSERT);
-	GetObject()->SetVel( vel );
+	GetObj()->SetVel( vel );
 }
 
 /******************************************************************/
@@ -119,7 +119,7 @@ void CVelocityComponent::RefreshFromStructure( Script::CStruct* pParams )
 
 void CVelocityComponent::Finalize()
 {
-	mp_suspend_component =  GetSuspendComponentFromObject( GetObject() );
+	mp_suspend_component =  GetSuspendComponentFromObject( GetObj() );
 }
 	
 
@@ -150,10 +150,10 @@ void CVelocityComponent::Update()
 	{
 		Mth::Vector pos, cur_pos, vel;
 
-		cur_pos = GetObject()->GetPos();
-		vel = GetObject()->GetVel();
-		pos = cur_pos + ( GetObject()->GetVel() * 0.5f * Tmr::FrameLength());
-		GetObject()->SetPos( pos );
+		cur_pos = GetObj()->GetPos();
+		vel = GetObj()->GetVel();
+		pos = cur_pos + ( GetObj()->GetVel() * 0.5f * Tmr::FrameLength());
+		GetObj()->SetPos( pos );
 	}
 }
 

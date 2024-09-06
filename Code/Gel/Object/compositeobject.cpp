@@ -369,7 +369,7 @@ void CCompositeObject::AddComponent( CBaseComponent* pComponent )
 
     // now that the component is "officially" associated with
     // this object, we can set the component's object ptr
-    pComponent->SetObject( this );
+    pComponent->SetObj( this );
 
 	// add the component to the by-type list of components maintained by the CompositeObjectManager
 	Obj::CCompositeObjectManager::Instance()->AddComponentByType( pComponent );

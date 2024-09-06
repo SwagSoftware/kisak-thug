@@ -1437,9 +1437,9 @@ void CSkeletonData::InitialiseBoneSkipList( const char* p_fileName )
 	// Stip leading path information and trailing extensions to obtain the name of the skeleton.
 	char skeleton_name[128];
 
-	char *p_copy = strrchr( p_fileName, '/' );
+	char *p_copy = (char*)strrchr( p_fileName, '/' );
 	if( p_copy == NULL )
-		p_copy = strrchr( p_fileName, '\\' );
+		p_copy = (char*)strrchr( p_fileName, '\\' );
 
 	if( p_copy )
 	{
@@ -1540,7 +1540,7 @@ bool CSkeletonData::Load(const char* p_fileName, bool assertOnFail)
 	if ( !pStream )
 	{
 		Dbg_MsgAssert( assertOnFail, ("Load of %s failed - file not found?", p_fileName) );
-		goto ERROR;
+		goto GOTOERROR;
 	}
 
 	file_size = File::GetFileSize(pStream);
@@ -1553,13 +1553,13 @@ bool CSkeletonData::Load(const char* p_fileName, bool assertOnFail)
 	if ( !File::Read( p_fileBuffer, file_size, 1, pStream ) )
 	{
 		Dbg_MsgAssert( assertOnFail, ("Load of %s failed - read failed?", p_fileName) );
-		goto ERROR;
+		goto GOTOERROR;
 	}
 
 	if ( !Load( p_fileBuffer, file_size, assertOnFail ) )
 	{
 		Dbg_MsgAssert( assertOnFail, ("Load of %s failed - parse failed?", p_fileName) );
-		goto ERROR;
+		goto GOTOERROR;
 	}
 
 	// GJ:  THPS4 patch for weird head scaling on female peds...
@@ -1571,7 +1571,7 @@ bool CSkeletonData::Load(const char* p_fileName, bool assertOnFail)
 	// if we get here, then it's successful
 	success = true;
 
-ERROR:
+GOTOERROR:
 	if ( p_fileBuffer )
 	{
 		Mem::Free( p_fileBuffer );

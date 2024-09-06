@@ -114,7 +114,7 @@ CSkaterCameraComponent::~CSkaterCameraComponent()
 /******************************************************************/
 void CSkaterCameraComponent::Finalize (   )
 {
-	mp_lookaround_component = GetCameraLookAroundComponentFromObject(GetObject());
+	mp_lookaround_component = GetCameraLookAroundComponentFromObject(GetObj());
 	
 	Dbg_Assert(mp_lookaround_component);
 }
@@ -126,7 +126,7 @@ void CSkaterCameraComponent::Finalize (   )
 /******************************************************************/
 void CSkaterCameraComponent::Enable( bool enable )
 {
-	CCameraComponent *p_cam_comp = GetCameraComponentFromObject( GetObject());
+	CCameraComponent *p_cam_comp = GetCameraComponentFromObject( GetObj());
 	Dbg_MsgAssert( p_cam_comp, ( "SkaterCameraComponent requires CameraComponent attached to parent" ));
 	p_cam_comp->Enable( enable );
 }
@@ -139,7 +139,7 @@ void CSkaterCameraComponent::Enable( bool enable )
 /******************************************************************/
 Gfx::Camera* CSkaterCameraComponent::GetCamera( void )
 {
-	CCameraComponent *p_cam_comp = GetCameraComponentFromObject( GetObject());
+	CCameraComponent *p_cam_comp = GetCameraComponentFromObject( GetObj());
 	Dbg_MsgAssert( p_cam_comp, ( "SkaterCameraComponent requires CameraComponent attached to parent" ));
 	return p_cam_comp->GetCamera();
 }
@@ -152,7 +152,7 @@ Gfx::Camera* CSkaterCameraComponent::GetCamera( void )
 /******************************************************************/
 const Mth::Vector& CSkaterCameraComponent::GetPosition( void ) const 
 {
-	CCameraComponent *p_cam_comp = GetCameraComponentFromObject( GetObject());
+	CCameraComponent *p_cam_comp = GetCameraComponentFromObject( GetObj());
 	Dbg_MsgAssert( p_cam_comp, ( "SkaterCameraComponent requires CameraComponent attached to parent" ));
 	return p_cam_comp->GetPosition();
 }
@@ -165,7 +165,7 @@ const Mth::Vector& CSkaterCameraComponent::GetPosition( void ) const
 /******************************************************************/
 void CSkaterCameraComponent::SetPosition( Mth::Vector& pos )
 {
-	CCameraComponent *p_cam_comp = GetCameraComponentFromObject( GetObject());
+	CCameraComponent *p_cam_comp = GetCameraComponentFromObject( GetObj());
 	Dbg_MsgAssert( p_cam_comp, ( "SkaterCameraComponent requires CameraComponent attached to parent" ));
 	p_cam_comp->SetPosition( pos );
 }
@@ -178,7 +178,7 @@ void CSkaterCameraComponent::SetPosition( Mth::Vector& pos )
 /******************************************************************/
 const Mth::Matrix& CSkaterCameraComponent::GetMatrix( void ) const
 {
-	CCameraComponent *p_cam_comp = GetCameraComponentFromObject( GetObject());
+	CCameraComponent *p_cam_comp = GetCameraComponentFromObject( GetObj());
 	Dbg_MsgAssert( p_cam_comp, ( "SkaterCameraComponent requires CameraComponent attached to parent" ));
 	return p_cam_comp->GetMatrix();
 }
@@ -193,12 +193,12 @@ void CSkaterCameraComponent::InitFromStructure( Script::CStruct* pParams )
 {
 
 // NOT We need a CCameraComponent attached in order to get camera details.
-//	CCameraComponent *p_cam_comp	= GetCameraComponentFromObject( GetObject());
+//	CCameraComponent *p_cam_comp	= GetCameraComponentFromObject( GetObj());
 //	Dbg_MsgAssert( p_cam_comp, ( "CSkaterCameraComponent needs CCameraComponent attached to parent" ));
 
 	// Clear the frame matrix, so that future slerps make sense.
 	//Mth::Matrix& frame_matrix		= p_cam_comp->GetMatrix();
-	Mth::Matrix& frame_matrix		= GetObject()->GetMatrix();
+	Mth::Matrix& frame_matrix		= GetObj()->GetMatrix();
 	frame_matrix.Ident();
 
 	mLastActualRight 				= frame_matrix[X];
@@ -244,7 +244,7 @@ void CSkaterCameraComponent::Commit( void )
 	// the Gfx::CCamera values during it's Update() function.
 	// In some cases however, we need the camera changes to be committed to the Gfx::Camera
 	// immediately, usually when logic is paused, and the component Update()'s are not taking place.
-	CCameraComponent *p_cam_component = GetCameraComponentFromObject( GetObject());
+	CCameraComponent *p_cam_component = GetCameraComponentFromObject( GetObj());
 	if( p_cam_component )
 	{
 		p_cam_component->Update();
@@ -258,7 +258,7 @@ void CSkaterCameraComponent::Commit( void )
 
 void CSkaterCameraComponent::ReadyForActivation ( const SCameraState& state )
 {
-	Dbg_MsgAssert(mpSkater, ("Skater camera (%s) has NULL target", Script::FindChecksumName(GetObject()->GetID())));
+	Dbg_MsgAssert(mpSkater, ("Skater camera (%s) has NULL target", Script::FindChecksumName(GetObj()->GetID())));
 	
 	mLastActualRight = state.lastActualMatrix[X];
 	mLastActualUp = state.lastActualMatrix[Y];
@@ -288,12 +288,12 @@ void CSkaterCameraComponent::Update( void )
 	// optimization KLUDGE
 	if (mpSkaterPhysicsControlComponent && mpSkaterPhysicsControlComponent->IsDriving())
 	{
-		GetObject()->Pause(true);
+		GetObj()->Pause(true);
 		return;
 	}
 	
 	// We need a CCameraComponent attached in order to get camera details.
-	CCameraComponent *p_cam_comp = GetCameraComponentFromObject( GetObject());
+	CCameraComponent *p_cam_comp = GetCameraComponentFromObject( GetObj());
 	Dbg_MsgAssert( p_cam_comp, ( "CSkaterCameraComponent needs CCameraComponent attached to parent" ));
 
 	// This used to be passed in as a param for the old CSkaterCam::Update().
@@ -995,7 +995,7 @@ void CSkaterCameraComponent::ResetMode( )
 void CSkaterCameraComponent::SetMode( ESkaterCamMode mode, float time )
 {
 	// We need a CCameraComponent attached in order to set camera details.
-	CCameraComponent *p_cam_comp = GetCameraComponentFromObject(GetObject());
+	CCameraComponent *p_cam_comp = GetCameraComponentFromObject(GetObj());
 	Dbg_MsgAssert( p_cam_comp, ( "CSkaterCameraComponent needs CCameraComponent attached to parent" ));
 
 	Dbg_MsgAssert( mode < SKATERCAM_NUM_MODES,( "Bad mode" ));

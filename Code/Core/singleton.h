@@ -128,7 +128,7 @@ public:
 	virtual					~SingletonPtr( void );
 
 
-#if ( defined ( __PLAT_XBOX__ ) || defined ( __PLAT_WN32__ ))
+#if defined ( __PLAT_XBOX__ )// || defined ( __PLAT_WN32__ )
 							SingletonPtr( const SingletonPtr< _T > & rhs );
 	SingletonPtr< _T >&		operator= ( const SingletonPtr< _T >& rhs );
 
@@ -179,7 +179,7 @@ SingletonPtr< _T >::~SingletonPtr()
 	mp_instance->sSgltnDelete();
 }
 
-#if ( defined ( __PLAT_XBOX__ ) || defined ( __PLAT_WN32__ ))
+#if defined ( __PLAT_XBOX__ )// || defined ( __PLAT_WN32__ )
    
 /******************************************************************/
 /*                                                                */

@@ -6,17 +6,18 @@
 
 namespace Tmr
 {
+// LWSS: Just used for debug prints
 uint64 GetRenderFrame( void )
 {
 	return 0;
 }
-
+// LWSS: Just used for debug prints
 uint64 GetTimeInCPUCycles( void )
 {
 	return 0;
 }
 }
-
+#if 0 // lwss: this looks evil
 namespace Obj
 {
 // Needed for asserts to compile
@@ -123,3 +124,4 @@ void PushMemProfile(char *p_type)
 #endif
 
 
+#endif

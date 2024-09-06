@@ -390,7 +390,7 @@ void CVehicleComponent::InitFromStructure( Script::CStruct* pParams )
 	}
 	
 	// setup position and orientation based on the object's state
-	m_orientation = GetObject()->GetMatrix();
+	m_orientation = GetObj()->GetMatrix();
 	m_orientation.Normalize();
 	if (pParams->ContainsComponentNamed(CRCD(0xaa99c521, "save")))
 	{
@@ -401,15 +401,15 @@ void CVehicleComponent::InitFromStructure( Script::CStruct* pParams )
 		m_orientation.Normalize();
 		m_orientation.GetMatrix(m_orientation_matrix);
 		m_orientation_matrix[W].Set();
-		GetObject()->SetMatrix(m_orientation_matrix);
-		GetObject()->SetDisplayMatrix(m_orientation_matrix);
+		GetObj()->SetMatrix(m_orientation_matrix);
+		GetObj()->SetDisplayMatrix(m_orientation_matrix);
 	}
 	
-	m_pos = GetObject()->GetPos();
+	m_pos = GetObj()->GetPos();
 	if (pParams->ContainsComponentNamed(CRCD(0x7f261953, "pos")))
 	{
 		pParams->GetVector(CRCD(0x7f261953, "pos"), &m_pos);
-		GetObject()->SetPos(m_pos);
+		GetObj()->SetPos(m_pos);
 	}
 	
 	m_skater_visible = m_skater_visible || pParams->ContainsFlag(CRCD(0x2ed67657, "make_skater_visible"));
@@ -456,7 +456,7 @@ void CVehicleComponent::InitFromStructure( Script::CStruct* pParams )
 	m_in_flip = false;
 	
 	// grab a pointer to the vehicle's skeleton
-	mp_skeleton_component = static_cast< CSkeletonComponent* >(GetObject()->GetComponent(CRC_SKELETON));
+	mp_skeleton_component = static_cast< CSkeletonComponent* >(GetObj()->GetComponent(CRC_SKELETON));
 	Dbg_MsgAssert(mp_skeleton_component, ("Vehicle component has no peer skeleton component."));
 	Dbg_MsgAssert(mp_skeleton_component->GetSkeleton()->GetNumBones() == static_cast< int >(2 + m_num_wheels), ("Vehicle component's peer skeleton component has an unexpected number of bones"));
 }
@@ -478,8 +478,8 @@ void CVehicleComponent::RefreshFromStructure( Script::CStruct* pParams )
 
 void CVehicleComponent::Finalize (   )
 {
-	mp_input_component = GetInputComponentFromObject(GetObject());
-	mp_model_component = GetModelComponentFromObject(GetObject());
+	mp_input_component = GetInputComponentFromObject(GetObj());
+	mp_model_component = GetModelComponentFromObject(GetObj());
 	
 	Dbg_Assert(mp_input_component);
 	Dbg_Assert(mp_model_component);
@@ -488,7 +488,7 @@ void CVehicleComponent::Finalize (   )
 	
 	Dbg_MsgAssert(m_num_wheels == vVP_NUM_WHEELS, ("Number of wheels must equal CVehicleComponent::vVP_NUM_WHEELS"));
 	
-	CModelComponent* p_model_component = static_cast< CModelComponent* >(GetModelComponentFromObject(GetObject()));
+	CModelComponent* p_model_component = static_cast< CModelComponent* >(GetModelComponentFromObject(GetObj()));
 	Dbg_Assert(p_model_component);
 	Nx::CModel* p_model = p_model_component->GetModel();
 	Dbg_Assert(p_model);
@@ -605,10 +605,10 @@ void CVehicleComponent::Finalize (   )
 	
 	update_dependent_variables();
 	
-	GetObject()->SetPos(m_pos);
-	GetObject()->SetVel(m_vel);
-	GetObject()->SetMatrix(m_orientation_matrix);
-	GetObject()->SetDisplayMatrix(GetObject()->GetMatrix());
+	GetObj()->SetPos(m_pos);
+	GetObj()->SetVel(m_vel);
+	GetObj()->SetMatrix(m_orientation_matrix);
+	GetObj()->SetDisplayMatrix(GetObj()->GetMatrix());
 	
 	update_skeleton();
 }
@@ -634,7 +634,7 @@ void CVehicleComponent::Update()
 	if (m_state == ASLEEP)
 	{
 		// reduced work set if we're asleep
-		GetObject()->SetDisplayMatrix(GetObject()->GetMatrix());
+		GetObj()->SetDisplayMatrix(GetObj()->GetMatrix());
 		update_steering_angles();
 		if (m_controls.brake)
 		{
@@ -746,10 +746,10 @@ void CVehicleComponent::Update()
 	draw_debug_rendering();
 	
 	// update object's position and orientation
-	GetObject()->SetPos(m_pos);
-	GetObject()->SetVel(m_vel);
-	GetObject()->SetMatrix(m_orientation_matrix);
-	GetObject()->SetDisplayMatrix(GetObject()->GetMatrix());
+	GetObj()->SetPos(m_pos);
+	GetObj()->SetVel(m_vel);
+	GetObj()->SetMatrix(m_orientation_matrix);
+	GetObj()->SetDisplayMatrix(GetObj()->GetMatrix());
 	
 	consider_sleeping();
 	
@@ -857,7 +857,7 @@ CBaseComponent::EMemberFunctionResult CVehicleComponent::CallMemberFunction( uin
 				m_pos = cam_pos;
 				m_pos += cam_mat[Y] * 12.0f * 12.0f;
 				m_pos -= cam_mat[Z] * 12.0f * 12.0f;
-				GetObject()->SetPos(m_pos);
+				GetObj()->SetPos(m_pos);
 				
 				m_orientation_matrix[X] = -cam_mat[X];
 				m_orientation_matrix[Y] = cam_mat[Y];
@@ -866,7 +866,7 @@ CBaseComponent::EMemberFunctionResult CVehicleComponent::CallMemberFunction( uin
 				m_orientation.Normalize();
 				m_orientation.GetMatrix(m_orientation_matrix);
 				m_orientation_matrix[W].Set();
-				GetObject()->SetMatrix(m_orientation_matrix);
+				GetObj()->SetMatrix(m_orientation_matrix);
 				
 				update_dependent_variables();
 			}
@@ -1128,16 +1128,16 @@ void CVehicleComponent::MoveToNode ( Script::CStruct* p_node )
 	m_state = ASLEEP;
 	
 	// update object's position and orientation
-	GetObject()->SetPos(m_pos);
-	GetObject()->SetVel(m_vel);
-	GetObject()->SetMatrix(m_orientation_matrix);
-	GetObject()->SetDisplayMatrix(GetObject()->GetMatrix());
+	GetObj()->SetPos(m_pos);
+	GetObj()->SetVel(m_vel);
+	GetObj()->SetMatrix(m_orientation_matrix);
+	GetObj()->SetDisplayMatrix(GetObj()->GetMatrix());
 	
 	update_skeleton();
 	
 	control_skater();
 	
-	GetObject()->SetTeleported();
+	GetObj()->SetTeleported();
 	mp_skater->SetTeleported();
 }
 
@@ -3043,7 +3043,7 @@ void CVehicleComponent::get_input (   )
 			if (Mth::Abs(Mth::DotProduct(m_vel, m_orientation_matrix[Z])) < 30.0f)
 			{
 				// signal an exit
-				GetObject()->BroadcastEvent(CRCD(0xcbaa3476, "ExitVehicleRequest"));
+				GetObj()->BroadcastEvent(CRCD(0xcbaa3476, "ExitVehicleRequest"));
 			}
 		}
 	}
@@ -3178,10 +3178,10 @@ void CVehicleComponent::control_skater (   )
 {
     // HACKY; setup the skater's position, orientation, and animation each frame
 	
-    mp_skater->SetPos(GetObject()->GetPos() + GetObject()->GetMatrix().Rotate(m_skater_pos));
-	mp_skater->SetMatrix(GetObject()->GetMatrix());
+    mp_skater->SetPos(GetObj()->GetPos() + GetObj()->GetMatrix().Rotate(m_skater_pos));
+	mp_skater->SetMatrix(GetObj()->GetMatrix());
 	mp_skater_core_physics_component->ResetLerpingMatrix();
-	mp_skater->SetVel(GetObject()->GetVel());
+	mp_skater->SetVel(GetObj()->GetVel());
 	
 	if (!m_skater_visible) return;
 	

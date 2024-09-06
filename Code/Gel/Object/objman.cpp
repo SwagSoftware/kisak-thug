@@ -447,7 +447,7 @@ uint32 CGeneralManager::NewObjectID( void )
 CObject*		CGeneralManager::GetObjectByID( uint32 id )
 {
 	CTracker* p_tracker = CTracker::Instance();
-	return p_tracker->GetObject(id);	
+	return p_tracker->GetObj(id);	
 }
 
 /******************************************************************/

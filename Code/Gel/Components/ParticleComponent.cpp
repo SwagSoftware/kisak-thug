@@ -314,7 +314,7 @@ void CParticleComponent::RefreshFromStructure( Script::CStruct* pParams )
 
 void CParticleComponent::Finalize()
 {
-	mp_suspend_component =  GetSuspendComponentFromObject( GetObject() );
+	mp_suspend_component =  GetSuspendComponentFromObject( GetObj() );
 }
 	
 
@@ -354,14 +354,14 @@ void CParticleComponent::Update()
 		// **  and update the internal physics state 
 		if( m_update_script )
 		{
-			Script::RunScript( m_update_script, NULL, GetObject() );
+			Script::RunScript( m_update_script, NULL, GetObj() );
 		}
 	
 		if( m_system_lifetime > 0 )
 		{
 			if(( Tmr::GetTime() - m_birth_time ) > m_system_lifetime )
 			{
-				GetObject()->MarkAsDead();
+				GetObj()->MarkAsDead();
 				return;
 			}
 		}
@@ -371,7 +371,7 @@ void CParticleComponent::Update()
 		{
 			for (int i = 0; i < Nx::vNUM_BOXES; i++)
 			{
-				Mth::Vector world_pos(mp_particle->GetParameters()->m_LocalBoxPos[i] + GetObject()->m_pos );
+				Mth::Vector world_pos(mp_particle->GetParameters()->m_LocalBoxPos[i] + GetObj()->m_pos );
 				//Mth::Vector world_pos(mp_particle->GetParameters()->m_LocalBoxPos[i] + Mth::Vector(100.0f, 100.0f, 0.0f));
 				
 				mp_particle->SetBoxPos(i, &world_pos);

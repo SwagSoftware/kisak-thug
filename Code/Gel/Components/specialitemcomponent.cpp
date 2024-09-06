@@ -157,7 +157,7 @@ CBaseComponent::EMemberFunctionResult CSpecialItemComponent::CallMemberFunction(
 				// special items need a lock object to work...
 				Script::CStruct* pLockParams = new Script::CStruct;
 				pLockParams->AppendStructure( pParams ); 			// pass along any bone or offset parameters...
-				pLockParams->AddChecksum( "id", GetObject()->GetID() );				  	
+				pLockParams->AddChecksum( "id", GetObj()->GetID() );				  	
 				Obj::CLockObjComponent* pLockObjComponent = GetLockObjComponentFromObject( pMovingObject );
 				Dbg_MsgAssert( pLockObjComponent, ( "No lock obj component" ) );
 				pLockObjComponent->InitFromStructure( pLockParams );				 		
@@ -173,7 +173,7 @@ CBaseComponent::EMemberFunctionResult CSpecialItemComponent::CallMemberFunction(
                     client = gamenet_man->GetClient( 0 );
 					Dbg_Assert( client );
 	
-					msg.m_ObjId = GetObject()->GetID();
+					msg.m_ObjId = GetObj()->GetID();
 					msg.m_Params = checksum;
 					msg.m_Index = index;
 					msg.m_Bone = bone;
@@ -205,7 +205,7 @@ CBaseComponent::EMemberFunctionResult CSpecialItemComponent::CallMemberFunction(
                     client = gamenet_man->GetClient( 0 );
 					Dbg_Assert( client );
 	
-					msg.m_ObjId = GetObject()->GetID();
+					msg.m_ObjId = GetObj()->GetID();
 					msg.m_Index = index;
 					
 					msg_desc.m_Data = &msg;
@@ -320,7 +320,7 @@ Obj::CCompositeObject* CSpecialItemComponent::CreateSpecialItem( int index, Scri
 	// so that the object knows which skater it's tied to
 	Script::CStruct* pTempStructure;
 	pTempStructure = new Script::CStruct;
-	pTempStructure->AddChecksum( "parentId", GetObject()->GetID() );
+	pTempStructure->AddChecksum( "parentId", GetObj()->GetID() );
 	uint32 cleanupScript;
 	if ( pNodeData->GetChecksum( CRCD(0x40764820,"CleanupScript"), &cleanupScript ) )
 	{
@@ -331,7 +331,7 @@ Obj::CCompositeObject* CSpecialItemComponent::CreateSpecialItem( int index, Scri
 
 	// in case there's any scaling applied to the model,
 	// apply that to the special item's model as well...
-	Obj::CModelComponent* pModelComponent = GetModelComponentFromObject( GetObject() );
+	Obj::CModelComponent* pModelComponent = GetModelComponentFromObject( GetObj() );
 	Nx::CModel* pModel = NULL;
 	if ( pModelComponent )
 	{

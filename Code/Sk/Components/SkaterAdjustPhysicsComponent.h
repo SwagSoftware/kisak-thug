@@ -53,7 +53,7 @@ public:
 
 	static CBaseComponent*			s_create();
 	
-	CSkater*						GetSkater() { return static_cast< CSkater* >(GetObject()); }
+	CSkater*						GetSkater() { return static_cast< CSkater* >(GetObj()); }
 	
 	bool							UberFriggedThisFrame (  ) { return m_uber_frigged_this_frame; }
 	

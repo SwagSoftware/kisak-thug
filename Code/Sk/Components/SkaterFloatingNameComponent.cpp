@@ -62,9 +62,9 @@ CSkaterFloatingNameComponent::~CSkaterFloatingNameComponent()
 
 void CSkaterFloatingNameComponent::InitFromStructure( Script::CStruct* pParams )
 {
-	Dbg_MsgAssert(GetObject()->GetType() == SKATE_TYPE_SKATER, ("CSkaterFloatingNameComponent added to non-skater composite object"));
+	Dbg_MsgAssert(GetObj()->GetType() == SKATE_TYPE_SKATER, ("CSkaterFloatingNameComponent added to non-skater composite object"));
 	
-	switch (GetObject()->GetID())
+	switch (GetObj()->GetID())
 	{
 		case 0:
 			m_screen_element_id = CRCD(0xe797a186, "skater_name_0");
@@ -121,7 +121,7 @@ void CSkaterFloatingNameComponent::Update()
 	
 	if (!GetSkater()->IsInWorld()) return;
 	
-	GameNet::PlayerInfo* player = GameNet::Manager::Instance()->GetPlayerByObjectID(GetObject()->GetID());
+	GameNet::PlayerInfo* player = GameNet::Manager::Instance()->GetPlayerByObjectID(GetObj()->GetID());
 	
 	float offset;
 	if (GameNet::Manager::Instance()->GetCurrentlyObservedPlayer() == player)
@@ -143,13 +143,13 @@ void CSkaterFloatingNameComponent::Update()
 	}
 	else
 	{
-		color_index = GetObject()->GetID() + 2;
+		color_index = GetObj()->GetID() + 2;
 	}
 
 	char text[64];
 	sprintf(text, "\\c%d%s", color_index, GetSkater()->GetDisplayName());
 	pParams->AddString(CRCD(0xc4745838, "text"), text);
-	pParams->AddVector(CRCD(0x4b491900, "pos3D"), GetObject()->m_pos[X], GetObject()->m_pos[Y] + offset, GetObject()->m_pos[Z]);
+	pParams->AddVector(CRCD(0x4b491900, "pos3D"), GetObj()->m_pos[X], GetObj()->m_pos[Y] + offset, GetObj()->m_pos[Z]);
 
 	Front::CScreenElement *p_name_elem = Front::CScreenElementManager::Instance()->GetElement(m_screen_element_id);
 	if (p_name_elem)

@@ -45,7 +45,7 @@ public:
 
 	static CBaseComponent*			s_create();
 	
-	CSkater*						GetSkater() { return static_cast< CSkater* >(GetObject()); }
+	CSkater*						GetSkater() { return static_cast< CSkater* >(GetObj()); }
 	Mdl::Score*						GetScore() { return mp_score; }
 	
 	void							Reset (   );

@@ -93,6 +93,10 @@
 #include <Sk/GameNet/Xbox/p_voice.h>
 #endif
 
+#ifdef __PLAT_WN32__
+#include <Sk/GameNet/XBox/p_buddy.h>
+#endif
+
 #include <sk/objects/skater.h>		   // we do various things with the skater, network play related
 
 
@@ -2871,6 +2875,7 @@ void	Manager::ServerShutdown( void )
 	{
 #ifndef __PLAT_XBOX__
 #ifndef __PLAT_NGC__
+#ifndef __PLAT_WN32__ // LWSS add
 		if( !m_server->IsLocal() && InInternetMode())
 		{
 			mpLobbyMan->StopReportingGame();
@@ -2878,6 +2883,7 @@ void	Manager::ServerShutdown( void )
 		}
 #endif
 #endif    
+#endif
 		net_man->DestroyApp( m_server );
 		m_server_add_new_players_task->Remove();
 		m_start_network_game_task->Remove();
@@ -4093,8 +4099,10 @@ void	Manager::FindServersOnLAN( void )
 		m_match_client->SendMessageTo( Net::MSG_ID_FIND_SERVER, sizeof( MsgFindServer ), &msg, 
 									0xFFFFFFFF, vHOST_PORT, 0 );
 #else
+#ifdef __PLAT_XBOX__ // lwss add ifdef here.
 		XNetRandom( m_match_client->m_Nonce, sizeof( m_match_client->m_Nonce ));
 		memcpy( msg.m_Nonce, &m_match_client->m_Nonce, sizeof( m_match_client->m_Nonce ));
+#endif
 		m_match_client->SendMessageTo( Net::MSG_ID_FIND_SERVER, sizeof( MsgFindServer ), &msg,
 									INADDR_BROADCAST, vHOST_PORT, 0 );
 #endif
@@ -4787,7 +4795,7 @@ void	Manager::UsePreferences( void )
 	}
 
 	// Override IP settings with the viewer_ip script variable, used to launch a server for real-time communication
-#ifdef __PLAT_XBOX__
+#if defined(__PLAT_XBOX__) || defined(__PLAT_WN32__) // LWSS: Confirmed PC fix
 	const char* viewer_ip = Script::GetString( "xbox_viewer_ip" );
 #endif
 #ifdef __PLAT_NGPS__
@@ -7442,6 +7450,9 @@ bool Manager::ScriptEnteredNetworkGame(Script::CScriptStructure *pParams, Script
 	Mlp::Manager * mlp_manager = Mlp::Manager::Instance();
     
 	mlp_manager->AddLogicTask( *gamenet_man->m_enter_chat_task );
+	// lwss add
+	g_hasJustEnteredNetworkGame = true;
+	// lwss end
 	mlp_manager->AddLogicTask( *gamenet_man->m_render_scores_task );
 	gamenet_man->m_scores_on = true;
 

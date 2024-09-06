@@ -128,6 +128,9 @@ public:
 	static CBaseComponent*			s_create();
 	
 	EStateType						GetState (   ) { return m_state; }
+
+	const							Mth::Vector& GetEffectivePos(); // lwss add
+
 	
 private:
 	void							set_state ( EStateType state );
@@ -144,6 +147,7 @@ private:
 	void							adjust_jump_for_ceiling_obstructions (   );
 	void							go_in_air_state (   );
 	void							control_horizontal_vel (   );
+	void							adjust_control_for_forced_run(); //lwss add
 	void							adjust_vertical_vel_for_ceiling (   );
 	void							check_for_landing ( const Mth::Vector& previous_pos, const Mth::Vector& final_pos );
 	void							maybe_wallplant (   );

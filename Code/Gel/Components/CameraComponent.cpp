@@ -63,7 +63,7 @@ CCameraComponent::~CCameraComponent()
 void CCameraComponent::InitFromStructure( Script::CStruct* pParams )
 {
 	// cameras must have a very low priority to insure that all objects update before they do (most importantly, the skater)
-	CCompositeObjectManager::Instance()->SetObjectPriority(*GetObject(), -1000);
+	CCompositeObjectManager::Instance()->SetObjectPriority(*GetObj(), -1000);
 }
 
 
@@ -88,12 +88,12 @@ void CCameraComponent::Update()
 	if( m_enabled )
 	{
 		// Use the position and orientation of the parent object to position and orient the attached camera.
-		Mth::Vector pos = GetObject()->GetPos();
-		Mth::Matrix mat = GetObject()->GetMatrix();
+		Mth::Vector pos = GetObj()->GetPos();
+		Mth::Matrix mat = GetObj()->GetMatrix();
 
 		// Set the Display pos of the object to the actual pos, so we can attach a model
 		// to the camera
-		GetObject()->SetDisplayMatrix(mat);
+		GetObj()->SetDisplayMatrix(mat);
 
 		mp_camera->SetPos( pos );
 		mp_camera->SetMatrix( mat );
@@ -181,7 +181,7 @@ void CCameraComponent::Enable( bool enable )
 /******************************************************************/
 const Mth::Vector &CCameraComponent::GetPosition( void ) const
 {
-	return GetObject()->GetPos();
+	return GetObj()->GetPos();
 }
 
 
@@ -192,7 +192,7 @@ const Mth::Vector &CCameraComponent::GetPosition( void ) const
 /******************************************************************/
 void CCameraComponent::SetPosition( Mth::Vector& pos )
 {
- 	GetObject()->SetPos( pos );
+ 	GetObj()->SetPos( pos );
 }
 
 
@@ -203,7 +203,7 @@ void CCameraComponent::SetPosition( Mth::Vector& pos )
 /******************************************************************/
 Mth::Matrix& CCameraComponent::GetMatrix( void )
 {
-	return GetObject()->GetMatrix();
+	return GetObj()->GetMatrix();
 }
 
 

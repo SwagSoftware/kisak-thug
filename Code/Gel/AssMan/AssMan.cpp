@@ -144,7 +144,11 @@ EAssetType CAssMan::FindAssetType( const char *p_assetName )
 	while ( p_lookup->p_extension != NULL )
 	{
 		// note, ignoring case
+#ifdef __PLAT_WN32__
+		if ( _stricmp( p_lookup->p_extension, p_ext ) == 0 )	 //lwss add
+#else
 		if ( strcmpi( p_lookup->p_extension, p_ext ) == 0 )	
+#endif
 		{
 			return p_lookup->type;
 		}

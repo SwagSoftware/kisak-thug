@@ -29,6 +29,12 @@
 #include <gel/scripting/symboltable.h>
 #include <gel/scripting/utils.h>
 
+// lwss add: TEMP this is from the xbox audio p_sfx.cpp
+#define NUM_VOICES_PER_CORE				24
+#define NUM_CORES						2
+#define NUM_VOICES						( NUM_VOICES_PER_CORE * NUM_CORES )
+// lwss end
+
 namespace Obj
 {
 
@@ -142,9 +148,9 @@ void CRigidBodyComponent::InitFromStructure( Script::CStruct* pParams )
 	
 	m_matrix.Ident();
 	
-	m_pos = GetObject()->GetPos();
+	m_pos = GetObj()->GetPos();
 	
-	m_orientation = GetObject()->GetMatrix();
+	m_orientation = GetObj()->GetMatrix();
 	m_orientation.Normalize();
 	m_orientation.GetMatrix(m_matrix);
 	
@@ -455,7 +461,7 @@ void CRigidBodyComponent::InitFromStructure( Script::CStruct* pParams )
 
 void CRigidBodyComponent::Finalize()
 {
-	mp_sound_component = GetSoundComponentFromObject(GetObject());
+	mp_sound_component = GetSoundComponentFromObject(GetObj());
 	
 	Dbg_Assert(mp_sound_component);
 }
@@ -491,7 +497,7 @@ void CRigidBodyComponent::Update()
 	{
 		if (m_die_countdown <= full_time_step)
 		{
-			GetObject()->MarkAsDead();
+			GetObj()->MarkAsDead();
 		}
 		else
 		{
@@ -502,7 +508,7 @@ void CRigidBodyComponent::Update()
 	// if we are asleep
 	if (m_state == ASLEEP)
 	{
-		GetObject()->SetDisplayMatrix(m_matrix);
+		GetObj()->SetDisplayMatrix(m_matrix);
 
 		if (s_debug_lines_on)
 		{
@@ -571,12 +577,12 @@ void CRigidBodyComponent::Update()
 
 	// if we've gotten here, we need to update the object
 	
-	GetObject()->SetPos(m_pos + m_matrix.Rotate(m_model_offset));
+	GetObj()->SetPos(m_pos + m_matrix.Rotate(m_model_offset));
 	
-	GetObject()->SetMatrix(m_matrix);
-	GetObject()->SetDisplayMatrix(m_matrix);
+	GetObj()->SetMatrix(m_matrix);
+	GetObj()->SetDisplayMatrix(m_matrix);
 	
-	GetObject()->SetVel(m_vel);
+	GetObj()->SetVel(m_vel);
 
 	if (s_debug_lines_on)
 	{
@@ -626,7 +632,7 @@ CBaseComponent::EMemberFunctionResult CRigidBodyComponent::CallMemberFunction( u
 			Mth::Vector v;
 			if (pParams->GetVector(CRCD(0xc4c809e, "vel"), &v))
 			{
-				GetObject()->SetVel(m_vel += v);
+				GetObj()->SetVel(m_vel += v);
 			}
 			if (pParams->GetVector(CRCD(0xfb1a83b2, "rotvel"), &v))
 			{
@@ -634,7 +640,7 @@ CBaseComponent::EMemberFunctionResult CRigidBodyComponent::CallMemberFunction( u
 			}
 			if (pParams->GetVector(CRCD(0x7f261953, "pos"), &v))
 			{
-				GetObject()->SetPos(m_pos += v);
+				GetObj()->SetPos(m_pos += v);
 			}
 			wake();
 			break;
@@ -670,7 +676,7 @@ CBaseComponent::EMemberFunctionResult CRigidBodyComponent::CallMemberFunction( u
 			{
 				m_vel *= 1.0f + Mth::PlusOrMinus(0.4f);
 			}
-			GetObject()->SetVel(m_vel);
+			GetObj()->SetVel(m_vel);
 			
 			if (m_state == ASLEEP && Mth::Abs(m_vel[Y]) < 1.0f)
 			{
@@ -966,11 +972,11 @@ void CRigidBodyComponent::handle_skater_collisions (   )
 		// call the bounce script callback
 		if (m_script_names.collide)
 		{
-			GetObject()->SpawnScriptPlease(m_script_names.collide, mp_script_params)->Update();
+			GetObj()->SpawnScriptPlease(m_script_names.collide, mp_script_params)->Update();
 		}
 		
 		// kill the object's shadow
-		if (Nx::CSector *p_shadow_sector = Nx::CEngine::sGetMainScene()->GetSector(Crc::ExtendCRCWithString(GetObject()->GetID(), "_Shadow")))
+		if (Nx::CSector *p_shadow_sector = Nx::CEngine::sGetMainScene()->GetSector(Crc::ExtendCRCWithString(GetObj()->GetID(), "_Shadow")))
 		{
 			p_shadow_sector->SetActive(false);
 		}
@@ -1077,7 +1083,7 @@ void CRigidBodyComponent::wake (   )
 {
 	if (m_state != AWAKE)
 	{
-		m_wake_pos = GetObject()->GetPos();
+		m_wake_pos = GetObj()->GetPos();
 		m_state = AWAKE;
 	}
 }
@@ -1091,7 +1097,7 @@ void CRigidBodyComponent::sleep (   )
 {
 	if (m_script_names.settle)
 	{
-		GetObject()->SpawnScriptPlease(m_script_names.settle, mp_script_params)->Update();
+		GetObj()->SpawnScriptPlease(m_script_names.settle, mp_script_params)->Update();
 	}
 	
 	m_vel.Set(0.0f, 0.0f, 0.0f);
@@ -1238,7 +1244,7 @@ void CRigidBodyComponent::resolve_collisions (   )
 			// call the sleep script callback
 			if (m_script_names.stuck)
 			{
-				GetObject()->SpawnScriptPlease(m_script_names.stuck, mp_script_params)->Update();
+				GetObj()->SpawnScriptPlease(m_script_names.stuck, mp_script_params)->Update();
 			}
 			else
 			{
@@ -1355,7 +1361,7 @@ void CRigidBodyComponent::resolve_collisions (   )
 	{
 		if (m_script_names.bounce)
 		{
-			GetObject()->SpawnScriptPlease(m_script_names.bounce, mp_script_params)->Update();
+			GetObj()->SpawnScriptPlease(m_script_names.bounce, mp_script_params)->Update();
 		}
 		
 		#ifdef __NOPT_ASSERT__

@@ -1147,7 +1147,8 @@ CSkater::CSkater ( int player_num, CBaseManager* p_obj_manager, bool local_clien
 		CreateComponentFromStructure(component_struct);
 		mp_walk_component = GetWalkComponent();
 		
-#		ifdef TESTING_GUNSLINGER
+//#		ifdef TESTING_GUNSLINGER
+#		ifdef KISAK_WANTS_GUNSLINGER_BUT_NOT_ALL
 		component_struct->AddChecksum(CRCD(0xb6015ea8,"component"), CRC_RIDER);
 		CreateComponentFromStructure(component_struct);
 

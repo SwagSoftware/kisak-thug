@@ -81,7 +81,7 @@ public:
 
 	static CBaseComponent*			s_create();
 	
-	CSkater*						GetSkater() { return static_cast< CSkater* >(GetObject()); }
+	CSkater*						GetSkater() { return static_cast< CSkater* >(GetObj()); }
 	
 public:
 	void							Reset (   );
@@ -113,10 +113,10 @@ public:
 	
 	void							CollideWithOtherSkaterLost ( CCompositeObject* p_other_skater );
 	
-	Mth::Vector&					GetPos (   ) { return GetObject()->m_pos; }
-	Mth::Vector&					GetOldPos (   ) { return GetObject()->m_old_pos; }
-	Mth::Matrix&					GetMatrix (   ) { return GetObject()->m_matrix; }
-	Mth::Vector&					GetVel (   ) { return GetObject()->m_vel; }
+	Mth::Vector&					GetPos (   ) { return GetObj()->m_pos; }
+	Mth::Vector&					GetOldPos (   ) { return GetObj()->m_old_pos; }
+	Mth::Matrix&					GetMatrix (   ) { return GetObj()->m_matrix; }
+	Mth::Vector&					GetVel (   ) { return GetObj()->m_vel; }
 	
 private:
 	void							do_on_ground_physics (   );
@@ -590,7 +590,7 @@ inline void CSkaterCorePhysicsComponent::ResetGrindTweak (   )
 	
 inline void CSkaterCorePhysicsComponent::ResetLerpingMatrix (   )
 {
-	m_lerping_display_matrix = GetObject()->m_matrix;
+	m_lerping_display_matrix = GetObj()->m_matrix;
 }
 
 /******************************************************************/

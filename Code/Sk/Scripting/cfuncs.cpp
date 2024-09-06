@@ -527,6 +527,11 @@ bool ScriptDummyCommand(Script::CStruct *pParams, Script::CScript *pScript)
 	return true;
 }
 
+bool ScriptDummyCommandFalse(Script::CStruct* pParams, Script::CScript* pScript)
+{
+	return false;
+}
+
 /******************************************************************/
 /*                                                                */
 /*                                                                */
@@ -6156,7 +6161,7 @@ bool ScriptParseNodeArray( Script::CStruct *pParams, Script::CScript *pScript )
 	Mem::PopMemProfile();
 	
 	// Nav nodes are added separately.
-#	ifdef TESTING_GUNSLINGER
+#	ifdef KISAK_WANTS_GUNSLINGER_BUT_NOT_ALL
 	Mem::PushMemProfile( "Nav Nodes" );
 	Obj::CNavManager* p_nav_man = skate_mod->GetNavManager();
 	Dbg_MsgAssert( p_nav_man, ( "Missing Nav Manager" ));
@@ -7970,26 +7975,26 @@ bool ScriptCleanup(Script::CStruct *pParams, Script::CScript *pScript)
 	{
 		// not guaranteed to do anything useful.... might crash the debugger (Mick)
 		printf ("Dumping Fragments.....\n");
-		MemView_DumpFragments(heap);
+		//MemView_DumpFragments(heap); // lwss remove
 		printf ("Done Dumping Fragments.....\n");
 	}
 	#endif
 	
 	Dbg_MsgAssert(fragmentation < 10000, ("Excessive bottom up fragmentation (%d) after cleanup",fragmentation)); 
 	
-#ifndef __PLAT_NGC__
-	heap = mem_man.TopDownHeap();
-	fragmentation = heap->mFreeMem.m_count;
-	if (fragmentation > 10000)
-	{
-		// not guaranteed to do anything useful.... might crash the debugger (Mick)
-		printf ("Dumping Fragments.....\n");
-		MemView_DumpFragments(heap);
-		printf ("Done Dumping Fragments.....\n");
-	}
-	
-	Dbg_MsgAssert(fragmentation < 10000, ("Excessive top down fragmentation (%d) after cleanup",fragmentation)); 
-#endif		// __PLAT_NGC__
+//#ifndef __PLAT_NGC__
+//	heap = mem_man.TopDownHeap();
+//	fragmentation = heap->mFreeMem.m_count;
+//	if (fragmentation > 10000)
+//	{
+//		// not guaranteed to do anything useful.... might crash the debugger (Mick)
+//		printf ("Dumping Fragments.....\n");
+//		//MemView_DumpFragments(heap); // lwss remove
+//		printf ("Done Dumping Fragments.....\n");
+//	}
+//	
+//	Dbg_MsgAssert(fragmentation < 10000, ("Excessive top down fragmentation (%d) after cleanup",fragmentation)); 
+//#endif		// __PLAT_NGC__
 	#endif
 
 #	if defined( __PLAT_XBOX__ ) && defined( __NOPT_ASSERT__ )
@@ -8280,6 +8285,9 @@ bool ScriptIfDebugOff(Script::CStruct *pParams, Script::CScript *pScript)
 // @script | CD | returns true if CD present
 bool ScriptCD(Script::CStruct *pParams, Script::CScript *pScript)
 {
+#ifdef __PLAT_WN32__
+	return true; // lwss: Change for PC. The Scripts assume !CD = dev build(with things that are missing like script debugger)
+#endif
 	return Config::CD();
 }
 
@@ -8291,6 +8299,9 @@ bool ScriptCD(Script::CStruct *pParams, Script::CScript *pScript)
 // @script | NotCD | returns true if CD not present
 bool ScriptNotCD(Script::CStruct *pParams, Script::CScript *pScript)
 {
+#ifdef __PLAT_WN32__
+	return false; // lwss: Change for PC. The Scripts assume !CD = dev build(with things that are missing like script debugger)
+#endif
 	return !Config::CD();
 }
 
@@ -8340,7 +8351,8 @@ bool ScriptNotCasArtist(Script::CStruct *pParams, Script::CScript *pScript)
 // @script | Gunslinger | returns true if a Gunslinger build
 bool ScriptGunslinger(Script::CStruct *pParams, Script::CScript *pScript)
 {
-#	ifdef TESTING_GUNSLINGER
+//#	ifdef TESTING_GUNSLINGER
+#	ifdef KISAK_WANTS_GUNSLINGER_BUT_NOT_ALL
 	return true;
 #	else
 	return false;
@@ -8948,7 +8960,7 @@ bool ScriptShatterFromNodeIndex( int nodeIndex )
 				Nx::CScene * p_main_scene = Nx::CEngine::sGetMainScene();
 				Nx::CSector *p_sector = p_main_scene->GetSector(checksumName);
 				Dbg_MsgAssert(p_sector,("sGetSector(0x%x) returned NULL (%s)",checksumName,Script::FindChecksumName(checksumName)));
-				p_sector->SetShatter(true);
+				//p_sector->SetShatter(true); // LWSS: Removed in PC.
 				//Bsp::ShatterWorldSector(  checksumName );
 			}
 			break;
@@ -11288,7 +11300,7 @@ bool	ScriptTryCheatString(  Script::CStruct *pParams, Script::CScript *pScript )
 	// then search through the cheat array to see if we have a match
 
 
-	#ifdef	__PLAT_XBOX__				 	
+	#if defined(__PLAT_XBOX__) || defined(__PLAT_WN32__)
 	Script::CArray *pCheatArray = Script::GetArray( "Cheat_Array_Xbox" );
 	#endif
 	#ifdef	__PLAT_NGC__				 	
@@ -11814,18 +11826,19 @@ bool ScriptLaunchViewer( Script::CStruct* pParams, Script::CScript* pScript )
 // @script | LaunchViewer | 
 bool ScriptLaunchScriptDebugger( Script::CStruct* pParams, Script::CScript* pScript )
 {
-	#ifdef __NOPT_ASSERT__
-	static bool initialized = false;
-	
-	if( initialized )
-	{
-		return true;
-	}
-
-	Mdl::Manager::Instance()->StartModule( *Dbg::CScriptDebugger::Instance() );
-	
-	initialized = true;
-	#endif
+	// LWSS: remove for now.
+	//#ifdef __NOPT_ASSERT__
+	//static bool initialized = false;
+	//
+	//if( initialized )
+	//{
+	//	return true;
+	//}
+	//
+	//Mdl::Manager::Instance()->StartModule( *Dbg::CScriptDebugger::Instance() );
+	//
+	//initialized = true;
+	//#endif
 	
 	return true;
 }
@@ -12832,6 +12845,11 @@ bool ScriptRotateVector( Script::CStruct* pParams, Script::CScript* pScript )
 // @script | IsPS2 | Returns true if the current hardware is PS2 (proview/devkit/regular).
 bool ScriptIsPS2( Script::CStruct* pParams, Script::CScript* pScript )
 {
+	// lwss add
+#ifdef __PLAT_WN32__
+	return false;
+#endif
+	// lwss end
 	if (( Config::GetHardware() == Config::HARDWARE_PS2 ) ||
 		( Config::GetHardware() == Config::HARDWARE_PS2_PROVIEW ) ||
 		( Config::GetHardware() == Config::HARDWARE_PS2_DEVSYSTEM ) )
@@ -12852,6 +12870,11 @@ bool ScriptIsPS2( Script::CStruct* pParams, Script::CScript* pScript )
 // @script | IsNGC | Returns true if the current hardware is GameCube.
 bool ScriptIsNGC( Script::CStruct* pParams, Script::CScript* pScript )
 {
+	// lwss add
+#ifdef __PLAT_WN32__
+	return false;
+#endif
+	// lwss end
 	if ( ( Config::GetHardware() == Config::HARDWARE_NGC ) )
 	{
 		return true;
@@ -12870,6 +12893,11 @@ bool ScriptIsNGC( Script::CStruct* pParams, Script::CScript* pScript )
 // @script | IsXBOX | Returns true if the current hardware is Xbox.
 bool ScriptIsXBOX( Script::CStruct* pParams, Script::CScript* pScript )
 {
+	// lwss add
+#ifdef __PLAT_WN32__
+	return true;
+#endif
+	// lwss end
 	if ( ( Config::GetHardware() == Config::HARDWARE_XBOX ) )
 	{
 		return true;
@@ -12888,6 +12916,11 @@ bool ScriptIsXBOX( Script::CStruct* pParams, Script::CScript* pScript )
 // @script | IsWin32 | Returns true if the current hardware is Win32.
 bool ScriptIsWIN32( Script::CStruct* pParams, Script::CScript* pScript )
 {
+	// lwss add
+#ifdef __PLAT_WN32__
+	return false; // doesn't make sense but it's accurate
+#endif
+	// lwss end
 	if ( ( Config::GetHardware() == Config::HARDWARE_WIN32 ) )
 	{
 		return true;
@@ -12910,25 +12943,31 @@ bool ScriptGetPlatform( Script::CStruct* pParams, Script::CScript* pScript )
 {
 	uint32 platform=0;
 	
+	// lwss add
+#ifdef __PLAT_WN32__
+	platform = 0x87d839b8; // xbox
+#else
 	switch (Config::GetHardware())
 	{
 	case Config::HARDWARE_PS2:
 	case Config::HARDWARE_PS2_PROVIEW:
 	case Config::HARDWARE_PS2_DEVSYSTEM:
-		platform=0x988a3508; // ps2
+		platform = 0x988a3508; // ps2
 		break;
 	case Config::HARDWARE_NGC:
-		platform=0xbcf00d45; // ngc
+		platform = 0xbcf00d45; // ngc
 		break;
 	case Config::HARDWARE_XBOX:
-		platform=0x87d839b8; // xbox
+		platform = 0x87d839b8; // xbox
 		break;
 	case Config::HARDWARE_WIN32:
-		platform=0x4af45e2e; // win32
+		platform = 0x4af45e2e; // win32
 		break;
 	default:
 		break;
 	}
+#endif
+	// lwss end
 	
 	pScript->GetParams()->AddChecksum("Platform",platform);		
 	return true;
@@ -13431,12 +13470,12 @@ bool ScriptAnalyzeHeap( Script::CStruct *pParams, Script::CScript *pScript )
 
 	pHeap = mem_man.GetHeap( whichHeap );
 
-#ifndef __PLAT_NGC__
-	if ( pHeap )
-	{
-		MemView_AnalyzeHeap( pHeap );
-	}
-#endif		// __PLAT_NGC__
+//#ifndef __PLAT_NGC__
+//	if ( pHeap )
+//	{
+//		MemView_AnalyzeHeap( pHeap );
+//	}
+//#endif		// __PLAT_NGC__
 
 	return true;
 }
@@ -13527,6 +13566,8 @@ bool ScriptDisplayFreeMem( Script::CStruct *pParams, Script::CScript *pScript )
 // @flag ExactValues | Prints the exact heap sizes in bytes.
 bool ScriptDumpHeaps( Script::CStruct *pParams, Script::CScript *pScript )
 {
+	return true;
+	/*
 #	if !defined( __PLAT_NGC__ ) || ( defined( __PLAT_NGC__ ) && !defined( __NOPT_FINAL__ ) )
 
 	Script::DumpLastStructs();
@@ -13668,6 +13709,7 @@ bool ScriptDumpHeaps( Script::CStruct *pParams, Script::CScript *pScript )
 #endif		// __NOPT_FINAL__
 
 	return true;
+	*/
 }
 
 /******************************************************************/
@@ -13685,36 +13727,36 @@ bool ScriptDumpFragments( Script::CStruct *pParams, Script::CScript *pScript )
 	{
 		maxFragmentation *= 1024;
 	}
-
-#ifdef __NOPT_ASSERT__
-	Mem::Manager& mem_man = Mem::Manager::sHandle();
-	
-	// sanity checks for fragmentation
-	Mem::Heap* heap = mem_man.BottomUpHeap();
-	int fragmentation = heap->mFreeMem.m_count;
-	
-	if (fragmentation > maxFragmentation)
-	{
-		// not guaranteed to do anything useful.... might crash the debugger (Mick)
-		printf ("Dumping Fragments.....\n");
-		MemView_DumpFragments(heap);
-		printf ("Done Dumping Fragments.....\n");
-	}
-	
-	Dbg_MsgAssert(fragmentation < maxFragmentation, ("Excessive bottom up fragmentation (%d) after cleanup (max=%d)",fragmentation,maxFragmentation)); 
-	
-	heap = mem_man.TopDownHeap();
-	fragmentation = heap->mFreeMem.m_count;
-	if (fragmentation > maxFragmentation)
-	{
-		// not guaranteed to do anything useful.... might crash the debugger (Mick)
-		printf ("Dumping Fragments.....\n");
-		MemView_DumpFragments(heap);
-		printf ("Done Dumping Fragments.....\n");
-	}
-	
-	Dbg_MsgAssert(fragmentation < maxFragmentation, ("Excessive top down fragmentation (%d) after cleanup (max=%d)",fragmentation,maxFragmentation)); 
-#endif
+//
+//#ifdef __NOPT_ASSERT__
+//	Mem::Manager& mem_man = Mem::Manager::sHandle();
+//	
+//	// sanity checks for fragmentation
+//	Mem::Heap* heap = mem_man.BottomUpHeap();
+//	int fragmentation = heap->mFreeMem.m_count;
+//	
+//	if (fragmentation > maxFragmentation)
+//	{
+//		// not guaranteed to do anything useful.... might crash the debugger (Mick)
+//		printf ("Dumping Fragments.....\n");
+//		MemView_DumpFragments(heap);
+//		printf ("Done Dumping Fragments.....\n");
+//	}
+//	
+//	Dbg_MsgAssert(fragmentation < maxFragmentation, ("Excessive bottom up fragmentation (%d) after cleanup (max=%d)",fragmentation,maxFragmentation)); 
+//	
+//	heap = mem_man.TopDownHeap();
+//	fragmentation = heap->mFreeMem.m_count;
+//	if (fragmentation > maxFragmentation)
+//	{
+//		// not guaranteed to do anything useful.... might crash the debugger (Mick)
+//		printf ("Dumping Fragments.....\n");
+//		MemView_DumpFragments(heap);
+//		printf ("Done Dumping Fragments.....\n");
+//	}
+//	
+//	Dbg_MsgAssert(fragmentation < maxFragmentation, ("Excessive top down fragmentation (%d) after cleanup (max=%d)",fragmentation,maxFragmentation)); 
+//#endif
 
 	return true;
 }

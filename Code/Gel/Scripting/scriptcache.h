@@ -21,7 +21,7 @@
 // CSymbolTableEntry.
 #ifdef __PLAT_WN32__
 // No caching when compiled on PC since it is not needed and would require linking in memory manager stuff.
-#define NO_SCRIPT_CACHING
+//#define NO_SCRIPT_CACHING // LWSS: undo this.
 #endif
 //#define NO_SCRIPT_CACHING
 

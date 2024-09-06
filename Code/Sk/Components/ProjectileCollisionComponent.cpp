@@ -147,7 +147,7 @@ void CProjectileCollisionComponent::RefreshFromStructure( Script::CStruct* pPara
 
 void CProjectileCollisionComponent::Finalize()
 {
-	mp_suspend_component =  GetSuspendComponentFromObject( GetObject() );
+	mp_suspend_component =  GetSuspendComponentFromObject( GetObj() );
 }
 	
 
@@ -229,7 +229,7 @@ void CProjectileCollisionComponent::Update()
 				}
 			}
 
-			dist = (pSkater->GetPos() - GetObject()->GetPos()).Length();
+			dist = (pSkater->GetPos() - GetObj()->GetPos()).Length();
 			if( dist < radii )
 			{
 				GameNet::MsgProjectileHit hit_msg;
@@ -240,13 +240,13 @@ void CProjectileCollisionComponent::Update()
 				server = gamenet_man->GetServer();
 
 				//Dbg_Printf( "COLLISION: Skater %d: owner: %d\n", pSkater->GetID(), m_owner_id);
-				GetObject()->MarkAsDead();
+				GetObj()->MarkAsDead();
 				if( m_death_script != 0 )
 				{
 					Script::CStruct* params;
 					Mth::Vector pos;
 
-					pos = GetObject()->GetPos();
+					pos = GetObj()->GetPos();
 					params = new Script::CStruct;
 					
 					params->AddVector( CRCD(0x7f261953,"pos"), pos );
@@ -261,7 +261,7 @@ void CProjectileCollisionComponent::Update()
 				hit_msg.m_Id = m_owner_id;
 				hit_msg.m_Damage = get_damage_amount();
 	
-				/*if (CInputComponent* p_input_component = GetInputComponentFromObject(GetObject()))
+				/*if (CInputComponent* p_input_component = GetInputComponentFromObject(GetObj()))
 				{
 					p_input_component->DisableInput();
 				}

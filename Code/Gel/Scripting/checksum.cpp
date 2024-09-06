@@ -148,6 +148,7 @@ void GetChecksumNamesBuffer(char **pp_start, char **pp_end)
 	*pp_end=sp_end_of_checksum_names;
 }	
 
+// 
 //uint32 sNumChecksums=0;
 void AddChecksumName(uint32 checksum, const char *p_name)
 {
@@ -169,7 +170,8 @@ void AddChecksumName(uint32 checksum, const char *p_name)
 		if (p_first->mChecksum==checksum)
 		{
 			// It does! Check whether it is the same name.
-			if (stricmp(p_first->mpName,p_name)==0)
+			//if (stricmp(p_first->mpName,p_name)==0)
+			if (_stricmp(p_first->mpName,p_name)==0)
 			{
 				// Phew, the name matches. No need to do anything.
 				return;
@@ -178,11 +180,11 @@ void AddChecksumName(uint32 checksum, const char *p_name)
 			{
 				// Oh bugger, a checksum clash.
 				#ifdef __PLAT_WN32__
-				#ifdef __QDEBUG__
+				//#ifdef __QDEBUG__
 				char p_foo[1024];
 				sprintf(p_foo,"Checksum clash between %s and %s, both have checksum 0x%08x",p_name,p_first->mpName,checksum);
 				MessageBox(NULL,p_foo,"Warning",MB_OK);
-				#endif
+				//#endif
 				// Carry on anyway, won't cause a crash.
 				#else				
 				Dbg_MsgAssert(0,("Checksum clash between %s and %s, both have checksum 0x%08x",p_name,p_first->mpName,checksum));

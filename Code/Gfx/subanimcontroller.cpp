@@ -41,7 +41,7 @@ CBonedAnimController::CBonedAnimController( CBlendChannel* pBlendChannel ) : CBa
 	mp_quickAnim = Nx::CEngine::sInitQuickAnim();
 	mp_quickAnim->Enable( false );
 	
-	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObject() );
+	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObj() );
 	m_animScriptName = pAnimationComponent->GetAnimScriptName();
 }
 
@@ -178,7 +178,7 @@ CWobbleController::CWobbleController( CBlendChannel* pBlendChannel ) : CBaseAnim
 	mp_quickAnim = Nx::CEngine::sInitQuickAnim();
 	mp_quickAnim->Enable( false );
 	
-	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObject() );
+	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObj() );
 	m_animScriptName = pAnimationComponent->GetAnimScriptName();
 	
 	/*
@@ -497,12 +497,12 @@ bool CFlipRotateController::GetPose( Gfx::CPose* pResultPose )
 	#ifdef	__NOPT_ASSERT__
 	{	// remove this scope if you actually want to use pAnimationComponent
 		// in something other than the assertion
-		Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObject() );
+		Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObj() );
 		Dbg_MsgAssert( pAnimationComponent, ( "No animation component?" ) );
 	}
 	#endif
 	
-	Obj::CSkaterFlipAndRotateComponent* pSkaterFlipAndRotateComponent = GetSkaterFlipAndRotateComponentFromObject( GetObject() );
+	Obj::CSkaterFlipAndRotateComponent* pSkaterFlipAndRotateComponent = GetSkaterFlipAndRotateComponentFromObject( GetObj() );
 
 	if ( pSkaterFlipAndRotateComponent && pSkaterFlipAndRotateComponent->IsBoardRotated() )
 //	if ( m_rotated )
@@ -616,7 +616,7 @@ void CIKController::Update()
 	// blend channels, then we might want to consider
 	// storing it in a CIKComponent...  then, the
 	// Update() function can grab it like so:
-	// Obj::CIKComponent* pIKComponent = GetIKComponentFromObject( GetObject() );
+	// Obj::CIKComponent* pIKComponent = GetIKComponentFromObject( GetObj() );
 	// if ( pIKComponent )
 	// {
 	//		Mth::Vector steering_column_pos = pIKComponent->GetBonePosition( "steering_column" );
@@ -725,7 +725,7 @@ bool CProceduralAnimController::GetPose( Gfx::CPose* pResultPose )
 	CSkeleton* pSkeleton = GetSkeleton();
 	Dbg_MsgAssert( pSkeleton, ( "No skeleton?" ) );
 
-	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObject() );
+	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObj() );
 	Dbg_MsgAssert( pAnimationComponent, ( "No animation component?" ) );
 	
 	int numProceduralBones = pAnimationComponent->GetNumProceduralBones(); 
@@ -764,7 +764,7 @@ bool CProceduralAnimController::GetPose( Gfx::CPose* pResultPose )
 	
 void CProceduralAnimController::SetProceduralBoneTransMin( uint32 boneName, const Mth::Vector& vec )
 {
-	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObject() );
+	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObj() );
 	Dbg_MsgAssert( pAnimationComponent, ( "No animation component?" ) );
 	
 	CProceduralBone* pProceduralBone = pAnimationComponent->GetProceduralBoneByName( boneName );
@@ -782,7 +782,7 @@ void CProceduralAnimController::SetProceduralBoneTransMin( uint32 boneName, cons
 	
 void CProceduralAnimController::SetProceduralBoneTransMax( uint32 boneName, const Mth::Vector& vec )
 {
-	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObject() );
+	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObj() );
 	Dbg_MsgAssert( pAnimationComponent, ( "No animation component?" ) );
 	
 	CProceduralBone* pProceduralBone = pAnimationComponent->GetProceduralBoneByName( boneName );
@@ -800,7 +800,7 @@ void CProceduralAnimController::SetProceduralBoneTransMax( uint32 boneName, cons
 	
 void CProceduralAnimController::SetProceduralBoneTransSpeed( uint32 boneName, const Mth::Vector& vec )
 {
-	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObject() );
+	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObj() );
 	Dbg_MsgAssert( pAnimationComponent, ( "No animation component?" ) );
 	
 	CProceduralBone* pProceduralBone = pAnimationComponent->GetProceduralBoneByName( boneName );
@@ -818,7 +818,7 @@ void CProceduralAnimController::SetProceduralBoneTransSpeed( uint32 boneName, co
 	
 void CProceduralAnimController::SetProceduralBoneTransActive( uint32 boneName, bool enabled )
 {
-	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObject() );
+	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObj() );
 	Dbg_MsgAssert( pAnimationComponent, ( "No animation component?" ) );
 	
 	CProceduralBone* pProceduralBone = pAnimationComponent->GetProceduralBoneByName( boneName );
@@ -836,7 +836,7 @@ void CProceduralAnimController::SetProceduralBoneTransActive( uint32 boneName, b
 	
 void CProceduralAnimController::SetProceduralBoneTransCurrent( uint32 boneName, const Mth::Vector& vec )
 {
-	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObject() );
+	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObj() );
 	Dbg_MsgAssert( pAnimationComponent, ( "No animation component?" ) );
 	
 	CProceduralBone* pProceduralBone = pAnimationComponent->GetProceduralBoneByName( boneName );
@@ -854,7 +854,7 @@ void CProceduralAnimController::SetProceduralBoneTransCurrent( uint32 boneName, 
 	
 void CProceduralAnimController::SetProceduralBoneRotMin( uint32 boneName, const Mth::Vector& vec )
 {
-	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObject() );
+	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObj() );
 	Dbg_MsgAssert( pAnimationComponent, ( "No animation component?" ) );
 	
 	CProceduralBone* pProceduralBone = pAnimationComponent->GetProceduralBoneByName( boneName );
@@ -874,7 +874,7 @@ void CProceduralAnimController::SetProceduralBoneRotMin( uint32 boneName, const 
 	
 void CProceduralAnimController::SetProceduralBoneRotMax( uint32 boneName, const Mth::Vector& vec )
 {
-	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObject() );
+	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObj() );
 	Dbg_MsgAssert( pAnimationComponent, ( "No animation component?" ) );
 	
 	CProceduralBone* pProceduralBone = pAnimationComponent->GetProceduralBoneByName( boneName );
@@ -894,7 +894,7 @@ void CProceduralAnimController::SetProceduralBoneRotMax( uint32 boneName, const 
 	
 void CProceduralAnimController::SetProceduralBoneRotSpeed( uint32 boneName, const Mth::Vector& vec )
 {
-	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObject() );
+	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObj() );
 	Dbg_MsgAssert( pAnimationComponent, ( "No animation component?" ) );
 	
 	CProceduralBone* pProceduralBone = pAnimationComponent->GetProceduralBoneByName( boneName );
@@ -912,7 +912,7 @@ void CProceduralAnimController::SetProceduralBoneRotSpeed( uint32 boneName, cons
 	
 void CProceduralAnimController::SetProceduralBoneRotCurrent( uint32 boneName, const Mth::Vector& vec )
 {
-	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObject() );
+	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObj() );
 	Dbg_MsgAssert( pAnimationComponent, ( "No animation component?" ) );
 	
 	CProceduralBone* pProceduralBone = pAnimationComponent->GetProceduralBoneByName( boneName );
@@ -930,7 +930,7 @@ void CProceduralAnimController::SetProceduralBoneRotCurrent( uint32 boneName, co
 	
 void CProceduralAnimController::SetProceduralBoneRotActive( uint32 boneName, bool enabled )
 {
-	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObject() );
+	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObj() );
 	Dbg_MsgAssert( pAnimationComponent, ( "No animation component?" ) );
 	
 	CProceduralBone* pProceduralBone = pAnimationComponent->GetProceduralBoneByName( boneName );
@@ -948,7 +948,7 @@ void CProceduralAnimController::SetProceduralBoneRotActive( uint32 boneName, boo
 	
 void CProceduralAnimController::SetProceduralBoneScaleMin( uint32 boneName, const Mth::Vector& vec )
 {
-	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObject() );
+	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObj() );
 	Dbg_MsgAssert( pAnimationComponent, ( "No animation component?" ) );
 	
 	CProceduralBone* pProceduralBone = pAnimationComponent->GetProceduralBoneByName( boneName );
@@ -966,7 +966,7 @@ void CProceduralAnimController::SetProceduralBoneScaleMin( uint32 boneName, cons
 	
 void CProceduralAnimController::SetProceduralBoneScaleMax( uint32 boneName, const Mth::Vector& vec )
 {
-	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObject() );
+	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObj() );
 	Dbg_MsgAssert( pAnimationComponent, ( "No animation component?" ) );
 	
 	CProceduralBone* pProceduralBone = pAnimationComponent->GetProceduralBoneByName( boneName );
@@ -984,7 +984,7 @@ void CProceduralAnimController::SetProceduralBoneScaleMax( uint32 boneName, cons
 	
 void CProceduralAnimController::SetProceduralBoneScaleSpeed( uint32 boneName, const Mth::Vector& vec )
 {
-	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObject() );
+	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObj() );
 	Dbg_MsgAssert( pAnimationComponent, ( "No animation component?" ) );
 	
 	CProceduralBone* pProceduralBone = pAnimationComponent->GetProceduralBoneByName( boneName );
@@ -1002,7 +1002,7 @@ void CProceduralAnimController::SetProceduralBoneScaleSpeed( uint32 boneName, co
 	
 void CProceduralAnimController::SetProceduralBoneScaleCurrent( uint32 boneName, const Mth::Vector& vec )
 {
-	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObject() );
+	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObj() );
 	Dbg_MsgAssert( pAnimationComponent, ( "No animation component?" ) );
 	
 	CProceduralBone* pProceduralBone = pAnimationComponent->GetProceduralBoneByName( boneName );
@@ -1020,7 +1020,7 @@ void CProceduralAnimController::SetProceduralBoneScaleCurrent( uint32 boneName, 
 	
 void CProceduralAnimController::SetProceduralBoneScaleActive( uint32 boneName, bool enabled )
 {
-	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObject() );
+	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObj() );
 	Dbg_MsgAssert( pAnimationComponent, ( "No animation component?" ) );
 	
 	CProceduralBone* pProceduralBone = pAnimationComponent->GetProceduralBoneByName( boneName );
@@ -1428,7 +1428,7 @@ CPartialAnimController::CPartialAnimController( CBlendChannel* pBlendChannel ) :
 	mp_quickAnim = Nx::CEngine::sInitQuickAnim();
 	mp_quickAnim->Enable( false );
 	
-	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObject() );
+	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObj() );
 	m_animScriptName = pAnimationComponent->GetAnimScriptName();
 
 	mp_animChannel = new Gfx::CAnimChannel;
@@ -1469,7 +1469,7 @@ void CPartialAnimController::InitFromStructure( Script::CStruct* pParams )
 	float From = 0.0f;
 	float To = 0.0f;
 	float Current = 0.0f;
-	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObject() );
+	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObj() );
 	float Duration = pAnimationComponent->AnimDuration( anim_name );
 	Gfx::GetTimeFromParams( &From, &To, Current, Duration, pParams, NULL );
 	  

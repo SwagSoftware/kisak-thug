@@ -57,6 +57,8 @@
 #elif defined( __PLAT_NGC__ )
 #include <gel/music/ngc/p_music.h>
 #include <gel/music/ngc/pcm/pcm.h>
+#elif defined( __PLAT_WN32__ )
+#include <Gel/Music/Win32/p_music.h>
 #endif
 #include <sys/config/config.h>
 #include <sys/replay/replay.h>
@@ -275,7 +277,7 @@ bool SetStreamVolumeFromID( uint32 streamID, Sfx::sVolume *p_volume )
 
 	if (channel >= 0)
 	{
-#		ifdef __PLAT_XBOX__
+#		if defined(__PLAT_XBOX__) || defined(__PLAT_WN32__)
 		PCMAudio_SetStreamVolume( p_volume, channel );
 #		else
 		PCMAudio_SetStreamVolume( p_volume->GetChannelVolume( 0 ), p_volume->GetChannelVolume( 1 ), channel );
@@ -640,7 +642,7 @@ int _PlayStream( uint32 checksum, Sfx::sVolume *p_volume, float pitch, int prior
 			else
 			{
 //				success = PCMAudio_PlayStream( checksum, i, volumeL, volumeR, pitch );
-#				ifdef __PLAT_XBOX__
+#				if defined(__PLAT_XBOX__) || defined(__PLAT_WN32__)
 				success = PCMAudio_PlayStream( checksum, i, p_volume, pitch );
 #				else
 				success = PCMAudio_PlayStream( checksum, i, p_volume->GetChannelVolume( 0 ), p_volume->GetChannelVolume( 1 ), pitch );
@@ -691,7 +693,7 @@ int _PlayStream( uint32 checksum, Sfx::sVolume *p_volume, float pitch, int prior
 		else
 		{
 //			success = PCMAudio_PlayStream( checksum, lowest_priority_channel, volumeL, volumeR, pitch );
-#			ifdef __PLAT_XBOX__
+#		if defined(__PLAT_XBOX__) || defined(__PLAT_WN32__)
 			success = PCMAudio_PlayStream( checksum, lowest_priority_channel, p_volume, pitch );
 #			else
 			success = PCMAudio_PlayStream( checksum, lowest_priority_channel, p_volume->GetChannelVolume( 0 ), p_volume->GetChannelVolume( 1 ), pitch );
@@ -768,7 +770,7 @@ uint32 PlayStreamFromObject( Obj::CStreamComponent *pComponent, uint32 streamNam
 		return 0;
 	}
 
-	Replay::WritePositionalStream(pComponent->GetObject()->GetID(),streamNameChecksum,dropoff,volume,pitch,priority,use_pos_info);
+	Replay::WritePositionalStream(pComponent->GetObj()->GetID(),streamNameChecksum,dropoff,volume,pitch,priority,use_pos_info);
 	if (StreamsDisabled()) return 0;
 	
 	Sfx::sVolume vol;
@@ -781,7 +783,7 @@ uint32 PlayStreamFromObject( Obj::CStreamComponent *pComponent, uint32 streamNam
 	// Set up volume according to position of object to camera.
 	if ( use_pos_info != 0 )
 	{
-		Gfx::Camera *pCamera = Nx::CViewportManager::sGetClosestCamera( pComponent->GetObject()->m_pos );
+		Gfx::Camera *pCamera = Nx::CViewportManager::sGetClosestCamera( pComponent->GetObj()->m_pos );
 
 		if (pCamera)
 		{
@@ -989,7 +991,7 @@ bool StartPreLoadedStream( uint32 streamID, Sfx::sVolume *p_volume, float pitch 
 #endif 
 
 //		return PCMAudio_StartPreLoadedStream( channel, volumeL, volumeR, pitch );
-#		ifdef __PLAT_XBOX__
+#		if defined(__PLAT_XBOX__) || defined(__PLAT_WN32__)
 		return PCMAudio_StartPreLoadedStream( channel, p_volume, pitch );
 #		else
 		return PCMAudio_StartPreLoadedStream( channel, p_volume->GetChannelVolume( 0 ), p_volume->GetChannelVolume( 1 ), pitch );
@@ -1093,7 +1095,7 @@ bool SetStreamVolume( int objStreamIndex )
 			Sfx::CSfxManager * sfx_manager = Sfx::CSfxManager::Instance();
 			if ( pInfo->use_pos_info )
 			{
-				Gfx::Camera *pCamera = Nx::CViewportManager::sGetClosestCamera( pComp->GetObject()->m_pos );
+				Gfx::Camera *pCamera = Nx::CViewportManager::sGetClosestCamera( pComp->GetObj()->m_pos );
 
 				if (pCamera)
 				{
@@ -1122,7 +1124,7 @@ bool SetStreamVolume( int objStreamIndex )
 				vol.PercentageAdjustment( pInfo->volume );
 			}
 
-#			ifdef __PLAT_XBOX__
+#		if defined(__PLAT_XBOX__) || defined(__PLAT_WN32__)
 			// We need the sign-correct version for Xbox to calculate proper 5.1 values.
 			PCMAudio_SetStreamVolume( &vol, pInfo->voice );
 #			else

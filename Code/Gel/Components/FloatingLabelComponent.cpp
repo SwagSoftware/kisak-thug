@@ -103,7 +103,7 @@ void CFloatingLabelComponent::Update()
 	sprintf(text, "\\c%d%s", m_color_index, m_string);
 
 	pParams->AddString(CRCD(0xc4745838, "text"), text);
-	pParams->AddVector(CRCD(0x4b491900, "pos3D"), GetObject()->m_pos[X], GetObject()->m_pos[Y] + m_y_offset, GetObject()->m_pos[Z]);
+	pParams->AddVector(CRCD(0x4b491900, "pos3D"), GetObj()->m_pos[X], GetObj()->m_pos[Y] + m_y_offset, GetObj()->m_pos[Z]);
 
 	Front::CScreenElement *p_name_elem = Front::CScreenElementManager::Instance()->GetElement(m_screen_element_id);
 	if (p_name_elem)

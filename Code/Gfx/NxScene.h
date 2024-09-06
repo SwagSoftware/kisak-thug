@@ -122,12 +122,12 @@ protected:
 	CTexDict *					mp_tex_dict;								// texture dictionary that this scene uses	
 	
 	bool						m_in_super_sectors;							// Is this scene in the super sectors
-	bool						m_sky;										// Tells if scene is a sky type
+	bool						m_sky;										// 0x8D, Tells if scene is a sky type
 
 	Mth::CBBox					m_render_bbox;								// scene renderable bounding box
 	Mth::CBBox					m_collision_bbox;							// scene collision bounding box
 	Lst::HashTable< CSector > *	mp_sector_table;							// All the CSector pointers
-	SSec::Manager *				mp_sector_man;								// SuperSector manager
+	SSec::Manager *				mp_sector_man;								// 0xD4 - SuperSector manager
 
 	char						m_coll_filename[128];						// collision filename (kept around for unload)
 	int							m_num_coll_sectors;							// non-cloned collision
@@ -142,9 +142,9 @@ protected:
 	CCollStaticTri *			mp_add_coll_sectors;
 	CCollObjTriData *			mp_add_coll_sector_data;
 
-	bool						m_using_add_sectors;
-	Lst::Head < CSector > *		mp_orig_sectors;
-	Lst::Head < CSector > *		mp_add_sectors;
+	bool						m_using_add_sectors; // 0x274
+	Lst::Head < CSector > *		mp_orig_sectors; // 0x278
+	Lst::Head < CSector > *		mp_add_sectors; // 0x27C
 
 private:
 	////////////////////////////////////////////////////////////

@@ -64,7 +64,6 @@ private :
 	
 	virtual		void*			allocate( size_t size, bool assert_on_fail );
 	virtual		void			free( BlockHeader* pHeader );
-
 	virtual		int				available();
 	virtual		void* 			reallocate_down( size_t new_size, void *pOld );
 	virtual		void*			reallocate_up( size_t newSize, void *pOld );

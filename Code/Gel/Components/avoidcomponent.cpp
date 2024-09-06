@@ -130,9 +130,9 @@ void CAvoidComponent::draw_collision_circle( int numPoints, float radius, uint32
 	for ( int i = 0; i < numPoints; i++ )
 	{
 		fwd.RotateY( 2.0f * Mth::PI / (float)numPoints );
-		v2 = GetObject()->m_pos + fwd;
+		v2 = GetObj()->m_pos + fwd;
 
-		if ( !collides_with( GetObject()->m_pos, v2 ) )
+		if ( !collides_with( GetObj()->m_pos, v2 ) )
 		{
 			Gfx::AddDebugLine(v1,v2,rgb0,rgb0,1);
 		}
@@ -190,10 +190,10 @@ void CAvoidComponent::play_appropriate_jump_anim( float rotAng, Script::CStruct*
 					flipped = 1;
 				}
 				
-				Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObject() );
+				Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObj() );
 				if ( pAnimationComponent )
 				{
-					pAnimationComponent->FlipAnimation( GetObject()->GetID(), flipped, 0, true );
+					pAnimationComponent->FlipAnimation( GetObj()->GetID(), flipped, 0, true );
 				}
 			}
 			break;
@@ -216,10 +216,10 @@ void CAvoidComponent::play_appropriate_jump_anim( float rotAng, Script::CStruct*
 					flipped = 1;
 				}
 				
-				Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObject() );
+				Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObj() );
 				if ( pAnimationComponent )
 				{
-					pAnimationComponent->FlipAnimation( GetObject()->GetID(), flipped, 0, true );
+					pAnimationComponent->FlipAnimation( GetObj()->GetID(), flipped, 0, true );
 				}
 			}
 			break;
@@ -231,7 +231,7 @@ void CAvoidComponent::play_appropriate_jump_anim( float rotAng, Script::CStruct*
 			
 	}
 	
-	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObject() );
+	Obj::CAnimationComponent* pAnimationComponent = GetAnimationComponentFromObject( GetObj() );
 
     if ( pAnimationComponent )
     {
@@ -275,8 +275,8 @@ float CAvoidComponent::get_ideal_heading()
 	// chose the direction that's farther...
 	Mth::Vector posPlus;
 	Mth::Vector posMinus;
-	posPlus = GetObject()->m_pos + jumpDir;
-	posMinus = GetObject()->m_pos - jumpDir;
+	posPlus = GetObj()->m_pos + jumpDir;
+	posMinus = GetObj()->m_pos - jumpDir;
 			
 	if ( Mth::DistanceSqr( pSkater->m_pos, posPlus ) < Mth::DistanceSqr( pSkater->m_pos, posMinus ) )
 	{
@@ -284,7 +284,7 @@ float CAvoidComponent::get_ideal_heading()
 		jumpDir[Z] = -jumpDir[Z];
 	}
 	
-	return Mth::RadToDeg( Mth::GetAngle( GetObject()->m_matrix, jumpDir ) );
+	return Mth::RadToDeg( Mth::GetAngle( GetObj()->m_matrix, jumpDir ) );
 }
 
 /******************************************************************/
@@ -437,8 +437,8 @@ CBaseComponent::EMemberFunctionResult CAvoidComponent::CallMemberFunction( uint3
 		{
 			// this is the starting point...
 			Mth::Matrix mat0;
-			mat0 = GetObject()->GetDisplayMatrix();
-			mat0[Mth::POS] = GetObject()->m_pos;
+			mat0 = GetObj()->GetDisplayMatrix();
+			mat0[Mth::POS] = GetObj()->m_pos;
 
 			// this is where we will eventually end up
 			Mth::Matrix mat1;
@@ -481,7 +481,7 @@ CBaseComponent::EMemberFunctionResult CAvoidComponent::CallMemberFunction( uint3
 				jumpDir = m_avoidOriginalPos - mat0[Mth::POS];
 
 				float rotAng;
-				rotAng = Mth::GetAngle( GetObject()->m_matrix, jumpDir );
+				rotAng = Mth::GetAngle( GetObj()->m_matrix, jumpDir );
 
 				bool success = jump( mat0, mat1, rotAng, get_jump_distance(pParams, rotAng), maxHerdDistance );
 
@@ -517,7 +517,7 @@ CBaseComponent::EMemberFunctionResult CAvoidComponent::CallMemberFunction( uint3
 			jumpDir = mat1[Mth::POS] - mat0[Mth::POS];
 
 			float rotAng;
-			rotAng = Mth::GetAngle( GetObject()->m_matrix, jumpDir );
+			rotAng = Mth::GetAngle( GetObj()->m_matrix, jumpDir );
 
 			// rotAng of zero means jump forward, so:
 			play_appropriate_jump_anim( rotAng, pParams );
@@ -534,7 +534,7 @@ CBaseComponent::EMemberFunctionResult CAvoidComponent::CallMemberFunction( uint3
 			theBox.SetMin( m_avoidOriginalPos - Mth::Vector( safeDist, safeDist, safeDist ) );
 			theBox.SetMax( m_avoidOriginalTargetPos + Mth::Vector( safeDist, safeDist, safeDist ) );
 
-			if ( theBox.Within( GetObject()->m_pos ) )
+			if ( theBox.Within( GetObj()->m_pos ) )
 			{
 				printf( "Intersects!\n" ); 
 			//	return CBaseComponent::MF_TRUE;
@@ -597,41 +597,41 @@ CBaseComponent::EMemberFunctionResult CAvoidComponent::CallMemberFunction( uint3
 			Mth::Matrix mat0;
 			m_avoidAlpha += ( m_jumpTime * ( 1.0f / 60.0f ) * Tmr::FrameRatio() );
 			m_avoidInterpolator.getMatrix( &mat0, m_avoidAlpha );
-			GetObject()->m_pos = mat0[Mth::POS];
-			GetObject()->m_matrix = mat0;
-			GetObject()->m_matrix[Mth::POS] = Mth::Vector(0.0f, 0.0f, 0.0f, 1.0f);
+			GetObj()->m_pos = mat0[Mth::POS];
+			GetObj()->m_matrix = mat0;
+			GetObj()->m_matrix[Mth::POS] = Mth::Vector(0.0f, 0.0f, 0.0f, 1.0f);
 		}
 		break;
 
 		// @script | Ped_AvoidPointReached |
 		case 0x3c7f8f3e:	// Ped_AvoidPointReached
 		{
-			Dbg_Assert( GetAnimationComponentFromObject( GetObject() ) );
-			return ( m_avoidAlpha >= 1.0f && GetAnimationComponentFromObject( GetObject() )->IsAnimComplete() ) ? CBaseComponent::MF_TRUE : CBaseComponent::MF_FALSE;
+			Dbg_Assert( GetAnimationComponentFromObject( GetObj() ) );
+			return ( m_avoidAlpha >= 1.0f && GetAnimationComponentFromObject( GetObj() )->IsAnimComplete() ) ? CBaseComponent::MF_TRUE : CBaseComponent::MF_FALSE;
 		}
 		break;
 
 		case 0x6a4bca91:	// Ped_RememberCurrentPosition
-			m_avoidOriginalPos = GetObject()->m_pos;
+			m_avoidOriginalPos = GetObj()->m_pos;
 		break;
 
 		case 0x3fb422e8:	// Ped_RememberNextWaypoint
 		{
-			Obj::CMotionComponent* pMotionComponent = GetMotionComponentFromObject( GetObject() );
+			Obj::CMotionComponent* pMotionComponent = GetMotionComponentFromObject( GetObj() );
 			if ( pMotionComponent && pMotionComponent->GetPathOb() )
 			{
 				m_avoidOriginalTargetPos = pMotionComponent->GetPathOb()->m_wp_pos_to;
 			}
 			else
 			{
-				m_avoidOriginalTargetPos = GetObject()->m_pos;
+				m_avoidOriginalTargetPos = GetObj()->m_pos;
 			}
 		}
 		break;
 
 		case 0x539a32dc:	// Ped_RememberStickToGround
 		{
-			Obj::CMotionComponent* pMotionComponent = GetMotionComponentFromObject( GetObject() );
+			Obj::CMotionComponent* pMotionComponent = GetMotionComponentFromObject( GetObj() );
 			Dbg_Assert( pMotionComponent );
 			m_avoidOriginalStickToGround = ( pMotionComponent->m_movingobj_flags |= MOVINGOBJ_FLAG_STICK_TO_GROUND );
 		}	
@@ -639,7 +639,7 @@ CBaseComponent::EMemberFunctionResult CAvoidComponent::CallMemberFunction( uint3
 
 		case 0x53bc3b4e:	// Ped_RestoreStickToGround
 		{
-			Obj::CMotionComponent* pMotionComponent = GetMotionComponentFromObject( GetObject() );
+			Obj::CMotionComponent* pMotionComponent = GetMotionComponentFromObject( GetObj() );
 			if ( pMotionComponent )
 			{
 				if ( m_avoidOriginalStickToGround )

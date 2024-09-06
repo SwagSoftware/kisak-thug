@@ -546,7 +546,7 @@ void CBettingGuy::SetupParams()
 		Script::CStruct* p_trickMappings = p_SkaterProfile->GetTrickMapping( CRCD(0xd544aa2d,"trick_mapping") );
 		p_trickMappings->GetChecksum( key_combo, &trick_name_checksum, Script::ASSERT );
 	
-		const char* trick_text;
+		const char* trick_text = nullptr;
 		if ( trick_name_checksum )
 		{
 			Script::CStruct* p_trick_structure = Script::GetStructure( trick_name_checksum, Script::ASSERT );

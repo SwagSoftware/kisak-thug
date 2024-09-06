@@ -49,6 +49,10 @@
 #include <sk/objects/moviecam.h>
 #include <sk/objects/movingobject.h>
 
+#ifdef __PLAT_WN32__
+#include "Win32/p_sfx.h" // lwss add
+#endif
+
 // Used by the script debugger code to fill in a structure
 // for transmitting to the monitor.exe utility running on the PC.
 void ObjectSoundInfo::GetDebugInfo(Script::CStruct *p_info)

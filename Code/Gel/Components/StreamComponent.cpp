@@ -236,7 +236,7 @@ Mth::Vector	CStreamComponent::GetClosestEmitterPos( Gfx::Camera *pCamera )
 	}
 	else
 	{
-		return GetObject()->m_pos;
+		return GetObj()->m_pos;
 	}
 }
 
@@ -324,7 +324,7 @@ bool CStreamComponent::PlayStream( Script::CScriptStructure *pParams, Script::CS
 	{
 		int use_pos_info = 1;
 		pParams->GetInteger( "use_pos_info", &use_pos_info, Script::NO_ASSERT );
-		//printf ("Playing stream 0x%x on object %s\n",streamChecksum,Script::FindChecksumName(GetObject()->GetID()));
+		//printf ("Playing stream 0x%x on object %s\n",streamChecksum,Script::FindChecksumName(GetObj()->GetID()));
 		return ( Pcm::PlayStreamFromObject( this, streamChecksum, dropoff, volume, pitch, priority, use_pos_info, dropoffFunction, id ) );
 	}
 	return ( false );

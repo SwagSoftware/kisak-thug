@@ -77,8 +77,8 @@
 // skater specific debug defines
 #ifdef __NOPT_ASSERT__
 #define HEADER { printf("%i:%s:%i: ", Tmr::GetRenderFrame(), __FILE__ + 15, __LINE__); }
-#define DUMP_VELOCITY { if (Script::GetInteger(CRCD(0x71f0478a, "debug_skater_vel"))) { HEADER; printf("m_vel = %g, %g, %g (%g)\n", GetObject()->m_vel[X], GetObject()->m_vel[Y], GetObject()->m_vel[Z], GetObject()->m_vel.Length()); } }
-#define DUMP_POSITION { if (Script::GetInteger(CRCD(0x029ade47, "debug_skater_pos"))) { HEADER; printf("m_pos = %g, %g, %g\n", GetObject()->m_pos[X], GetObject()->m_pos[Y], GetObject()->m_pos[Z]); } }
+#define DUMP_VELOCITY { if (Script::GetInteger(CRCD(0x71f0478a, "debug_skater_vel"))) { HEADER; printf("m_vel = %g, %g, %g (%g)\n", GetObj()->m_vel[X], GetObj()->m_vel[Y], GetObj()->m_vel[Z], GetObj()->m_vel.Length()); } }
+#define DUMP_POSITION { if (Script::GetInteger(CRCD(0x029ade47, "debug_skater_pos"))) { HEADER; printf("m_pos = %g, %g, %g\n", GetObj()->m_pos[X], GetObj()->m_pos[Y], GetObj()->m_pos[Z]); } }
 #define DUMP_SPOSITION { if (Script::GetInteger(CRCD(0x029ade47, "debug_skater_pos"))) { HEADER; printf("m_pos = %g, %g, %g\n", m_pos[X], m_pos[Y], m_pos[Z]); } }
 #else
 #define DUMP_VELOCITY {   }
@@ -99,7 +99,7 @@
 	#endif
 #endif
 
-#ifdef	__PLAT_XBOX__
+#if defined(__PLAT_XBOX__) || defined(__PLAT_WN32__)
 #define	BREAK_SPINE_BUTTONS (control_pad.m_L2.GetPressed() && control_pad.m_R2.GetPressed())
 #define	WALK_SPINE_BUTTONS (control_pad.m_L2.GetPressed() && control_pad.m_R2.GetPressed())
 #endif

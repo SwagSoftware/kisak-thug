@@ -148,7 +148,8 @@ public :
 /******************************************************************/
 
 template < class _T > inline   
-PtrToConst< _T >::PtrToConst< _T >( const _T* ptr ) 
+//PtrToConst< _T >::PtrToConst< _T >( const _T* ptr ) 
+Mem::PtrToConst<_T>::PtrToConst( const _T* ptr )
 : m_const_ptr ( ptr )
 {
 	

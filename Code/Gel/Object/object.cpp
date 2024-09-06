@@ -1181,7 +1181,7 @@ void			CObject::GetDebugInfo(Script::CStruct *p_info)
 // just retained for convenience
 CObject *ResolveToObject(uint32 id)
 {
-	return Obj::CTracker::Instance()->GetObject(id); 	
+	return Obj::CTracker::Instance()->GetObj(id); 	
 }
 
 

@@ -105,6 +105,8 @@ public:
 	bool		m_used;
 };
 
+extern Manager* sp_instance;
+
 class Manager : public Spt::Class			
 {
 	
@@ -213,7 +215,6 @@ private :
 	static char 				s_top_heap_buffer[];
 	static char 				s_bot_heap_buffer[];
 	static bool					s_initialized;
-	static Manager*				sp_instance;
 		
 	class MemManContext
 	{
@@ -339,10 +340,11 @@ bool	IsThreadSafe( void );
 
 inline Manager&	Manager::sHandle( void )
 {
-	
-
-	Dbg_AssertType( sp_instance, Manager );
-
+	//Dbg_AssertType( sp_instance, Manager );
+	if (!sp_instance)
+	{
+		Mem::Manager::sSetUp();
+	}
 	return *sp_instance;
 }
 

@@ -115,13 +115,13 @@ namespace Mem
 **								 Private Data								**
 *****************************************************************************/
 
-char 			Manager::s_manager_buffer[sizeof(Manager)];
+char 			Manager::s_manager_buffer[sizeof(Manager) * 2];
 char 			Manager::s_region_buffer[sizeof(Region)];
 char 			Manager::s_script_region_buffer[sizeof(Region)];
 char 			Manager::s_top_heap_buffer[sizeof(Heap)];
 char 			Manager::s_bot_heap_buffer[sizeof(Heap)];
 char 			Manager::s_debug_heap_buffer[sizeof(Heap)];
-Manager*		Manager::sp_instance = NULL;
+Manager*		sp_instance = NULL;
 #ifdef __PLAT_NGPS__
 static	int		s_context_semaphore;
 #endif
@@ -164,8 +164,11 @@ Manager::Manager( void )
 	_std_mem_end	= _mem_end;
 #	elif defined ( __PLAT_WN32__ )
 	// Nasty hack for WN32 for now - just grab 38mb of main memory via a malloc.
-	_mem_start	= (char *)malloc( 38 * 1024 * 1024 );
-	_mem_end	= _mem_start + ( 38 * 1024 * 1024 );
+	//_mem_start	= (char *)malloc( 38 * 1024 * 1024 );
+	//_mem_end	= _mem_start + ( 38 * 1024 * 1024 );
+	// LWSS: greatly increase this.
+	_mem_start	= (char *)malloc( 200 * 1024 * 1024 );
+	_mem_end	= _mem_start + ( 200 * 1024 * 1024 );
 	_std_mem_end = _mem_end;
 
 #	endif 
@@ -274,7 +277,6 @@ void*	Manager::New( size_t size, bool assert_on_fail, Allocator* pAlloc )
 
 	return p_ret;
 }
-
 
 // Returns the amount of memory avaialbe in the current context
 // currently this is only valid for Heaps
@@ -991,12 +993,15 @@ void Manager::DeleteCutsceneHeap()
 
 void Manager::InitDebugHeap()
 {
-	#ifdef	__PLAT_NGPS__
+	// lwss: re-enable
+//#ifdef	__PLAT_NGPS__
 	// The Debug heap is allocated directly from debug memory (>32MB on PS2)
 	// as such, it should only ever be used on the TOOL (T10K) debug stations, or equivalents on other platforms 
-	mp_debug_region 	= new ((void*)s_debug_region_buffer) Region( nAlignUp( _debug_heap_start ), nAlignDown( _debug_heap_start+DEBUG_HEAP_SIZE ) );
-	mp_debug_heap = CreateHeap( mp_debug_region, Mem::Allocator::vBOTTOM_UP, "debug" );
-	#endif
+	//mp_debug_region 	= new ((void*)s_debug_region_buffer) Region( nAlignUp( _debug_heap_start ), nAlignDown( _debug_heap_start+DEBUG_HEAP_SIZE ) );
+	_debug_heap_start = new char[DEBUG_HEAP_SIZE + 1]; // lwss hack
+	mp_debug_region 	= new Region( nAlignUp( _debug_heap_start ), nAlignDown( _debug_heap_start+DEBUG_HEAP_SIZE ) );
+	mp_debug_heap = CreateHeap(mp_debug_region, Mem::Allocator::vBOTTOM_UP, "debug");
+//#endif
 }
 
 void Manager::InitSkaterHeaps(int players)
@@ -1491,12 +1496,15 @@ void	PushMemProfile(char *p_type)
 
 
 		// just copy over the memory containing the name												  
-		char *p = &(sp_current_profile->m_type[0]);
+		char *p = &sp_current_profile->m_type[0];
 		char *q = (char*) p_type;
-		for (int i=0;i<MAX_PROFILE_NAME;i++)
+		int len = min(MAX_PROFILE_NAME - 1, strlen(q)); // lwss: change size bound here. strings not guaranteed to be alloc'd to 64
+		//for (int i=0;i<MAX_PROFILE_NAME;i++)
+		for (int i=0;i<len;i++)
 		{
 			*p++ = *q++;			
 		}
+		*p++ = '\0';
 		// and set the counters to zero
 		sp_current_profile->m_blocks = 0;
 		sp_current_profile->m_size = 0;

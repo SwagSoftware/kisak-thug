@@ -104,11 +104,11 @@ CBaseComponent::EMemberFunctionResult CSkaterSoundComponent::CallMemberFunction(
 			{
 				case GROUND:
 				case AIR:
-					PlayJumpSound(GetObject()->GetVel().Length() / m_max_speed);
+					PlayJumpSound(GetObj()->GetVel().Length() / m_max_speed);
 					break;
 					 
 				case RAIL:
-					PlayJumpSound(GetObject()->GetVel().Length() / m_max_speed);
+					PlayJumpSound(GetObj()->GetVel().Length() / m_max_speed);
 				
 				default:
 					break;
@@ -123,11 +123,11 @@ CBaseComponent::EMemberFunctionResult CSkaterSoundComponent::CallMemberFunction(
 			{
 				case GROUND:
 				case AIR:
-					PlayLandSound(Mth::Abs(GetObject()->GetVel()[Y]) / m_max_speed);
+					PlayLandSound(Mth::Abs(GetObj()->GetVel()[Y]) / m_max_speed);
 					break;
 					
 				case RAIL:
-					PlayLandSound(GetObject()->GetVel().Length() / m_max_speed);
+					PlayLandSound(GetObj()->GetVel().Length() / m_max_speed);
 					break;
 					
 				default:
@@ -139,14 +139,14 @@ CBaseComponent::EMemberFunctionResult CSkaterSoundComponent::CallMemberFunction(
 		// @script | PlayBonkSound |
 		case CRCC(0x0069e457, "PlayBonkSound"):
 		{
-			PlayBonkSound(GetObject()->GetVel().Length() / m_max_speed);
+			PlayBonkSound(GetObj()->GetVel().Length() / m_max_speed);
 			break;
 		}
 		
         // @script | PlayCessSound | 
 		case CRCC(0x6f5e9124, "PlayCessSound"):
 		{
-			PlayCessSound(GetObject()->GetVel().Length() / m_max_speed);
+			PlayCessSound(GetObj()->GetVel().Length() / m_max_speed);
 			break;
 		}
 
@@ -216,7 +216,7 @@ void CSkaterSoundComponent::PlayLandSound ( float speed_fraction, ETerrainType t
 	}
 	#endif
 	
-	Env::CTerrainManager::sPlaySound(table, terrain, GetObject()->GetPos(), speed_fraction * m_vol_mult, speed_fraction, speed_fraction);
+	Env::CTerrainManager::sPlaySound(table, terrain, GetObj()->GetPos(), speed_fraction * m_vol_mult, speed_fraction, speed_fraction);
 }
    
 /******************************************************************/
@@ -275,7 +275,7 @@ void CSkaterSoundComponent::PlayJumpSound ( float speed_fraction, ETerrainType t
 	}
 	#endif
 
-	Env::CTerrainManager::sPlaySound(table, terrain, GetObject()->GetPos(), speed_fraction * m_vol_mult, speed_fraction, speed_fraction);
+	Env::CTerrainManager::sPlaySound(table, terrain, GetObj()->GetPos(), speed_fraction * m_vol_mult, speed_fraction, speed_fraction);
 }
    
 /******************************************************************/
@@ -304,7 +304,7 @@ void CSkaterSoundComponent::PlayBonkSound ( float speed_fraction, ETerrainType t
 	}
 	#endif
 
-	Env::CTerrainManager::sPlaySound(Env::vTABLE_BONK, terrain, GetObject()->GetPos(), speed_fraction * m_vol_mult, speed_fraction, speed_fraction);
+	Env::CTerrainManager::sPlaySound(Env::vTABLE_BONK, terrain, GetObj()->GetPos(), speed_fraction * m_vol_mult, speed_fraction, speed_fraction);
 }
    
 /******************************************************************/
@@ -333,7 +333,7 @@ void CSkaterSoundComponent::PlayCessSound ( float speed_fraction, ETerrainType t
 	}
 	#endif
 
-	Env::CTerrainManager::sPlaySound(Env::vTABLE_CESS, terrain, GetObject()->GetPos(), speed_fraction * m_vol_mult, speed_fraction, speed_fraction);
+	Env::CTerrainManager::sPlaySound(Env::vTABLE_CESS, terrain, GetObj()->GetPos(), speed_fraction * m_vol_mult, speed_fraction, speed_fraction);
 }
 
 /******************************************************************/

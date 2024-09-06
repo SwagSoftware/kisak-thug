@@ -208,7 +208,7 @@ void CMotionComponent::Update()
 	if ( m_movingobj_status & MOVINGOBJ_STATUS_JUMPING )
 	{
 		DoJump();
-		GetObject()->m_pos = m_jump_pos;
+		GetObj()->m_pos = m_jump_pos;
 		// m_pos[Y]=m_jump_y;
 	}
 
@@ -216,9 +216,9 @@ void CMotionComponent::Update()
 	// TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
 	// BIT OF A PATCH, as the skater has a motion component
 	// but we don't want to set his display matrix directly here.
-	if (GetObject()->GetID() > 15)
+	if (GetObj()->GetID() > 15)
 	{
-		GetObject()->SetDisplayMatrix(GetObject()->GetMatrix());
+		GetObj()->SetDisplayMatrix(GetObj()->GetMatrix());
 	}
 	
 }
@@ -294,9 +294,9 @@ static void s_get_acceleration( Script::CStruct* pParams, float* pAccel )
 
 void CMotionComponent::UndoHover( void )
 {   
-	Mth::Vector pos=GetObject()->GetPos();
+	Mth::Vector pos=GetObj()->GetPos();
 	pos[Y]=m_y_before_applying_hover;
-	GetObject()->SetPos(pos);
+	GetObj()->SetPos(pos);
 }
 
 /******************************************************************/
@@ -308,10 +308,10 @@ void CMotionComponent::ApplyHover( void )
 {   
 	uint32 t=Tmr::ElapsedTime(0)%m_hover_period;
 	m_hover_offset=m_hover_amp*sinf(t*2*3.141592653f/m_hover_period);
-	Mth::Vector pos=GetObject()->GetPos();
+	Mth::Vector pos=GetObj()->GetPos();
 	m_y_before_applying_hover=pos[Y];
 	pos[Y]+=m_hover_offset;
-	GetObject()->SetPos(pos);
+	GetObj()->SetPos(pos);
 }
 
 /******************************************************************/
@@ -338,7 +338,7 @@ bool CMotionComponent::IsHovering( void )
 void CMotionComponent::GetHoverOrgPos( Mth::Vector* p_orgPos )
 {
 	Dbg_MsgAssert(p_orgPos,("NULL p_orgPos"));
-	Mth::Vector pos=GetObject()->GetPos();
+	Mth::Vector pos=GetObj()->GetPos();
 	p_orgPos->Set(pos[X],m_y_before_applying_hover,pos[Z]);
 }
 
@@ -363,7 +363,7 @@ CBaseComponent::EMemberFunctionResult CMotionComponent::CallMemberFunction( uint
 
         // @script | Obj_StorePos | stores the current position
 		case 0x8e52abea: 		// Obj_StorePos
-			m_stored_pos = GetObject()->GetPos();
+			m_stored_pos = GetObj()->GetPos();
 			break;
 
         // @script | Obj_StoreNode | stores the next waypoint in the path
@@ -508,7 +508,7 @@ CBaseComponent::EMemberFunctionResult CMotionComponent::CallMemberFunction( uint
 			else
 			{
 				m_movingobj_flags |= MOVINGOBJ_FLAG_CONSTANT_HEIGHT;
-				pParams->GetFloat( NONAME, &GetObject()->m_pos[ Y ] );
+				pParams->GetFloat( NONAME, &GetObj()->m_pos[ Y ] );
 			}
 			break;
 
@@ -574,7 +574,7 @@ CBaseComponent::EMemberFunctionResult CMotionComponent::CallMemberFunction( uint
 				{
 					enterTurnDist = FEET_TO_INCHES( enterTurnDist );
 				}
-				EnsurePathobExists( GetObject() );
+				EnsurePathobExists( GetObj() );
 				GetPathOb()->m_enter_turn_dist = enterTurnDist;
 			}
 			break;
@@ -741,7 +741,7 @@ CBaseComponent::EMemberFunctionResult CMotionComponent::CallMemberFunction( uint
 		{
 			float dist=0.0f;
 			pParams->GetFloat(CRCD(0x7e832f08,"Dist"),&dist);
-			Move_Init( pParams, pScript, GetObject()->GetPos() + GetObject()->m_matrix[Z] * dist );	 
+			Move_Init( pParams, pScript, GetObj()->GetPos() + GetObj()->m_matrix[Z] * dist );	 
 			break;
 		}
 
@@ -754,7 +754,7 @@ CBaseComponent::EMemberFunctionResult CMotionComponent::CallMemberFunction( uint
 		{
 			float dist=0.0f;
 			pParams->GetFloat(CRCD(0x7e832f08,"Dist"),&dist);
-			Move_Init( pParams, pScript, GetObject()->GetPos() + GetObject()->m_matrix[X] * dist );	 
+			Move_Init( pParams, pScript, GetObj()->GetPos() + GetObj()->m_matrix[X] * dist );	 
 			break;
 		}
 			
@@ -858,11 +858,11 @@ CBaseComponent::EMemberFunctionResult CMotionComponent::CallMemberFunction( uint
 			Script::CStruct* p_node_data = SkateScript::GetNode(node_index);
 			
 			SkateScript::GetPosition(p_node_data, &node_pos);
-			GetObject()->SetPos( node_pos );
+			GetObj()->SetPos( node_pos );
 			this->OrientToNode(p_node_data);
 		
 			// refresh the model with the new pos/orientation
-			Obj::CModelComponent* pModelComponent = (Obj::CModelComponent*)GetModelComponentFromObject( GetObject() );
+			Obj::CModelComponent* pModelComponent = (Obj::CModelComponent*)GetModelComponentFromObject( GetObj() );
 			pModelComponent->Update();
 		}
 		break;
@@ -896,7 +896,7 @@ CBaseComponent::EMemberFunctionResult CMotionComponent::CallMemberFunction( uint
 					m_hover_period = 1;
 				}
 				
-				m_y_before_applying_hover=GetObject()->GetPos()[Y];
+				m_y_before_applying_hover=GetObj()->GetPos()[Y];
 				m_movingobj_status |= MOVINGOBJ_STATUS_HOVERING;
 			}	
 			break;
@@ -913,9 +913,9 @@ CBaseComponent::EMemberFunctionResult CMotionComponent::CallMemberFunction( uint
 			{
 				speed=m_moveto_speed;
 			}
-			else if ( GetLockObjComponentFromObject(GetObject()) && GetLockObjComponentFromObject(GetObject())->IsLockEnabled() )
+			else if ( GetLockObjComponentFromObject(GetObj()) && GetLockObjComponentFromObject(GetObj())->IsLockEnabled() )
 			{
-				Mth::Vector d=GetObject()->m_pos - GetObject()->m_old_pos;
+				Mth::Vector d=GetObj()->m_pos - GetObj()->m_old_pos;
 				float m_time = Tmr::FrameLength();	 	// dodgy
 				if (m_time)
 				{
@@ -924,7 +924,7 @@ CBaseComponent::EMemberFunctionResult CMotionComponent::CallMemberFunction( uint
 			}
 			else
 			{
-				speed=GetObject()->m_vel.Length();
+				speed=GetObj()->m_vel.Length();
 			}
 			
 			// speed is now in inches per sec.
@@ -966,7 +966,7 @@ CBaseComponent::EMemberFunctionResult CMotionComponent::CallMemberFunction( uint
 			m_jump_gravity = -360.0f;
 			pParams->GetFloat( CRCD(0xa5e2da58,"Gravity"), &m_jump_gravity );
 
-			m_jump_start_pos = GetObject()->m_pos;
+			m_jump_start_pos = GetObj()->m_pos;
 
 			m_jump_col_dist_above = 6.0f;
 			pParams->GetFloat( CRCD( 0xecc2c699, "col_dist_above" ), &m_jump_col_dist_above, Script::NO_ASSERT );
@@ -982,7 +982,7 @@ CBaseComponent::EMemberFunctionResult CMotionComponent::CallMemberFunction( uint
 			else if ( pParams->ContainsFlag( CRCD( 0xfecffe49, "use_current_heading" ) ) )
 			{
 				// m_jump_heading = Mth::Vector(0, 0, 1);
-				m_jump_heading = GetObject()->GetDisplayMatrix()[Z];
+				m_jump_heading = GetObj()->GetDisplayMatrix()[Z];
 				m_jump_use_heading = true;
 				m_jump_speed *= m_jump_heading[Y];
 				m_jump_heading[Y] = 0.0f;				
@@ -1168,14 +1168,14 @@ void CMotionComponent::InitPath( int nodeNumber )
 {
 	if (mp_path_object_tracker)
 	{
-		mp_path_object_tracker->StopTrackingObject( GetObject() );
+		mp_path_object_tracker->StopTrackingObject( GetObj() );
 	}	
 
-	mp_path_object_tracker=Obj::CPathMan::Instance()->TrackObject( GetObject(), nodeNumber );	
+	mp_path_object_tracker=Obj::CPathMan::Instance()->TrackObject( GetObj(), nodeNumber );	
 	// Note: mp_path_object_tracker could be NULL
 	
-	EnsurePathobExists( GetObject() );
-	GetPathOb()->NewPath( nodeNumber, GetObject()->GetPos() );
+	EnsurePathobExists( GetObj() );
+	GetPathOb()->NewPath( nodeNumber, GetObj()->GetPos() );
 }
 
 /******************************************************************/
@@ -1228,7 +1228,7 @@ void CMotionComponent::HitWaypoint( int nodeIndex )
 		Script::CStruct* pScriptParams = NULL;
 		pNodeData->GetStructure( CRCD(0x7031f10c,"Params"), &pScriptParams );
 #ifdef __NOPT_ASSERT__
-		Script::CScript* p_script=GetObject()->SpawnScriptPlease( scriptChecksum, pScriptParams );
+		Script::CScript* p_script=GetObj()->SpawnScriptPlease( scriptChecksum, pScriptParams );
 		p_script->SetCommentString("Created by CMotionComponent::HitWaypoint");
 #else
 		GetObject()->SpawnScriptPlease( scriptChecksum, pScriptParams );
@@ -1240,7 +1240,7 @@ void CMotionComponent::HitWaypoint( int nodeIndex )
 	{
 		Script::CStruct* pScriptParams = NULL;
 		pNodeData->GetStructure( CRCD(0x7031f10c,"Params"), &pScriptParams );
-		GetObject()->SwitchScript( scriptChecksum, pScriptParams );
+		GetObj()->SwitchScript( scriptChecksum, pScriptParams );
 		return;
 	}
 }
@@ -1282,7 +1282,7 @@ bool CMotionComponent::LookAt_Init( Script::CStruct* pParams, const Mth::Vector&
 	{
 		if ( lockAxis & ( 1 << i ) )
 		{
-			if ( SetUpLookAtPos( lookAtPos, GetObject()->GetPos(), i == Z ? Y : Z, i, threshold ) )
+			if ( SetUpLookAtPos( lookAtPos, GetObj()->GetPos(), i == Z ? Y : Z, i, threshold ) )
 			{
 				if ( time )
 				{
@@ -1321,7 +1321,7 @@ void CMotionComponent::QuatRot_Setup( Script::CStruct* pParams, const Mth::Matri
 	}
 
     Mth::Matrix tempMatrix = rot;
-	mp_slerp->setMatrices( &GetObject()->GetMatrix(), &tempMatrix );
+	mp_slerp->setMatrices( &GetObj()->GetMatrix(), &tempMatrix );
 	
 	m_rot_time = 0.0f;
 	m_rot_time_target = 0.0f;
@@ -1345,7 +1345,7 @@ void CMotionComponent::QuatRot_Init( Script::CStruct* pParams )
 			rot.ConvertToMaxCoords( );
 		}
 		rot.DegreesToRadians( );
-		Mth::Matrix temp = GetObject()->GetMatrix();
+		Mth::Matrix temp = GetObj()->GetMatrix();
 		temp.RotateLocal( rot );
 		QuatRot_Setup( pParams, temp );
 	}
@@ -1372,7 +1372,7 @@ bool CMotionComponent::SetUpLookAtPos( const Mth::Vector& lookToPos, const Mth::
 	Mth::Vector pathHeading = lookToPos - currentPos;
 	
 	m_cur_turn_ang[ rotAxis ] = 0.0f;
-	m_turn_ang_target[ rotAxis ] = Mth::GetAngle( GetObject()->GetMatrix(), pathHeading, headingAxis, rotAxis );
+	m_turn_ang_target[ rotAxis ] = Mth::GetAngle( GetObj()->GetMatrix(), pathHeading, headingAxis, rotAxis );
 	if ( fabs(m_turn_ang_target[ rotAxis ]) > threshold )
 	{
 		m_movingobj_status |= ( MOVINGOBJ_STATUS_ROTX << rotAxis );
@@ -1570,7 +1570,7 @@ void CMotionComponent::LookAtPos_Init( Script::CStruct* pParams, bool absolute )
 	}
 	if ( !absolute )
 	{
-		vec += GetObject()->GetPos();
+		vec += GetObj()->GetPos();
 	}
 	LookAt_Init( pParams, vec );
 }
@@ -1585,18 +1585,18 @@ void CMotionComponent::Rot( int rotAxis, float deltaRot )
 	switch ( rotAxis )
 	{
 		case ( X ):
-			GetObject()->m_matrix.RotateXLocal( deltaRot );
-			GetObject()->m_matrix.OrthoNormalizeAbout( X );
+			GetObj()->m_matrix.RotateXLocal( deltaRot );
+			GetObj()->m_matrix.OrthoNormalizeAbout( X );
 			break;
 		
 		case ( Y ):
-			GetObject()->m_matrix.RotateYLocal( deltaRot );
-			GetObject()->m_matrix.OrthoNormalizeAbout( Y );
+			GetObj()->m_matrix.RotateYLocal( deltaRot );
+			GetObj()->m_matrix.OrthoNormalizeAbout( Y );
 			break;
 		
 		case ( Z  ):
-			GetObject()->m_matrix.RotateZLocal( deltaRot );
-			GetObject()->m_matrix.OrthoNormalizeAbout( Z );
+			GetObj()->m_matrix.RotateZLocal( deltaRot );
+			GetObj()->m_matrix.OrthoNormalizeAbout( Z );
 			break;
 		
 		default:
@@ -1612,10 +1612,10 @@ void CMotionComponent::Rot( int rotAxis, float deltaRot )
 void CMotionComponent::RotateToFacePos( const Mth::Vector pos )
 {   
 	Mth::Vector desiredHeading;
-	desiredHeading = pos - GetObject()->GetPos();
-	float deltaY = Mth::GetAngle( GetObject()->GetMatrix(), desiredHeading );
-	GetObject()->m_matrix.RotateYLocal( deltaY );
-	GetObject()->m_matrix.OrthoNormalizeAbout( Y );
+	desiredHeading = pos - GetObj()->GetPos();
+	float deltaY = Mth::GetAngle( GetObj()->GetMatrix(), desiredHeading );
+	GetObj()->m_matrix.RotateYLocal( deltaY );
+	GetObj()->m_matrix.OrthoNormalizeAbout( Y );
 }
 
 /******************************************************************/
@@ -1843,11 +1843,11 @@ bool CMotionComponent::Move_Init( Script::CStruct* pParams, Script::CScript* pSc
 	float speed;
 
 	m_moveto_pos = pos;
-	m_moveto_dist = Mth::Distance( m_moveto_pos, GetObject()->GetPos() );
+	m_moveto_dist = Mth::Distance( m_moveto_pos, GetObj()->GetPos() );
 	m_moveto_acceleration = 0.0f;
 	
 	// initialize everything:
-	m_orig_pos = GetObject()->GetPos();
+	m_orig_pos = GetObj()->GetPos();
 	m_moveto_dist_traveled = 0.0f;
 	m_movingobj_status |= MOVINGOBJ_STATUS_MOVETO;
 	// can't follow path and moveto at the same time:
@@ -1900,7 +1900,7 @@ bool CMotionComponent::Move_Init( Script::CStruct* pParams, Script::CScript* pSc
 	else
 	{
 		// instantaneous move:
-		GetObject()->SetPos(m_moveto_pos);
+		GetObj()->SetPos(m_moveto_pos);
 		m_movingobj_status &= ~MOVINGOBJ_STATUS_MOVETO;
 		
 		if ( nodeNum != -1 )
@@ -1986,7 +1986,7 @@ void CMotionComponent::MoveToPos_Init( Script::CStruct* pParams, Script::CScript
 	}
 	if ( !absolute )
 	{
-		vec += GetObject()->GetPos();
+		vec += GetObj()->GetPos();
 	}
 	Move_Init( pParams, pScript, vec );
 }
@@ -2048,7 +2048,7 @@ bool CMotionComponent::Move( void )
 	m_moveto_dist_traveled += m_time * m_moveto_speed;
 	if ( m_moveto_dist_traveled >= m_moveto_dist )
 	{
-		GetObject()->m_pos = m_moveto_pos;
+		GetObj()->m_pos = m_moveto_pos;
 		if ( m_moveto_node_num != -1 )
 		{
 			HitWaypoint( m_moveto_node_num );
@@ -2057,7 +2057,7 @@ bool CMotionComponent::Move( void )
 	}
 	Mth::Vector newPos = m_moveto_pos - m_orig_pos;
 	newPos *= ( m_moveto_dist_traveled / m_moveto_dist );
-	GetObject()->m_pos = m_orig_pos + newPos;
+	GetObj()->m_pos = m_orig_pos + newPos;
 	return false;
 }
 
@@ -2069,7 +2069,7 @@ bool CMotionComponent::Move( void )
 void CMotionComponent::OrientToNode(Script::CStruct* pNodeData)
 {
 	Mth::Vector rot;
-	GetObject()->m_matrix.Ident( );	   		// Set identity before we decided if we need to rotate or not, in case we don't.
+	GetObj()->m_matrix.Ident( );	   		// Set identity before we decided if we need to rotate or not, in case we don't.
 	SkateScript::GetAngles( pNodeData, &rot );
 	if ( rot[ X ] || rot[ Y ] || rot[ Z ] )
 	{
@@ -2078,14 +2078,14 @@ void CMotionComponent::OrientToNode(Script::CStruct* pNodeData)
 		//		the exporter to do Z,X,Y
 
 		//m_matrix.RotateZ( rot[ Z ] );
-		GetObject()->GetMatrix().RotateX( rot[ X ] );
-		GetObject()->GetMatrix().RotateY( rot[ Y ] );
-		GetObject()->GetMatrix().RotateZ( rot[ Z ] );
+		GetObj()->GetMatrix().RotateX( rot[ X ] );
+		GetObj()->GetMatrix().RotateY( rot[ Y ] );
+		GetObj()->GetMatrix().RotateZ( rot[ Z ] );
 	}	
 	//printf ("OrientToNode %d, (%f,%f,%f)\n",nodeNum,rot[X],rot[Y],rot[Z]);
 	
 	// sync up the display matrix to the physics matrix
-	GetObject()->GetDisplayMatrix() = GetObject()->m_matrix;
+	GetObj()->GetDisplayMatrix() = GetObj()->m_matrix;
 }
 
 /******************************************************************/
@@ -2108,7 +2108,7 @@ void CMotionComponent::QuatRot( void )
 	}
 	
 	Dbg_MsgAssert( mp_slerp,( "Missing mp_slerp..." ));
-    mp_slerp->getMatrix( &GetObject()->m_matrix, percent );
+    mp_slerp->getMatrix( &GetObj()->m_matrix, percent );
 }
 
 /******************************************************************/
@@ -2119,13 +2119,13 @@ void CMotionComponent::QuatRot( void )
 void CMotionComponent::FollowPath( void )
 {   
 	// temp hack to separate new peds from old path ob stuff
-	Obj::CPedLogicComponent* pPedLogicComp = GetPedLogicComponentFromObject( GetObject() );
+	Obj::CPedLogicComponent* pPedLogicComp = GetPedLogicComponentFromObject( GetObj() );
 	if ( pPedLogicComp )
 		return;
 
 	Dbg_MsgAssert( GetPathOb(),( "Shouldn't be in FOLLOW_WAYPOINTS state without pathob." ));
 
-    Mth::Vector movement = -GetObject()->GetPos();				
+    Mth::Vector movement = -GetObj()->GetPos();				
 				
 	// change velocity:
 	DoPathPhysics();
@@ -2145,7 +2145,7 @@ void CMotionComponent::FollowPath( void )
 		//if ( GetPathOb()->TraversePath( is_being_skitched, m_vel_z * m_time, 
 		//	( m_movingobj_flags & MOVINGOBJ_FLAG_INDEPENDENT_HEADING ) ? NULL : &m_matrix[ Z ] ) )
 		if ( GetPathOb()->TraversePath( m_vel_z * m_time, 
-			( m_movingobj_flags & MOVINGOBJ_FLAG_INDEPENDENT_HEADING ) ? NULL : &GetObject()->m_matrix[ Z ] ) )
+			( m_movingobj_flags & MOVINGOBJ_FLAG_INDEPENDENT_HEADING ) ? NULL : &GetObj()->m_matrix[ Z ] ) )
 		{
 			// path is done... turn off flag:
 			m_movingobj_status &= ~MOVINGOBJ_STATUS_ON_PATH;
@@ -2155,13 +2155,13 @@ void CMotionComponent::FollowPath( void )
 		if ( !( m_movingobj_flags & MOVINGOBJ_FLAG_INDEPENDENT_HEADING ) )
 		{
 			// set up the matrix according to the nav point heading...
-			GetPathOb()->SetHeading( &GetObject()->m_matrix[ Z ] );
+			GetPathOb()->SetHeading( &GetObj()->m_matrix[ Z ] );
 			if ( m_movingobj_flags & MOVINGOBJ_FLAG_NO_PITCH_PLEASE )
 			{
-				if ( ( GetObject()->m_matrix[ Z ] )[ Y ] )
+				if ( ( GetObj()->m_matrix[ Z ] )[ Y ] )
 				{
-					( GetObject()->m_matrix[ Z ] )[ Y ] = 0.0f;
-					GetObject()->m_matrix[ Z ].Normalize( );
+					( GetObj()->m_matrix[ Z ] )[ Y ] = 0.0f;
+					GetObj()->m_matrix[ Z ].Normalize( );
 				}
 			}
 			// this heading may be changed in a moment, when we stick
@@ -2170,37 +2170,37 @@ void CMotionComponent::FollowPath( void )
 			if ( !( m_movingobj_flags & MOVINGOBJ_FLAG_STICK_TO_GROUND ) )
 			{
 				// make sure our matrix is orthagonal:
-				GetObject()->m_matrix[ X ] = Mth::CrossProduct( GetObject()->m_matrix[ Y ], GetObject()->m_matrix[ Z ]);
-				GetObject()->m_matrix[ X ].Normalize();
+				GetObj()->m_matrix[ X ] = Mth::CrossProduct( GetObj()->m_matrix[ Y ], GetObj()->m_matrix[ Z ]);
+				GetObj()->m_matrix[ X ].Normalize();
 				// This will work for things whose Y axis is always up...
 				// May have to add flags for things that rotate along Z axis or
 				// far along X axis:
-				GetObject()->m_matrix[ Z ] = Mth::CrossProduct( GetObject()->m_matrix[ X ], GetObject()->m_matrix[ Y ] );
-				GetObject()->m_matrix[ Z ].Normalize( );
+				GetObj()->m_matrix[ Z ] = Mth::CrossProduct( GetObj()->m_matrix[ X ], GetObj()->m_matrix[ Y ] );
+				GetObj()->m_matrix[ Z ].Normalize( );
 			}
 		}
 		if ( m_movingobj_flags & MOVINGOBJ_FLAG_STICK_TO_GROUND )
 		{
 			// Just move it to the nav pos ( except for y axis ) then stick it to the ground...
-			float origY = GetObject()->m_pos[ Y ];
-			GetObject()->m_pos = GetPathOb()->m_nav_pos;
-			GetObject()->m_pos[ Y ] = origY;
+			float origY = GetObj()->m_pos[ Y ];
+			GetObj()->m_pos = GetPathOb()->m_nav_pos;
+			GetObj()->m_pos[ Y ] = origY;
 
 			StickToGround();
 		}
 		else
 		{
-			float origY = GetObject()->m_pos[ Y ];
-			GetObject()->m_pos = GetPathOb()->m_nav_pos;
+			float origY = GetObj()->m_pos[ Y ];
+			GetObj()->m_pos = GetPathOb()->m_nav_pos;
 			if ( m_movingobj_flags & MOVINGOBJ_FLAG_CONSTANT_HEIGHT )
 			{
-				GetObject()->m_pos[ Y ] = origY;
+				GetObj()->m_pos[ Y ] = origY;
 			}
 		}
 	}
 
-	movement += GetObject()->m_pos;				// actually calculate movement	
-	GetObject()->m_vel = movement / m_time; 		// calculate the velocity, so we can impart velocity in things we hit, etc
+	movement += GetObj()->m_pos;				// actually calculate movement	
+	GetObj()->m_vel = movement / m_time; 		// calculate the velocity, so we can impart velocity in things we hit, etc
 }
 
 /******************************************************************/
@@ -2357,14 +2357,14 @@ bool CMotionComponent::StickToGround()
 		Mth::Vector v0, v1;
 
 		// make sure our X vector is correct (got Z from the nav matrix...)
-		GetObject()->m_matrix[ X ] = Mth::CrossProduct( GetObject()->m_matrix[ Y ], GetObject()->m_matrix[ Z ]);
-		GetObject()->m_matrix[ X ].Normalize();
+		GetObj()->m_matrix[ X ] = Mth::CrossProduct( GetObj()->m_matrix[ Y ], GetObj()->m_matrix[ Z ]);
+		GetObj()->m_matrix[ X ].Normalize();
 
 		v0.Set( 0.0f, FEET_TO_INCHES( fabs( m_col_dist_above ) ), 0.0f );
 		v1.Set( 0.0f, -FEET_TO_INCHES( fabs( m_col_dist_below ) ), 0.0f );
 
-		v0 += GetObject()->m_pos;
-		v1 += GetObject()->m_pos;
+		v0 += GetObj()->m_pos;
+		v1 += GetObj()->m_pos;
 
 		// get disatnce to ground
 		// and snap the skater to it
@@ -2372,7 +2372,7 @@ bool CMotionComponent::StickToGround()
 		Mth::Vector collision_point;
 		if (s_do_collision_check(&v0, &v1, &collision_point, &m_last_triangle))
 		{
-			GetObject()->m_pos=collision_point;
+			GetObj()->m_pos=collision_point;
 			return true;
 		}
 		return false;	
@@ -2385,18 +2385,18 @@ bool CMotionComponent::StickToGround()
 		bool rightCollision = false;
 		CFeeler		feeler;
 
-		GetObject()->m_matrix[ Y ].Set( 0.0f, 1.0f, 0.0f );
+		GetObj()->m_matrix[ Y ].Set( 0.0f, 1.0f, 0.0f );
 		// make sure our X vector is correct (got Y and Z from the nav matrix...)
-		GetObject()->m_matrix[ X ] = Mth::CrossProduct( GetObject()->m_matrix[ Y ], GetObject()->m_matrix[ Z ]);
-		GetObject()->m_matrix[ X ].Normalize();
+		GetObj()->m_matrix[ X ] = Mth::CrossProduct( GetObj()->m_matrix[ Y ], GetObj()->m_matrix[ Z ]);
+		GetObj()->m_matrix[ X ].Normalize();
 
-		vectForward = GetObject()->m_matrix[ Z ] * FEET_TO_INCHES( 6.0f );
-		vectLeft = GetObject()->m_matrix[ X ] * FEET_TO_INCHES( 2.5f );
+		vectForward = GetObj()->m_matrix[ Z ] * FEET_TO_INCHES( 6.0f );
+		vectLeft = GetObj()->m_matrix[ X ] * FEET_TO_INCHES( 2.5f );
 
-		GetObject()->m_pos -= vectForward;
-		GetObject()->m_pos += vectLeft;
+		GetObj()->m_pos -= vectForward;
+		GetObj()->m_pos += vectLeft;
 
-		v0 = v1 = GetObject()->m_pos;
+		v0 = v1 = GetObj()->m_pos;
 		v0[ Y ] += FEET_TO_INCHES( m_col_dist_above );
 		v1[ Y ] -= FEET_TO_INCHES( m_col_dist_below );
 
@@ -2406,9 +2406,9 @@ bool CMotionComponent::StickToGround()
 			leftCollision = true;
 		}
 		
-		GetObject()->m_pos -= vectLeft * 2;
+		GetObj()->m_pos -= vectLeft * 2;
 
-		v0 = v1 = GetObject()->m_pos;
+		v0 = v1 = GetObj()->m_pos;
 		v0[ Y ] += FEET_TO_INCHES( m_col_dist_above );
 		v1[ Y ] -= FEET_TO_INCHES( m_col_dist_below );
 
@@ -2418,29 +2418,29 @@ bool CMotionComponent::StickToGround()
 			rightCollision = true;
 			if ( leftCollision )
 			{
-				GetObject()->m_matrix[ X ] = leftCollidePoint - rightCollidePoint;
-				GetObject()->m_matrix[ X ].Normalize( );
+				GetObj()->m_matrix[ X ] = leftCollidePoint - rightCollidePoint;
+				GetObj()->m_matrix[ X ].Normalize( );
 			}
 		}
 		
-		GetObject()->m_pos += vectForward * 2;
-		GetObject()->m_pos += vectLeft;
+		GetObj()->m_pos += vectForward * 2;
+		GetObj()->m_pos += vectLeft;
 
-		v0 = v1 = GetObject()->m_pos;
+		v0 = v1 = GetObj()->m_pos;
 		v0[ Y ] += FEET_TO_INCHES( m_col_dist_above );
 		v1[ Y ] -= FEET_TO_INCHES( m_col_dist_below );
 
-		GetObject()->m_pos -= vectForward;
+		GetObj()->m_pos -= vectForward;
 
 		Mth::Vector mid_front_collide_point;
 		if (s_do_collision_check(&v0, &v1, &mid_front_collide_point, &m_car_mid_front_last_triangle))
 		{
 			if ( rightCollision && leftCollision )
 			{
-				GetObject()->m_pos[ Y ] = leftCollidePoint[ Y ] + rightCollidePoint[ Y ];
-				GetObject()->m_pos[ Y ] /= 2;
-				GetObject()->m_pos[ Y ] += mid_front_collide_point.GetY();
-				GetObject()->m_pos[ Y ] /= 2;
+				GetObj()->m_pos[ Y ] = leftCollidePoint[ Y ] + rightCollidePoint[ Y ];
+				GetObj()->m_pos[ Y ] /= 2;
+				GetObj()->m_pos[ Y ] += mid_front_collide_point.GetY();
+				GetObj()->m_pos[ Y ] /= 2;
 
 				Mth::Vector heading;
 
@@ -2450,11 +2450,11 @@ bool CMotionComponent::StickToGround()
 				heading *= -1;
 				heading.Normalize( );
 
-				GetObject()->m_matrix[ Z ] += heading;
-				GetObject()->m_matrix[ Z ] /= 2;
+				GetObj()->m_matrix[ Z ] += heading;
+				GetObj()->m_matrix[ Z ] /= 2;
 
-				GetObject()->m_matrix[ Y ] = Mth::CrossProduct( GetObject()->m_matrix[ Z ], GetObject()->m_matrix[ X ] );
-				GetObject()->m_matrix[ Y ].Normalize( );
+				GetObj()->m_matrix[ Y ] = Mth::CrossProduct( GetObj()->m_matrix[ Z ], GetObj()->m_matrix[ X ] );
+				GetObj()->m_matrix[ Y ].Normalize( );
 
 				return true;
 			}
@@ -2558,9 +2558,9 @@ CCompositeObject* CMotionComponent::GetNextObjectOnPath( float range )
 			{
 				CCompositeObject* p_ob=pp_object_list[i].Convert();
 	
-				if (p_ob!=GetObject() && 
-					Mth::DotProduct(GetObject()->m_matrix[Z],p_ob->GetMatrix()[Z]) >= 0.0f &&
-					Mth::DotProduct(GetObject()->m_matrix[Z],p_ob->GetPos()-GetObject()->GetPos()) >= 0.0f
+				if (p_ob!=GetObj() && 
+					Mth::DotProduct(GetObj()->m_matrix[Z],p_ob->GetMatrix()[Z]) >= 0.0f &&
+					Mth::DotProduct(GetObj()->m_matrix[Z],p_ob->GetPos()-GetObj()->GetPos()) >= 0.0f
 					)
 				{
 					if (GetMotionComponentFromObject(p_ob)->GetDestinationPathNode()==GetDestinationPathNode() &&
@@ -2572,7 +2572,7 @@ CCompositeObject* CMotionComponent::GetNextObjectOnPath( float range )
 					}
 					else
 					{
-						float d=Mth::Distance( GetObject()->GetPos(), p_ob->GetPos());
+						float d=Mth::Distance( GetObj()->GetPos(), p_ob->GetPos());
 						if( d <= range )
 						{
 							if( !p_closest_ob || d < min_dist )
@@ -2601,11 +2601,11 @@ void CMotionComponent::FollowLeader( void )
 	
 	mp_follow_ob->GetNewPathPointFromObjectBeingFollowed();
 	
-	float old_y = GetObject()->m_pos[Y];
-	mp_follow_ob->CalculatePositionAndOrientation(&GetObject()->m_pos,&GetObject()->m_matrix);
+	float old_y = GetObj()->m_pos[Y];
+	mp_follow_ob->CalculatePositionAndOrientation(&GetObj()->m_pos,&GetObj()->m_matrix);
 	if (m_leave_y_unaffected_when_following_leader)
 	{
-		GetObject()->m_pos[Y]=old_y;
+		GetObj()->m_pos[Y]=old_y;
 	}	
 }
 
@@ -2635,7 +2635,7 @@ void CMotionComponent::FollowLeader_Init( Script::CStruct* pParams )
 	m_movingobj_status &= ~MOVINGOBJ_STATUS_MOVETO;
 
 	//	GetMotionComponent()->m_movingobj_status &= ~MOVINGOBJ_STATUS_LOCKED_TO_OBJECT;
-	Obj::CLockObjComponent* pLockObjComponent = GetLockObjComponentFromObject(GetObject());
+	Obj::CLockObjComponent* pLockObjComponent = GetLockObjComponentFromObject(GetObj());
 	pLockObjComponent->EnableLock( false );
 
 	if ( !mp_follow_ob )
@@ -2671,12 +2671,12 @@ void CMotionComponent::DoJump( void )
 	// Gfx::AddDebugLine( m_jump_start_pos, m_pos, MAKE_RGB( 128, 0, 0 ), MAKE_RGB( 128, 0, 0 ), 1 );
 	float distance = m_jump_speed * m_time + ( m_jump_gravity * 0.5f * m_time * m_time );
 	// printf("m_jump_speed = %f, m_jump_gravity = %f\n, m_jump_original_speed = %f, m_jump_heading = (%f, %f, %f)\n", m_jump_speed, m_jump_gravity, m_jump_original_speed, m_jump_heading[X], m_jump_heading[Y], m_jump_heading[Z]);
-	new_pos = GetObject()->m_pos;
+	new_pos = GetObj()->m_pos;
 	if ( m_jump_use_heading )
 	{		
 		// first figure the pos if we stayed on our original heading
 		new_pos += ( m_jump_heading * m_jump_original_speed * m_time );
-		new_pos[Y] = GetObject()->m_pos[Y];
+		new_pos[Y] = GetObj()->m_pos[Y];
 	}
 	new_pos[Y] += distance;
 
@@ -2702,7 +2702,7 @@ void CMotionComponent::DoJump( void )
 			if ( feeler.GetCollision() )
 			{
 				m_movingobj_status &= ~MOVINGOBJ_STATUS_JUMPING;
-				if ( m_jump_start_pos[X] != GetObject()->m_pos[X] || m_jump_start_pos[Z] != GetObject()->m_pos[Z] )
+				if ( m_jump_start_pos[X] != GetObj()->m_pos[X] || m_jump_start_pos[Z] != GetObj()->m_pos[Z] )
 				{
 					// printf("StickToGround %s\n",Script::FindChecksumName(GetID()));
 					// GetMotionComponent()->StickToGround();

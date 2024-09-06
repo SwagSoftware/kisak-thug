@@ -120,10 +120,15 @@ namespace Spt
 /*                                                                */
 /******************************************************************/
 
-#if (defined ( ZERO_CLASS_MEM ) && !defined ( __PLAT_WN32__ ))
+//#if (defined ( ZERO_CLASS_MEM ) && !defined ( __PLAT_WN32__ ))
 
 void* 	Class::operator new( size_t size )
 {
+#ifdef KISAK_THUG_ALLOC
+	void* mem = malloc(size);
+	memset(mem, 0x00, size);
+	return mem;
+#endif
 	void*		p_ret = Mem::Manager::sHandle().New( size );
 
 	if ( p_ret )
@@ -142,6 +147,11 @@ void* 	Class::operator new( size_t size )
 
 void* 	Class::operator new[] ( size_t size )
 {
+#ifdef KISAK_THUG_ALLOC
+	void* mem = malloc(size);
+	memset(mem, 0x00, size);
+	return mem;
+#endif
 	void*		p_ret = Mem::Manager::sHandle().New( size );
 
 	if ( p_ret )
@@ -161,6 +171,11 @@ void* 	Class::operator new[] ( size_t size )
 
 void* 	Class::operator new( size_t size, bool assert_on_fail )
 {
+#ifdef KISAK_THUG_ALLOC
+	void* mem = malloc(size);
+	memset(mem, 0x00, size);
+	return mem;
+#endif
 	void*		p_ret = Mem::Manager::sHandle().New( size, assert_on_fail );
 
 	if ( p_ret )
@@ -180,6 +195,11 @@ void* 	Class::operator new( size_t size, bool assert_on_fail )
 
 void* 	Class::operator new[] ( size_t size, bool assert_on_fail )
 {
+#ifdef KISAK_THUG_ALLOC
+	void* mem = malloc(size);
+	memset(mem, 0x00, size);
+	return mem;
+#endif
 	void*	p_ret = Mem::Manager::sHandle().New( size, assert_on_fail );
 
 	if ( p_ret )
@@ -199,6 +219,11 @@ void* 	Class::operator new[] ( size_t size, bool assert_on_fail )
 
 void*	Class::operator new( size_t size, Mem::Allocator* pAlloc, bool assert_on_fail )
 {
+#ifdef KISAK_THUG_ALLOC
+	void* mem = malloc(size);
+	memset(mem, 0x00, size);
+	return mem;
+#endif
 	void*	p_ret = Mem::Manager::sHandle().New( size, assert_on_fail, pAlloc );
 
 	if ( p_ret )
@@ -218,6 +243,11 @@ void*	Class::operator new( size_t size, Mem::Allocator* pAlloc, bool assert_on_f
 
 void*	Class::operator new[]( size_t size, Mem::Allocator* pAlloc, bool assert_on_fail )
 {       
+#ifdef KISAK_THUG_ALLOC
+	void* mem = malloc(size);
+	memset(mem, 0x00, size);
+	return mem;
+#endif
 	void*	p_ret = Mem::Manager::sHandle().New( size, assert_on_fail, pAlloc );
 
 	if ( p_ret )
@@ -267,6 +297,6 @@ void* 	Class::operator new[]( size_t size, void* pLocation )
 /*                                                                */
 /*                                                                */
 /******************************************************************/
-#endif
+//#endif
 } // namespace Spt
 

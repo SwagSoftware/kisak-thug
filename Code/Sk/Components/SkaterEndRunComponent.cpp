@@ -18,7 +18,7 @@
 #include <gel/scripting/symboltable.h>
 #include <gel/objtrack.h>
 
-#define	FLAGEXCEPTION(X) GetObject()->SelfEvent(X)
+#define	FLAGEXCEPTION(X) GetObj()->SelfEvent(X)
 
 namespace Obj
 {
@@ -84,7 +84,7 @@ void CSkaterEndRunComponent::Update()
 		return;
 	}
 	
-	if( static_cast< CSkater* >(GetObject())->IsLocalClient())
+	if( static_cast< CSkater* >(GetObj())->IsLocalClient())
 	{
 		if (m_flags.Test(FINISHED_END_OF_RUN) && !GameNet::Manager::Instance()->HaveSentEndOfRunMessage())
 		{
@@ -174,9 +174,9 @@ void CSkaterEndRunComponent::EndRun ( bool force_end )
 		{
 			//DumpUnwindStack( 20, 0 );
 			m_flags.Set(IS_ENDING_RUN);
-			if (static_cast< CSkater* >(GetObject())->IsLocalClient())
+			if (static_cast< CSkater* >(GetObj())->IsLocalClient())
 			{
-				Script::RunScript(CRCD(0xf4ce3e97, "ForceEndOfRun"), NULL, GetObject());
+				Script::RunScript(CRCD(0xf4ce3e97, "ForceEndOfRun"), NULL, GetObj());
 			}
 		}
 	}

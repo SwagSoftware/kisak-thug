@@ -70,7 +70,7 @@ CSkaterPhysicsControlComponent::~CSkaterPhysicsControlComponent()
 
 void CSkaterPhysicsControlComponent::InitFromStructure( Script::CStruct* pParams )
 {
-	Dbg_MsgAssert(GetObject()->GetType() == SKATE_TYPE_SKATER, ("CSkaterPhysicsControlComponent added to non-skater composite object"));
+	Dbg_MsgAssert(GetObj()->GetType() == SKATE_TYPE_SKATER, ("CSkaterPhysicsControlComponent added to non-skater composite object"));
 	
 	m_physics_suspended = false;
 }
@@ -83,8 +83,8 @@ void CSkaterPhysicsControlComponent::InitFromStructure( Script::CStruct* pParams
 
 void CSkaterPhysicsControlComponent::Finalize(  )
 {
-	mp_core_physics_component = GetSkaterCorePhysicsComponentFromObject(GetObject());
-	mp_state_component = GetSkaterStateComponentFromObject(GetObject());
+	mp_core_physics_component = GetSkaterCorePhysicsComponentFromObject(GetObj());
+	mp_state_component = GetSkaterStateComponentFromObject(GetObj());
 	
 	Dbg_Assert(mp_core_physics_component);
 	Dbg_Assert(mp_state_component);
@@ -118,11 +118,11 @@ void CSkaterPhysicsControlComponent::Update()
 	switch (mp_state_component->m_physics_state)
 	{
 		case SKATING:
-			GetObject()->SetDisplayMatrix(mp_core_physics_component->m_lerping_display_matrix);
+			GetObj()->SetDisplayMatrix(mp_core_physics_component->m_lerping_display_matrix);
 			break;
 		
 		case WALKING:
-			GetObject()->SetDisplayMatrix(GetObject()->GetMatrix());
+			GetObj()->SetDisplayMatrix(GetObj()->GetMatrix());
 			break;
 			
 		default:
@@ -248,26 +248,26 @@ void CSkaterPhysicsControlComponent::suspend_physics ( bool suspend )
 	m_physics_suspended = suspend;
 	
 	// If the skater is suspended, we don't want to unsuspend the physics components.  We only want to change the CSkaterPhysicsControlComponent state.
-	if (!suspend && GetObject()->IsSuspended()) return;
+	if (!suspend && GetObj()->IsSuspended()) return;
     
 	switch (mp_state_component->m_physics_state)
 	{
 		case SKATING:
 			Dbg_Assert(mp_core_physics_component);
-			Dbg_Assert(GetSkaterRotateComponentFromObject(GetObject()));
-			Dbg_Assert(GetSkaterAdjustPhysicsComponentFromObject(GetObject()));
-			Dbg_Assert(GetSkaterFinalizePhysicsComponentFromObject(GetObject()));
+			Dbg_Assert(GetSkaterRotateComponentFromObject(GetObj()));
+			Dbg_Assert(GetSkaterAdjustPhysicsComponentFromObject(GetObj()));
+			Dbg_Assert(GetSkaterFinalizePhysicsComponentFromObject(GetObj()));
 			
 			mp_core_physics_component->Suspend(suspend);
-			GetSkaterRotateComponentFromObject(GetObject())->Suspend(suspend);
-			GetSkaterAdjustPhysicsComponentFromObject(GetObject())->Suspend(suspend);
-			GetSkaterFinalizePhysicsComponentFromObject(GetObject())->Suspend(suspend);
+			GetSkaterRotateComponentFromObject(GetObj())->Suspend(suspend);
+			GetSkaterAdjustPhysicsComponentFromObject(GetObj())->Suspend(suspend);
+			GetSkaterFinalizePhysicsComponentFromObject(GetObj())->Suspend(suspend);
 			break;
 
 		case WALKING:
-			Dbg_Assert(GetWalkComponentFromObject(GetObject()));
+			Dbg_Assert(GetWalkComponentFromObject(GetObj()));
 			
-			GetWalkComponentFromObject(GetObject())->Suspend(suspend);
+			GetWalkComponentFromObject(GetObj())->Suspend(suspend);
 			break;
 			
 		default:
@@ -287,7 +287,7 @@ void CSkaterPhysicsControlComponent::switch_walking_to_skating (   )
 	m_previous_physics_state_duration = Tmr::ElapsedTime(m_physics_state_switch_time_stamp);
 	m_physics_state_switch_time_stamp = Tmr::GetTime();
 	
-	CWalkComponent* p_walk_component = GetWalkComponentFromObject(GetObject());
+	CWalkComponent* p_walk_component = GetWalkComponentFromObject(GetObj());
 	CCompositeObject* p_skater_cam = get_skater_camera();
 	CSkaterCameraComponent* p_skater_camera_component = GetSkaterCameraComponentFromObject(p_skater_cam);
 	CWalkCameraComponent* p_walk_camera_component = GetWalkCameraComponentFromObject(p_skater_cam);
@@ -310,9 +310,9 @@ void CSkaterPhysicsControlComponent::switch_walking_to_skating (   )
 	mp_core_physics_component->Suspend(false);
 	mp_core_physics_component->ReadySkateState(p_walk_component->GetState() == CWalkComponent::WALKING_GROUND, p_walk_component->GetRailData(), p_walk_component->GetAcidDropData());
 	
-	GetSkaterRotateComponentFromObject(GetObject())->Suspend(false);
-	GetSkaterAdjustPhysicsComponentFromObject(GetObject())->Suspend(false);
-	GetSkaterFinalizePhysicsComponentFromObject(GetObject())->Suspend(false);
+	GetSkaterRotateComponentFromObject(GetObj())->Suspend(false);
+	GetSkaterAdjustPhysicsComponentFromObject(GetObj())->Suspend(false);
+	GetSkaterFinalizePhysicsComponentFromObject(GetObj())->Suspend(false);
 	
 	p_skater_camera_component->Suspend(false);
 	
@@ -340,7 +340,7 @@ void CSkaterPhysicsControlComponent::switch_skating_to_walking (   )
 	m_previous_physics_state_duration = Tmr::ElapsedTime(m_physics_state_switch_time_stamp);
 	m_physics_state_switch_time_stamp = Tmr::GetTime();
 	
-	CWalkComponent* p_walk_component = GetWalkComponentFromObject(GetObject());
+	CWalkComponent* p_walk_component = GetWalkComponentFromObject(GetObj());
 	CCompositeObject* p_skater_cam = get_skater_camera();
 	CSkaterCameraComponent* p_skater_camera_component = GetSkaterCameraComponentFromObject(p_skater_cam);
 	CWalkCameraComponent* p_walk_camera_component = GetWalkCameraComponentFromObject(p_skater_cam);
@@ -355,9 +355,9 @@ void CSkaterPhysicsControlComponent::switch_skating_to_walking (   )
 	mp_core_physics_component->CleanUpSkateState();
 	mp_core_physics_component->Suspend(true);
 
-	GetSkaterRotateComponentFromObject(GetObject())->Suspend(true);
-	GetSkaterAdjustPhysicsComponentFromObject(GetObject())->Suspend(true);
-	GetSkaterFinalizePhysicsComponentFromObject(GetObject())->Suspend(true);
+	GetSkaterRotateComponentFromObject(GetObj())->Suspend(true);
+	GetSkaterAdjustPhysicsComponentFromObject(GetObj())->Suspend(true);
+	GetSkaterFinalizePhysicsComponentFromObject(GetObj())->Suspend(true);
 
 	p_skater_camera_component->Suspend(true);
 	
@@ -393,12 +393,12 @@ void CSkaterPhysicsControlComponent::switch_walking_to_riding( void )
 	if (mp_state_component->m_physics_state == SKATING) return;
 	if (mp_state_component->m_physics_state == RIDING) return;
 	
-	CRiderComponent*		p_rider_component			= GetRiderComponentFromObject(GetObject());
+	CRiderComponent*		p_rider_component			= GetRiderComponentFromObject(GetObj());
 
 	// Use the rider component to check that this switch is valid.
 	if(	p_rider_component->ReadyRiderState( true ))
 	{
-		CWalkComponent*			p_walk_component			= GetWalkComponentFromObject(GetObject());
+		CWalkComponent*			p_walk_component			= GetWalkComponentFromObject(GetObj());
 		CCompositeObject*		p_skater_cam				= get_skater_camera();
 		CSkaterCameraComponent*	p_skater_camera_component	= GetSkaterCameraComponentFromObject(p_skater_cam);
 		CWalkCameraComponent*	p_walk_camera_component		= GetWalkCameraComponentFromObject(p_skater_cam);
@@ -418,10 +418,10 @@ void CSkaterPhysicsControlComponent::switch_walking_to_riding( void )
 //		mp_core_physics_component->ReadySkateState(p_walk_component->GetState() == CWalkComponent::WALKING_GROUND, p_walk_component->GetRailData());
 		p_rider_component->Suspend( false );
 	
-//		GetSkaterRotateComponentFromObject(GetObject())->Suspend(false);
-//		GetSkaterAdjustPhysicsComponentFromObject(GetObject())->Suspend(false);
-//		GetSkaterFinalizePhysicsComponentFromObject(GetObject())->Suspend(false);
-//		GetSkaterCleanupStateComponentFromObject(GetObject())->Suspend(false);
+//		GetSkaterRotateComponentFromObject(GetObj())->Suspend(false);
+//		GetSkaterAdjustPhysicsComponentFromObject(GetObj())->Suspend(false);
+//		GetSkaterFinalizePhysicsComponentFromObject(GetObj())->Suspend(false);
+//		GetSkaterCleanupStateComponentFromObject(GetObj())->Suspend(false);
 	
 //		p_skater_camera_component->Suspend(false);
 	
@@ -448,8 +448,8 @@ void CSkaterPhysicsControlComponent::switch_riding_to_walking( void )
 {
 //	if (mp_state_component->m_physics_state == WALKING) return;
 	
-	CWalkComponent*			p_walk_component = GetWalkComponentFromObject(GetObject());
-	CRiderComponent*		p_rider_component			= GetRiderComponentFromObject(GetObject());
+	CWalkComponent*			p_walk_component = GetWalkComponentFromObject(GetObj());
+	CRiderComponent*		p_rider_component			= GetRiderComponentFromObject(GetObj());
 	CCompositeObject*		p_skater_cam = get_skater_camera();
 	CSkaterCameraComponent*	p_skater_camera_component = GetSkaterCameraComponentFromObject(p_skater_cam);
 	CWalkCameraComponent*	p_walk_camera_component = GetWalkCameraComponentFromObject(p_skater_cam);
@@ -461,10 +461,10 @@ void CSkaterPhysicsControlComponent::switch_riding_to_walking( void )
 	// switch off skating
 	mp_core_physics_component->Suspend(true);
 
-	GetSkaterRotateComponentFromObject(GetObject())->Suspend(true);
-	GetSkaterAdjustPhysicsComponentFromObject(GetObject())->Suspend(true);
-	GetSkaterFinalizePhysicsComponentFromObject(GetObject())->Suspend(true);
-//	GetSkaterCleanupStateComponentFromObject(GetObject())->Suspend(true);
+	GetSkaterRotateComponentFromObject(GetObj())->Suspend(true);
+	GetSkaterAdjustPhysicsComponentFromObject(GetObj())->Suspend(true);
+	GetSkaterFinalizePhysicsComponentFromObject(GetObj())->Suspend(true);
+//	GetSkaterCleanupStateComponentFromObject(GetObj())->Suspend(true);
 
 	p_skater_camera_component->Suspend(true);
 	

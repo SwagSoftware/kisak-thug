@@ -88,6 +88,19 @@ CBaseComponent* CWalkComponent::s_create()
 	return static_cast< CBaseComponent* >( new CWalkComponent );	
 }
 
+
+inline const Mth::Vector& CWalkComponent::GetEffectivePos()
+{
+	if (m_state != WALKING_ANIMWAIT)
+	{
+		return GetObj()->GetPos();
+	}
+	else
+	{
+		return GetObj()->GetPos();
+	}
+}
+
 /******************************************************************/
 /*                                                                */
 /*                                                                */
@@ -130,14 +143,14 @@ CWalkComponent::~CWalkComponent()
 	
 void CWalkComponent::Finalize()
 {
-	mp_input_component = GetInputComponentFromObject(GetObject());
-	mp_animation_component = GetAnimationComponentFromObject(GetObject());
-	mp_model_component = GetModelComponentFromObject(GetObject());
-	mp_trigger_component = GetTriggerComponentFromObject(GetObject());
-	mp_physics_control_component = GetSkaterPhysicsControlComponentFromObject(GetObject());
-	mp_movable_contact_component = GetMovableContactComponentFromObject(GetObject());
-	mp_state_component = GetSkaterStateComponentFromObject(GetObject());
-	mp_core_physics_component = GetSkaterCorePhysicsComponentFromObject(GetObject());
+	mp_input_component = GetInputComponentFromObject(GetObj());
+	mp_animation_component = GetAnimationComponentFromObject(GetObj());
+	mp_model_component = GetModelComponentFromObject(GetObj());
+	mp_trigger_component = GetTriggerComponentFromObject(GetObj());
+	mp_physics_control_component = GetSkaterPhysicsControlComponentFromObject(GetObj());
+	mp_movable_contact_component = GetMovableContactComponentFromObject(GetObj());
+	mp_state_component = GetSkaterStateComponentFromObject(GetObj());
+	mp_core_physics_component = GetSkaterCorePhysicsComponentFromObject(GetObj());
 	
 	Dbg_Assert(mp_input_component);
 	Dbg_Assert(mp_animation_component);
@@ -288,7 +301,7 @@ void CWalkComponent::Update()
 	smooth_anim_speed(previous_frame_event);
 	
 	Dbg_Assert(m_frame_event);
-	GetObject()->SelfEvent(m_frame_event);
+	GetObj()->SelfEvent(m_frame_event);
 	
 	// set the animation speeds
 	update_anim_speeds();
@@ -544,29 +557,29 @@ void CWalkComponent::ReadyWalkState ( bool to_ground_state )
     // always reset the state timestamp
     m_state_timestamp = Tmr::GetTime();
 	
-	if (GetObject()->GetMatrix()[Y][Y] > 0.999f)
+	if (GetObj()->GetMatrix()[Y][Y] > 0.999f)
 	{
 		m_rotate_upright_timer = 0.0f;
 	}
 	else
 	{
 		// if we're not upright, get ready to rotate to upright
-		if (GetObject()->GetMatrix()[Y][Y] > -0.999f)
+		if (GetObj()->GetMatrix()[Y][Y] > -0.999f)
 		{
-			m_rotate_upright_axis.Set(-GetObject()->GetMatrix()[Y][Z], 0.0f, GetObject()->GetMatrix()[Y][X]);
-			m_rotate_upright_angle = acosf(Mth::Clamp(GetObject()->GetMatrix()[Y][Y], -1.0f, 1.0f));
+			m_rotate_upright_axis.Set(-GetObj()->GetMatrix()[Y][Z], 0.0f, GetObj()->GetMatrix()[Y][X]);
+			m_rotate_upright_angle = acosf(Mth::Clamp(GetObj()->GetMatrix()[Y][Y], -1.0f, 1.0f));
 		}
 		else
 		{
-			m_rotate_upright_axis = GetObject()->GetMatrix()[X];
+			m_rotate_upright_axis = GetObj()->GetMatrix()[X];
 			m_rotate_upright_angle = Mth::PI;
 		}
         
 		m_rotate_upright_timer = s_get_param(CRCD(0xb0675803, "rotate_upright_duration"));
 		
-		if (GetObject()->GetMatrix()[Y][Y] < 0.0f)
+		if (GetObj()->GetMatrix()[Y][Y] < 0.0f)
 		{
-			GetObject()->SetPos(GetObject()->GetPos() + 6.0f * GetObject()->GetMatrix()[Y]);
+			GetObj()->SetPos(GetObj()->GetPos() + 6.0f * GetObj()->GetMatrix()[Y]);
 			to_ground_state = false;
 		}
 	}
@@ -580,12 +593,12 @@ void CWalkComponent::ReadyWalkState ( bool to_ground_state )
 		
 		m_last_ground_feeler_valid = false;
 		
-		GetObject()->GetVel()[Y] = 0.0f;
+		GetObj()->GetVel()[Y] = 0.0f;
 		
 		m_disallow_acid_drops = false;
 
 		/*
-		if (GetObject()->GetVel().LengthSqr() > Mth::Sqr(450.0f))
+		if (GetObj()->GetVel().LengthSqr() > Mth::Sqr(450.0f))
 		{
 			m_cancel_transition_momentum = false;
 		}
@@ -602,32 +615,32 @@ void CWalkComponent::ReadyWalkState ( bool to_ground_state )
 		// give a slight velocity boost when transitioning from vert air
 		if (mp_core_physics_component->GetFlag(VERT_AIR) && m_rotate_upright_timer != 0.0f)
 		{
-			Mth::Vector target_facing = GetObject()->GetMatrix()[Z];
+			Mth::Vector target_facing = GetObj()->GetMatrix()[Z];
 			target_facing.Rotate(m_rotate_upright_axis, m_rotate_upright_angle);
-			GetObject()->GetVel() += s_get_param(CRCD(0x17b37748, "initial_vert_vel_boost")) * target_facing;
+			GetObj()->GetVel() += s_get_param(CRCD(0x17b37748, "initial_vert_vel_boost")) * target_facing;
 		}
 		
 		// set primary air direction in the direction of velocity
-		m_primary_air_direction = GetObject()->GetVel();
+		m_primary_air_direction = GetObj()->GetVel();
 		m_primary_air_direction[Y] = 0.0f;
 		float length = m_primary_air_direction.Length();
 		if (length < 0.001f)
 		{
 			// or facing
-			m_primary_air_direction = GetObject()->GetMatrix()[Z];
+			m_primary_air_direction = GetObj()->GetMatrix()[Z];
 			m_primary_air_direction[Y] = 0.0f;
 			length = m_primary_air_direction.Length();
 			if (length < 0.001f)
 			{
 				// or future facing
-				m_primary_air_direction = -GetObject()->GetMatrix()[Y];
+				m_primary_air_direction = -GetObj()->GetMatrix()[Y];
 				m_primary_air_direction[Y] = 0.0f;
 				length = m_primary_air_direction.Length();
 			}
 		}
 		m_primary_air_direction /= length;
 		
-		leave_movable_contact_for_air(GetObject()->GetVel(), GetObject()->GetVel()[Y]);
+		leave_movable_contact_for_air(GetObj()->GetVel(), GetObj()->GetVel()[Y]);
 		
 		m_in_air_control_suppression_timer = 0.0f;
 		
@@ -672,11 +685,11 @@ void CWalkComponent::CleanUpWalkState (   )
 void CWalkComponent::CollideWithOtherSkaterLost ( CCompositeObject* p_other_skater )
 {
 	set_state(WALKING_AIR);
-	m_primary_air_direction = GetObject()->GetVel();
+	m_primary_air_direction = GetObj()->GetVel();
 	m_primary_air_direction[Y] = 0.0f;
 	m_primary_air_direction.Normalize();
 	
-	leave_movable_contact_for_air(GetObject()->GetVel(), GetObject()->GetVel()[Y]);
+	leave_movable_contact_for_air(GetObj()->GetVel(), GetObj()->GetVel()[Y]);
 }
 
 /******************************************************************/
@@ -1139,7 +1152,7 @@ bool  CWalkComponent::adjust_horizonal_vel_for_environment (   )
 		// if we're on the moving object, don't count its movement when doing collision detection, as the walker's velocity is already measured
 		// relative to its movable contact's
 		if (feeler.IsMovableCollision()
-			&& (!mp_movable_contact_component->HaveContact() || mp_movable_contact_component->GetContact()->GetObject() != feeler.GetMovingObject()))
+			&& (!mp_movable_contact_component->HaveContact() || mp_movable_contact_component->GetContact()->GetObj() != feeler.GetMovingObject()))
 		{
 			mp_contacts[n].movement = Mth::DotProduct(feeler.GetMovingObject()->GetVel(), mp_contacts[n].normal);
 		}
@@ -1427,7 +1440,7 @@ void CWalkComponent::respond_to_ground (   )
 		m_primary_air_direction = m_facing;
 		leave_movable_contact_for_air(m_horizontal_vel, m_vertical_vel);
 		m_frame_event = CRCD(0xabf1f6ac, "WalkOffEdge");
-		GetObject()->BroadcastEvent(CRCD(0xd96f01f1, "SkaterOffEdge"));
+		GetObj()->BroadcastEvent(CRCD(0xd96f01f1, "SkaterOffEdge"));
 		return;
 	}
 	
@@ -1436,7 +1449,7 @@ void CWalkComponent::respond_to_ground (   )
 	// no not send event for very small snaps
 	if (Mth::Abs(snap_distance) > s_get_param(CRCD(0xd3193d8e, "max_unnoticed_ground_snap")))
 	{
-		GetObject()->SelfEvent(snap_distance > 0.0f ? CRCD(0x93fcf3ed, "SnapUpEdge") : CRCD(0x56e21153, "SnapDownEdge"));
+		GetObj()->SelfEvent(snap_distance > 0.0f ? CRCD(0x93fcf3ed, "SnapUpEdge") : CRCD(0x56e21153, "SnapDownEdge"));
 	}
 	
 	// snap position to the ground
@@ -1600,7 +1613,7 @@ void CWalkComponent::jump (   )
 	}
 	
 	// Called by script from outside of the component update, so m_vertical_vel is not used.
-	GetObject()->GetVel()[Y] = strength * s_get_param(CRCD(0x63d62a21, "jump_velocity"));
+	GetObj()->GetVel()[Y] = strength * s_get_param(CRCD(0x63d62a21, "jump_velocity"));
 	
 	// jumps for ladders and hanging get a backwards velocity
 	switch (m_state)
@@ -1659,8 +1672,8 @@ void CWalkComponent::jump (   )
 			m_false_wall.active = true;
 			m_false_wall.distance = Mth::DotProduct(m_false_wall.normal, m_pos + m_critical_point_offset);
 			
-			GetObject()->GetVel()[X] = 0.0f;
-			GetObject()->GetVel()[Z] = 0.0f;
+			GetObj()->GetVel()[X] = 0.0f;
+			GetObj()->GetVel()[Z] = 0.0f;
 			m_primary_air_direction = m_facing;
 			break;
 			
@@ -1670,23 +1683,23 @@ void CWalkComponent::jump (   )
 			m_false_wall.distance = Mth::DotProduct(m_false_wall.normal, m_pos + m_critical_point_offset);
 			m_false_wall.cancel_height = m_pos[Y] - m_vertical_hang_offset;
 			
-			GetObject()->GetVel()[X] = 0.0f;
-			GetObject()->GetVel()[Z] = 0.0f;
+			GetObj()->GetVel()[X] = 0.0f;
+			GetObj()->GetVel()[Z] = 0.0f;
 			m_primary_air_direction = m_facing;
 			break;
 
 		case WALKING_LADDER:
-			GetObject()->GetVel()[X] = 0.0f;
-			GetObject()->GetVel()[Z] = 0.0f;
+			GetObj()->GetVel()[X] = 0.0f;
+			GetObj()->GetVel()[Z] = 0.0f;
 			m_primary_air_direction = m_facing;
 			break;
 	}
 	
-	leave_movable_contact_for_air(GetObject()->GetVel(), GetObject()->GetVel()[Y]);
+	leave_movable_contact_for_air(GetObj()->GetVel(), GetObj()->GetVel()[Y]);
 	
 	set_state(WALKING_AIR);
 	
-	GetObject()->BroadcastEvent(CRCD(0x8687163a, "SkaterJump"));
+	GetObj()->BroadcastEvent(CRCD(0x8687163a, "SkaterJump"));
 }
 
 /******************************************************************/
@@ -1954,7 +1967,7 @@ void CWalkComponent::adjust_vertical_vel_for_ceiling (   )
 		DUMP_WPOSITION
 	}
 	
-	GetObject()->SelfEvent(CRCD(0x6e84acf3, "HitCeiling"));
+	GetObj()->SelfEvent(CRCD(0x6e84acf3, "HitCeiling"));
 }
 
 /******************************************************************/
@@ -2020,7 +2033,7 @@ void CWalkComponent::check_for_landing ( const Mth::Vector& previous_pos, const 
 	mp_movable_contact_component->CheckForMovableContact(feeler);
 	if (mp_movable_contact_component->HaveContact())
 	{
-		m_horizontal_vel -= mp_movable_contact_component->GetContact()->GetObject()->GetVel();
+		m_horizontal_vel -= mp_movable_contact_component->GetContact()->GetObj()->GetVel();
 		m_horizontal_vel[Y] = 0.0f;
 	}
 	
@@ -2082,12 +2095,12 @@ void CWalkComponent::maybe_wallplant (   )
 	
 	/*
 	// here we attempt to stop wallplant when in is more likely that the player is going for a grind or wants to jump up over the wall
-	if (GetObject()->m_vel[Y] > 0.0f)
+	if (GetObj()->m_vel[Y] > 0.0f)
 	{
 		Mth::Vector wall_point = mp_contacts[contact_idx].feeler.GetPoint();
 		Mth::Vector	wall_normal = mp_contacts[contact_idx].feeler.GetNormal();
 
-		Mth::Vector wall_up_vel(0.0f, GetObject()->m_vel[Y] * 0.15f, 0.0f);		// check 0.15 seconds ahead
+		Mth::Vector wall_up_vel(0.0f, GetObj()->m_vel[Y] * 0.15f, 0.0f);		// check 0.15 seconds ahead
 		wall_up_vel.RotateToPlane(wall_normal);  
 
 		// check at what height will be in two frames
@@ -2159,7 +2172,7 @@ void CWalkComponent::maybe_wallplant (   )
 	if (mp_physics_control_component->HaveBeenReset()) return;
 	
 	// graffiti the object
-	GetTrickComponentFromObject(GetObject())->TrickOffObject(mp_contacts[contact_idx].feeler.GetNodeChecksum());
+	GetTrickComponentFromObject(GetObj())->TrickOffObject(mp_contacts[contact_idx].feeler.GetNodeChecksum());
 	
 	// time stamp the wallplant
 	mp_core_physics_component->m_last_wallplant_time_stamp = Tmr::GetTime();
@@ -2190,7 +2203,7 @@ void CWalkComponent::uber_frig (   )
 		mp_model_component->ApplyLightingFromCollision(feeler);
 		
 		// Store these values off for the simple shadow calculation.
-		CShadowComponent* p_shadow_component = GetShadowComponentFromObject(GetObject());
+		CShadowComponent* p_shadow_component = GetShadowComponentFromObject(GetObj());
 		p_shadow_component->SetShadowPos(feeler.GetPoint());
 		p_shadow_component->SetShadowNormal(feeler.GetNormal()); 
 		
@@ -2252,8 +2265,8 @@ void CWalkComponent::transition_lerp_upright (   )
 	{
 		float lerp_factor = Mth::LinearMap(0.0f, 1.0f, m_frame_length, 0.0f, s_get_param(CRCD(0xb0675803, "rotate_upright_duration")));
 		
-		GetObject()->GetMatrix().Rotate(m_rotate_upright_axis, m_rotate_upright_angle * lerp_factor);
-		GetObject()->SetDisplayMatrix(GetObject()->GetMatrix());
+		GetObj()->GetMatrix().Rotate(m_rotate_upright_axis, m_rotate_upright_angle * lerp_factor);
+		GetObj()->SetDisplayMatrix(GetObj()->GetMatrix());
 		
 		m_rotate_upright_timer -= m_frame_length;
 		m_rotate_upright_timer = Mth::ClampMin(m_rotate_upright_timer, 0.0f);
@@ -2439,10 +2452,10 @@ bool CWalkComponent::maybe_jump_low_barrier (   )
 	
 	m_frame_event = CRCD(0x584cf9e9, "Jump");
 	
-	GetObject()->BroadcastEvent(CRCD(0x8687163a, "SkaterJump"));
+	GetObj()->BroadcastEvent(CRCD(0x8687163a, "SkaterJump"));
 	
 	// stop late jumps after an autojump
-	GetObject()->RemoveEventHandler(CRCD(0x6b9ca247, "JumpRequested"));
+	GetObj()->RemoveEventHandler(CRCD(0x6b9ca247, "JumpRequested"));
 	
 	return true;
 }
@@ -2521,7 +2534,7 @@ void CWalkComponent::leave_movable_contact_for_air ( Mth::Vector& horizontal_vel
 	if (mp_movable_contact_component->HaveContact())
 	{
 		// keep track of the horizontal velocity due to our old contact
-		m_uncontrollable_air_horizontal_vel = mp_movable_contact_component->GetContact()->GetObject()->GetVel();
+		m_uncontrollable_air_horizontal_vel = mp_movable_contact_component->GetContact()->GetObj()->GetVel();
 
 		if (Mth::DotProduct(m_uncontrollable_air_horizontal_vel, horizontal_vel) > 0.0f)
 		{
@@ -2611,14 +2624,14 @@ void CWalkComponent::go_anim_wait_state (   )
 
 void CWalkComponent::anim_wait_complete (   )
 {
-	GetObject()->SetPos(m_anim_wait_goal_pos + m_offset_due_to_movable_contact);
+	GetObj()->SetPos(m_anim_wait_goal_pos + m_offset_due_to_movable_contact);
 	
     Mth::Matrix matrix;
     matrix[Z] = m_drift_goal_facing;
     matrix[Y].Set(0.0f, 1.0f, 0.0f);
     matrix[X].Set(m_drift_goal_facing[Z], 0.0f, -m_drift_goal_facing[X]);
 	matrix[W].Set();
-	GetObject()->SetMatrix(matrix);
+	GetObj()->SetMatrix(matrix);
 	
 	m_display_offset = m_drift_goal_display_offset;
 	
@@ -2682,7 +2695,7 @@ bool CWalkComponent::maybe_stick_to_rail (   )
 			{
 				m_special_transition_data.rail_data.p_rail_man = p_rail_manager_component->GetRailManager();
 				m_special_transition_data.rail_data.rail_pos = obj_matrix.Transform(m_special_transition_data.rail_data.rail_pos);
-				m_special_transition_data.rail_data.p_movable_contact = p_rail_manager_component->GetObject();
+				m_special_transition_data.rail_data.p_movable_contact = p_rail_manager_component->GetObj();
 			}
 		}
 	}
@@ -2729,8 +2742,8 @@ void CWalkComponent::setup_collision_cache (   )
 	float vertical_depth = 1.0f + s_get_param(CRCD(0xaf3e4251, "snap_down_height"));
 	
 	Mth::CBBox bbox(
-		GetObject()->GetPos() - Mth::Vector(horizontal_reach, vertical_depth, horizontal_reach, 0.0f),
-		GetObject()->GetPos() + Mth::Vector(horizontal_reach, vertical_height, horizontal_reach, 0.0f)
+		GetObj()->GetPos() - Mth::Vector(horizontal_reach, vertical_depth, horizontal_reach, 0.0f),
+		GetObj()->GetPos() + Mth::Vector(horizontal_reach, vertical_height, horizontal_reach, 0.0f)
 	);
 	
 	mp_collision_cache->Update(bbox);
@@ -2859,26 +2872,26 @@ void CWalkComponent::adjust_pos_for_false_wall (   )
 	
 void CWalkComponent::extract_state_from_object (   )
 {
-	m_pos = GetObject()->m_pos;
+	m_pos = GetObj()->m_pos;
 	DUMP_WPOSITION
 	
-	m_horizontal_vel = GetObject()->GetVel();
+	m_horizontal_vel = GetObj()->GetVel();
 	m_horizontal_vel[Y] = 0.0f;
-	m_vertical_vel = GetObject()->GetVel()[Y];
+	m_vertical_vel = GetObj()->GetVel()[Y];
 	
 	// note that m_facing and m_upward will often not be orthogonal, but will always span a plan
 	
 	// generally straight up, but now after a transition from skating
-	m_upward = GetObject()->GetMatrix()[Y];
+	m_upward = GetObj()->GetMatrix()[Y];
 	
-	m_facing = GetObject()->GetMatrix()[Z];
+	m_facing = GetObj()->GetMatrix()[Z];
 	m_frame_initial_facing_Y = m_facing[Y];
 	m_facing[Y] = 0.0f;
 	float length = m_facing.Length();
 	if (length < 0.001f)
 	{
 		// upward facing orientation matrix
-		m_facing = -GetObject()->GetMatrix()[Y];
+		m_facing = -GetObj()->GetMatrix()[Y];
 		m_facing[Y] = 0.0f;
 		m_facing.Normalize();
 		
@@ -2913,30 +2926,30 @@ void CWalkComponent::copy_state_into_object (   )
 	matrix[W].Set();
 	
 	DUMP_WPOSITION
-	GetObject()->SetPos(m_pos);
-	GetObject()->SetMatrix(matrix);
-	GetObject()->SetDisplayMatrix(matrix);
+	GetObj()->SetPos(m_pos);
+	GetObj()->SetMatrix(matrix);
+	GetObj()->SetDisplayMatrix(matrix);
 	
 	// construct the object's velocity
 	switch (m_state)
 	{
 		case WALKING_GROUND:
 		case WALKING_AIR:
-			GetObject()->SetVel(m_horizontal_vel);
-			GetObject()->GetVel()[Y] = m_vertical_vel;
+			GetObj()->SetVel(m_horizontal_vel);
+			GetObj()->GetVel()[Y] = m_vertical_vel;
 			break;
 			
 		case WALKING_HANG:
-			GetObject()->GetVel().Set(-m_facing[Z], 0.0f, m_facing[X]);
-			GetObject()->GetVel() *= m_hang_move_vel;
+			GetObj()->GetVel().Set(-m_facing[Z], 0.0f, m_facing[X]);
+			GetObj()->GetVel() *= m_hang_move_vel;
 			break;
 		
 		case WALKING_LADDER:
-			GetObject()->GetVel().Set(0.0f, m_anim_effective_speed, 0.0f);
+			GetObj()->GetVel().Set(0.0f, m_anim_effective_speed, 0.0f);
 			break;
 			
 		default:
-			GetObject()->GetVel().Set();
+			GetObj()->GetVel().Set();
 			break;
 	}
 	
@@ -3116,7 +3129,7 @@ bool CWalkComponent::determine_stand_pos ( const Mth::Vector& proposed_stand_pos
 
 void CWalkComponent::update_run_speed_factor (   )
 {
-	if (GetSkaterScoreComponentFromObject(GetObject())->GetScore()->GetScorePotValue() > 0)
+	if (GetSkaterScoreComponentFromObject(GetObj())->GetScore()->GetScorePotValue() > 0)
 	{
 		m_run_speed_factor = 1.0f;
 		return;

@@ -261,7 +261,7 @@ CScreenElementPtr CScreenElementManager::GetElement(uint32 id, EAssert assert)
 {
 	Dbg_MsgAssert(id > 0, ("can't use 0 as an ID"));
 	Obj::CTracker* p_tracker = Obj::CTracker::Instance();
-	Obj::CObject *p_object = p_tracker->GetObject(id);
+	Obj::CObject *p_object = p_tracker->GetObj(id);
 	if (assert)
 		Dbg_MsgAssert(p_object, ("couldn't find screen element %s", Script::FindChecksumName(id)));
 	if (p_object)

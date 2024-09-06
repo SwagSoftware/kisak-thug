@@ -38,8 +38,6 @@ void AllocatePools()
 	
 	Mem::Manager::sHandle().PushContext(Mem::Manager::sHandle().ScriptHeap());
 
-	#ifndef __PLAT_WN32__
-	
 	#ifdef NO_SCRIPT_CACHING
 	#else
 	Mem::PushMemProfile("CScriptCacheEntry");
@@ -48,6 +46,7 @@ void AllocatePools()
 	Mem::PopMemProfile();
 	#endif
 		
+
 	Mem::PushMemProfile("CComponent and Reserve CComponent");
 	
 	// 16 bytes each
@@ -92,8 +91,6 @@ void AllocatePools()
 	// 80 bytes each (100)
 	CStoredRandom::SCreatePool(MAX_STORED_RANDOMS,"CStoredRandom");
 	Mem::PopMemProfile();
-	#endif
-
 
 	// This will create a further 4096 CSymbolTableEntry's, but as a contiguous array.
 //	Mem::PushMemProfile("CreateSymbolHashTable");
@@ -115,7 +112,7 @@ void DeallocatePools()
 	DeallocatePermanentStringHeap();
 	DestroySymbolHashTable();
 	
-	#ifndef __PLAT_WN32__
+//	#ifndef __PLAT_WN32__
 	CScript::SRemovePool();
 	CSymbolTableEntry::SRemovePool();
 	CArray::SRemovePool();
@@ -123,7 +120,7 @@ void DeallocatePools()
 	CPair::SRemovePool();
 	CVector::SRemovePool();
 	CComponent::SRemovePool();
-	#endif
+//	#endif
 		
 	DeallocateChecksumNameLookupTables();
 }
