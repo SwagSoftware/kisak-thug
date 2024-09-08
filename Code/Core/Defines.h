@@ -39,7 +39,7 @@
 #include <iostream.h>
 #else
 #include <iostream>
-using namespace std;
+//using namespace std;
 #endif
 #include <stdio.h>
 #include <string.h>

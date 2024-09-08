@@ -1,3 +1,4 @@
+#if 0
 /*****************************************************************************
 **																			**
 **					   	  Neversoft Entertainment							**
@@ -133,3 +134,4 @@ void	PerFrameUpdate( void );
 } // namespace Sfx
 
 #endif	// __MODULES_P_SFX_H
+#endif

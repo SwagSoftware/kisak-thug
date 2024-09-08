@@ -17,16 +17,19 @@ This was done mainly with an IDA-minded approach to be 1:1 as possible.
 - Window Handling
 - Dx9 (Not complete)
 - SDL Gamepad Input
+- Sound ( [TONYRE](https://github.com/cuckydev/TONYRE) )
+- Music ( [TONYRE](https://github.com/cuckydev/TONYRE) )
+
 
 #### TODO
 - CMake Project
-- Audio SFX & Music
 - Fix Ped Models not attempting to load in
 - Fix NetPlay
 - Unstub Additional Gfx features (particles, billboards, ...)
 - Fix resolution code to not be hard-stuck at 640x480
 - SDL Windowing Code
 - Anything marked with "KISAKTODO" in the src
+- Rip out music crc code and implement custom soundtracks
 
 ### Extra
 

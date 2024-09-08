@@ -50,7 +50,8 @@
 #include <sk/objects/movingobject.h>
 
 #ifdef __PLAT_WN32__
-#include "Win32/p_sfx.h" // lwss add
+//#include "Win32/p_sfx.h" // lwss add
+#include "SDL/p_sfx.h"
 #endif
 
 // Used by the script debugger code to fill in a structure

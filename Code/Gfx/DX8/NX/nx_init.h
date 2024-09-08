@@ -17,7 +17,7 @@ void QueryRegistryAndSetGammaRamp();
 // lwss end
 
 
-typedef struct
+typedef struct cuck
 {
 	// lwss: there are a few more added above here...
 	D3DPRESENT_PARAMETERS params;

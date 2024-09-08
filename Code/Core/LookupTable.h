@@ -168,7 +168,7 @@ LookupItem<_V>::LookupItem()
 
 
 template<class _V> //inline
-LookupTable<_V>::LookupTable(int size=0) 
+LookupTable<_V>::LookupTable(int size) // int size =0
 {
     m_size = 0;
 	mp_list = NULL;

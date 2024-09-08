@@ -33,7 +33,7 @@
 
 #include <gel/module.h>
 #include <gel/soundfx/soundfx.h>
-#include <gel/soundfx/xbox/p_sfx.h>
+#include <gel/SoundFX/SDL/p_sfx.h>
 #include <gel/music/music.h>
 
 #include <SDL.h>
@@ -135,7 +135,7 @@ Manager::Manager ( void )
 	// Create the keyboard queue.
 //	XInputDebugInitKeyboardQueue( &xdkp );
 
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER) < 0) // the INIT_VIDEO is needed....
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER | SDL_INIT_AUDIO) < 0) // the INIT_VIDEO is needed....
     {
         __debugbreak();
     }

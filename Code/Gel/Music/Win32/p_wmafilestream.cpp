@@ -1,3 +1,4 @@
+#if 0
 /*****************************************************************************
 **																			**
 **			              Neversoft Entertainment			                **
@@ -1226,3 +1227,4 @@ uint32 WINAPI WMAFileStreamThreadProc( LPVOID lpParameter )
 
 
 } // namespace PCM
+#endif

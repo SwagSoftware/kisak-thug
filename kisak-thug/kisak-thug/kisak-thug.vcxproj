@@ -113,6 +113,9 @@
     <ClCompile Include="..\..\Code\Gel\Module\module.cpp" />
     <ClCompile Include="..\..\Code\Gel\Movies\Movies.cpp" />
     <ClCompile Include="..\..\Code\Gel\Music\music.cpp" />
+    <ClCompile Include="..\..\Code\Gel\Music\SDL\miniaudio.cpp" />
+    <ClCompile Include="..\..\Code\Gel\Music\SDL\p_music.cpp" />
+    <ClCompile Include="..\..\Code\Gel\Music\SDL\usersoundtrack.cpp" />
     <ClCompile Include="..\..\Code\Gel\Music\Win32\p_adpcmfilestream.cpp" />
     <ClCompile Include="..\..\Code\Gel\Music\Win32\p_music.cpp" />
     <ClCompile Include="..\..\Code\Gel\Music\Win32\p_soundtrack.cpp" />
@@ -154,6 +157,10 @@
     <ClCompile Include="..\..\Code\Gel\Scripting\utils.cpp" />
     <ClCompile Include="..\..\Code\Gel\Scripting\vecpair.cpp" />
     <ClCompile Include="..\..\Code\Gel\Scripting\win32functions.cpp" />
+    <ClCompile Include="..\..\Code\Gel\SoundFX\SDL\ima.cpp" />
+    <ClCompile Include="..\..\Code\Gel\SoundFX\SDL\Mixer.cpp" />
+    <ClCompile Include="..\..\Code\Gel\SoundFX\SDL\p_sfx.cpp" />
+    <ClCompile Include="..\..\Code\Gel\SoundFX\SDL\snd.cpp" />
     <ClCompile Include="..\..\Code\Gel\SoundFX\soundfx.cpp" />
     <ClCompile Include="..\..\Code\Gel\SoundFX\Win32\p_sfx.cpp" />
     <ClCompile Include="..\..\Code\Gfx\2D\BlurEffect.cpp" />
@@ -307,8 +314,37 @@
     <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\Chat\chatHandlers.c" />
     <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\Chat\chatMain.c" />
     <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\Chat\chatSocket.c" />
+    <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\common\gsAssert.c" />
+    <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\common\gsAvailable.c" />
+    <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\common\gsCore.c" />
+    <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\common\gsCrypt.c" />
+    <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\common\gsDebug.c" />
+    <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\common\gsLargeInt.c" />
+    <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\common\gsMemory.c" />
+    <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\common\gsPlatform.c" />
+    <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\common\gsPlatformSocket.c" />
+    <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\common\gsPlatformThread.c" />
+    <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\common\gsPlatformUtil.c" />
+    <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\common\gsRC4.c" />
+    <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\common\gsSHA1.c" />
+    <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\common\gsSoap.c" />
+    <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\common\gsSSL.c" />
+    <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\common\gsStringUtil.c" />
+    <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\common\gsUdpEngine.c" />
+    <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\common\gsXML.c" />
+    <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\common\win32\gsSocketWin32.c" />
     <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\common\win32\Win32Common.c" />
     <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\darray.c" />
+    <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\gt2\gt2Auth.c" />
+    <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\gt2\gt2Buffer.c" />
+    <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\gt2\gt2Callback.c" />
+    <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\gt2\gt2Connection.c" />
+    <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\gt2\gt2Encode.c" />
+    <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\gt2\gt2Filter.c" />
+    <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\gt2\gt2Main.c" />
+    <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\gt2\gt2Message.c" />
+    <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\gt2\gt2Socket.c" />
+    <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\gt2\gt2Utility.c" />
     <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\hashtable.c" />
     <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\md5c.c" />
     <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\natneg\NATify.c" />
@@ -436,42 +472,14 @@
     <ClCompile Include="..\..\Code\Sys\sys.cpp" />
     <ClCompile Include="..\..\Code\Sys\timer.cpp" />
     <ClCompile Include="..\..\Code\Sys\Win32\p_timer.cpp" />
-    <ClCompile Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\gsAssert.c" />
-    <ClCompile Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\gsAvailable.c" />
-    <ClCompile Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\gsCore.c" />
-    <ClCompile Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\gsCrypt.c" />
-    <ClCompile Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\gsDebug.c" />
-    <ClCompile Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\gsLargeInt.c" />
-    <ClCompile Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\gsMemory.c" />
-    <ClCompile Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\gsPlatform.c" />
-    <ClCompile Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\gsPlatformSocket.c" />
-    <ClCompile Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\gsPlatformThread.c" />
-    <ClCompile Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\gsPlatformUtil.c" />
-    <ClCompile Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\gsRC4.c" />
-    <ClCompile Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\gsSHA1.c" />
-    <ClCompile Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\gsSoap.c" />
-    <ClCompile Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\gsSSL.c" />
-    <ClCompile Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\gsStringUtil.c" />
-    <ClCompile Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\gsUdpEngine.c" />
-    <ClCompile Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\gsXML.c" />
-    <ClCompile Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\ghttp\ghttpBuffer.c" />
-    <ClCompile Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\ghttp\ghttpCallbacks.c" />
-    <ClCompile Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\ghttp\ghttpCommon.c" />
-    <ClCompile Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\ghttp\ghttpConnection.c" />
-    <ClCompile Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\ghttp\ghttpEncryption.c" />
-    <ClCompile Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\ghttp\ghttpMain.c" />
-    <ClCompile Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\ghttp\ghttpPost.c" />
-    <ClCompile Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\ghttp\ghttpProcess.c" />
-    <ClCompile Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\gt2\gt2Auth.c" />
-    <ClCompile Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\gt2\gt2Buffer.c" />
-    <ClCompile Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\gt2\gt2Callback.c" />
-    <ClCompile Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\gt2\gt2Connection.c" />
-    <ClCompile Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\gt2\gt2Encode.c" />
-    <ClCompile Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\gt2\gt2Filter.c" />
-    <ClCompile Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\gt2\gt2Main.c" />
-    <ClCompile Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\gt2\gt2Message.c" />
-    <ClCompile Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\gt2\gt2Socket.c" />
-    <ClCompile Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\gt2\gt2Utility.c" />
+    <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\ghttp\ghttpBuffer.c" />
+    <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\ghttp\ghttpCallbacks.c" />
+    <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\ghttp\ghttpCommon.c" />
+    <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\ghttp\ghttpConnection.c" />
+    <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\ghttp\ghttpEncryption.c" />
+    <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\ghttp\ghttpMain.c" />
+    <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\ghttp\ghttpPost.c" />
+    <ClCompile Include="..\..\Code\Sk\GameNet\GameSpy\ghttp\ghttpProcess.c" />
     <ClCompile Include="WinMain.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -596,6 +604,9 @@
     <ClInclude Include="..\..\Code\Gel\module.h" />
     <ClInclude Include="..\..\Code\Gel\Movies\Movies.h" />
     <ClInclude Include="..\..\Code\Gel\Music\music.h" />
+    <ClInclude Include="..\..\Code\Gel\Music\SDL\miniaudio.h" />
+    <ClInclude Include="..\..\Code\Gel\Music\SDL\p_music.h" />
+    <ClInclude Include="..\..\Code\Gel\Music\SDL\usersoundtrack.h" />
     <ClInclude Include="..\..\Code\Gel\Music\Win32\p_adpcmfilestream.h" />
     <ClInclude Include="..\..\Code\Gel\Music\Win32\p_music.h" />
     <ClInclude Include="..\..\Code\Gel\Music\Win32\p_soundtrack.h" />
@@ -632,6 +643,11 @@
     <ClInclude Include="..\..\Code\Gel\Scripting\tokens.h" />
     <ClInclude Include="..\..\Code\Gel\Scripting\utils.h" />
     <ClInclude Include="..\..\Code\Gel\Scripting\vecpair.h" />
+    <ClInclude Include="..\..\Code\Gel\SoundFX\SDL\ima.h" />
+    <ClInclude Include="..\..\Code\Gel\SoundFX\SDL\miniaudio.h" />
+    <ClInclude Include="..\..\Code\Gel\SoundFX\SDL\Mixer.h" />
+    <ClInclude Include="..\..\Code\Gel\SoundFX\SDL\p_sfx.h" />
+    <ClInclude Include="..\..\Code\Gel\SoundFX\SDL\snd.h" />
     <ClInclude Include="..\..\Code\Gel\SoundFX\soundfx.h" />
     <ClInclude Include="..\..\Code\Gel\SoundFX\Win32\p_sfx.h" />
     <ClInclude Include="..\..\Code\Gel\SoundFX\Win32\skate5fx.h" />
@@ -791,7 +807,37 @@
     <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\Chat\chatMain.h" />
     <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\Chat\chatSocket.h" />
     <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\Chat\chatty\resource.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\common\gsAssert.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\common\gsAvailable.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\common\gsCommon.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\common\gsCore.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\common\gsCrypt.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\common\gsDebug.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\common\gsLargeInt.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\common\gsMemory.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\common\gsPlatform.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\common\gsPlatformSocket.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\common\gsPlatformThread.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\common\gsPlatformUtil.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\common\gsRC4.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\common\gsSHA1.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\common\gsSoap.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\common\gsSSL.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\common\gsStringUtil.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\common\gsUdpEngine.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\common\gsXML.h" />
     <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\darray.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\gt2\gt2.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\gt2\gt2Auth.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\gt2\gt2Buffer.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\gt2\gt2Callback.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\gt2\gt2Connection.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\gt2\gt2Encode.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\gt2\gt2Filter.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\gt2\gt2Main.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\gt2\gt2Message.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\gt2\gt2Socket.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\gt2\gt2Utility.h" />
     <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\hashtable.h" />
     <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\md5.h" />
     <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\natneg\NATify.h" />
@@ -927,59 +973,31 @@
     <ClInclude Include="..\..\Code\Sys\SIO\keyboard.h" />
     <ClInclude Include="..\..\Code\Sys\sys.h" />
     <ClInclude Include="..\..\Code\Sys\timer.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\gsAssert.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\gsAvailable.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\gsCommon.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\gsCore.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\gsCrypt.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\gsDebug.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\gsLargeInt.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\gsMemory.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\gsPlatform.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\gsPlatformSocket.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\gsPlatformThread.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\gsPlatformUtil.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\gsRC4.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\gsSHA1.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\gsSoap.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\gsSSL.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\gsStringUtil.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\gsUdpEngine.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\gsXML.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\ghttp\ghttp.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\ghttp\ghttpASCII.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\ghttp\ghttpBuffer.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\ghttp\ghttpCallbacks.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\ghttp\ghttpCommon.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\ghttp\ghttpConnection.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\ghttp\ghttpEncryption.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\ghttp\ghttpMain.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\ghttp\ghttpPost.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\ghttp\ghttpProcess.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\gt2\gt2.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\gt2\gt2Auth.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\gt2\gt2Buffer.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\gt2\gt2Callback.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\gt2\gt2Connection.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\gt2\gt2Encode.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\gt2\gt2Filter.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\gt2\gt2Main.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\gt2\gt2Message.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\gt2\gt2Socket.h" />
-    <ClInclude Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\gt2\gt2Utility.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\ghttp\ghttp.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\ghttp\ghttpASCII.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\ghttp\ghttpBuffer.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\ghttp\ghttpCallbacks.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\ghttp\ghttpCommon.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\ghttp\ghttpConnection.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\ghttp\ghttpEncryption.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\ghttp\ghttpMain.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\ghttp\ghttpPost.h" />
+    <ClInclude Include="..\..\Code\Sk\GameNet\GameSpy\ghttp\ghttpProcess.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\Code\Core\Math\matrix.inl" />
     <None Include="..\..\Code\Core\Math\quat.inl" />
     <None Include="..\..\Code\Core\Math\vector.inl" />
-    <None Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\ghttp\ghttp.sln" />
-    <None Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\gt2\gt2.sln" />
+    <None Include="..\..\Code\Sk\GameNet\GameSpy\common\win32\win32common.sln" />
+    <None Include="..\..\Code\Sk\GameNet\GameSpy\ghttp\ghttp.sln" />
+    <None Include="..\..\Code\Sk\GameNet\GameSpy\gt2\gt2.sln" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\..\Code\Sk\GameNet\GameSpy\changelog.txt" />
-    <Text Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\common\changelog.txt" />
-    <Text Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\ghttp\changelog.txt" />
-    <Text Include="C:\Users\Thugn\Downloads\GameSpy-master\src\GameSpy\gt2\changelog.txt" />
+    <Text Include="..\..\Code\Sk\GameNet\GameSpy\common\changelog.txt" />
+    <Text Include="..\..\Code\Sk\GameNet\GameSpy\common\win32\changelog.txt" />
+    <Text Include="..\..\Code\Sk\GameNet\GameSpy\ghttp\changelog.txt" />
+    <Text Include="..\..\Code\Sk\GameNet\GameSpy\gt2\changelog.txt" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -994,7 +1012,7 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
-    <EnableASAN>true</EnableASAN>
+    <EnableASAN>false</EnableASAN>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -1036,8 +1054,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir)\..\..\Code\Sk;$(ProjectDir)\..\..\Code;F:\MSVCProj\kisak-thug\SDL2\include</IncludePath>
-    <LibraryPath>F:\MSVCProj\kisak-thug\SDL2;F:\MSVCProj\kisak-thug\dxvk_dx9_debug;C:\Program Files %28x86%29\Microsoft DirectX SDK %28June 2010%29\Lib\x86;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)\..\..\Code\Sk;$(ProjectDir)\..\..\Code;$(ProjectDir)\..\..\SDL2\include</IncludePath>
+    <LibraryPath>$(ProjectDir)\..\..\SDL2;$(ProjectDir)\..\..\dxvk_dx9_debug;C:\Program Files %28x86%29\Microsoft DirectX SDK %28June 2010%29\Lib\x86;$(LibraryPath)</LibraryPath>
     <ExternalIncludePath>$(ExternalIncludePath);C:\Program Files %28x86%29\Microsoft DirectX SDK %28June 2010%29\Include</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -1057,6 +1075,7 @@
       <ConformanceMode>false</ConformanceMode>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

@@ -1,4 +1,4 @@
-
+#if 0
 #pragma once
 
 typedef enum _DSP_IMAGE_skate5fx_FX_INDICES {
@@ -59,3 +59,4 @@ typedef struct _GraphXTalk_FX0_XTalk_STATE {
 } GraphXTalk_FX0_XTalk_STATE, *LPGraphXTalk_FX0_XTalk_STATE;
 
 typedef const GraphXTalk_FX0_XTalk_STATE *LPCGraphXTalk_FX0_XTalk_STATE;
+#endif

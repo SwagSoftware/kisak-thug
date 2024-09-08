@@ -1,3 +1,4 @@
+#if 0
 /*****************************************************************************
 **																			**
 **			              Neversoft Entertainment			                **
@@ -1132,3 +1133,4 @@ bool CADPCMFileStream::IsSafeToDelete( void )
 
 
 } // namespace PCM
+#endif

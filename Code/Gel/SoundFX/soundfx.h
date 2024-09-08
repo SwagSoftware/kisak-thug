@@ -35,7 +35,8 @@
 #elif defined( __PLAT_NGC__ )
 #include <gel/soundfx/ngc/p_sfx.h>
 #elif defined( __PLAT_WN32__ )
-#include <Gel/SoundFX/Win32/p_sfx.h>
+//#include <Gel/SoundFX/Win32/p_sfx.h>
+#include <Gel/SoundFX/SDL/p_sfx.h>
 #endif
 
 /*****************************************************************************
