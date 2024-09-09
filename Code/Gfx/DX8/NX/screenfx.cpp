@@ -1009,7 +1009,7 @@ static HRESULT focus_blur( int blurFlagsOverride )
     D3DDevice_GetRenderState(D3DRS_SRCBLEND, &srcBlend);
     D3DDevice_GetRenderState(D3DRS_DESTBLEND, &destBlend);
 
-    set_vertex_shader(0x144);
+    set_vertex_shader(D3DFVF_TEX1 | D3DFVF_DIFFUSE | D3DFVF_XYZRHW);
     set_pixel_shader((IDirect3DPixelShader9*)NULL);
 
     D3DDevice_SetSamplerState(0, D3DSAMP_MIPFILTER, 0);

@@ -25,7 +25,7 @@ typedef struct cuck
 	bool				g_windowJustWentOutOfFocus;
 	bool				g_windowHasBeenDisplayedEver;
 	bool				hasHLSLv101 = true;
-	bool				has_D3DPTADDRESSCAPS_BORDER;
+	bool				has_D3DPTADDRESSCAPS_BORDER = true;
 	DWORD				devicecaps_max_anisotopy;
 	bool				dontConvertBlendModes = false;
 	DWORD				dword_72DE0C;

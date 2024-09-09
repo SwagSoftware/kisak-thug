@@ -114,7 +114,7 @@ void CImposterManager::plat_pre_render_imposters( void )
 	NxXbox::set_blend_mode( NxXbox::vBLEND_MODE_ONE_INV_SRC_ALPHA );
 
 	//NxXbox::set_vertex_shader( D3DFVF_XYZ | D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE2( 0 )); // 0x102
-	NxXbox::set_vertex_shader(0x102); // 0x102
+	NxXbox::set_vertex_shader(D3DFVF_TEX1 | D3DFVF_XYZ); // 0x102
 	//NxXbox::set_pixel_shader( PixelShader2 );
 	NxXbox::set_pixel_shader( 0 ); // lwss change
 

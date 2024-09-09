@@ -462,7 +462,7 @@ void sSprite::Draw(void)
 		//STDMETHOD(DrawIndexedPrimitiveUP)(THIS_ D3DPRIMITIVETYPE PrimitiveType, UINT MinVertexIndex, UINT NumVertices, 
 		// UINT PrimitiveCount, CONST void* pIndexData, D3DFORMAT IndexDataFormat, CONST void* pVertexStreamZeroData,
 		// UINT VertexStreamZeroStride) PURE;
-		set_vertex_shader(0x144);
+		set_vertex_shader(D3DFVF_TEX1 | D3DFVF_DIFFUSE | D3DFVF_XYZRHW);
 		D3DDevice_SetTextureStageState(0, D3DTSS_COLOROP, 5);
 		D3DDevice_SetTextureStageState(0, D3DTSS_ALPHAOP, 5);
 

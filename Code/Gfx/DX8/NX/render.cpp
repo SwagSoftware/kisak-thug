@@ -6,6 +6,8 @@
 //#include <xgraphics.h>
 //#include <xgmath.h>
 #include <gfx\DX8\p_nxgeom.h>
+#include <Gfx/DX8/p_nxscene.h>
+#include <Gfx/nx.h>
 #include <sys\timer.h>
 #include "nx_init.h"
 #include "scene.h"
@@ -2124,8 +2126,28 @@ void set_render_state( uint32 type, uint32 state )
 /*                                                                */
 /*                                                                */
 /******************************************************************/
+
 void create_texture_projection_details( sTexture *p_texture, Nx::CXboxModel *p_model, sScene *p_scene )
 {
+	// LWSS hack for pc...
+	if (!p_scene)
+	{
+		for (int i = 0; i < Nx::CEngine::MAX_LOADED_SCENES; i++)
+		{
+			if (Nx::CEngine::sp_loaded_scenes[i])
+			{
+				Nx::CXboxScene* pXboxScene = static_cast<Nx::CXboxScene*>(Nx::CEngine::sp_loaded_scenes[i]);
+
+				if (!pXboxScene->IsSky())
+				{
+					p_scene = (sScene*)pXboxScene;
+					break;
+				}
+			}
+		}
+	}
+
+	// LWSS end
 	sTextureProjectionDetails *p_details = new sTextureProjectionDetails;
 
 	p_details->p_model		= p_model;
@@ -2657,22 +2679,25 @@ void render_shadow_targets( void )
 			D3DDevice_SetTransform(D3DTS_VIEW, &p_details->view_matrix);
 			D3DDevice_SetTransform(D3DTS_PROJECTION, &p_details->projection_matrix);
 			D3DMATRIX v10;
-			v10._43 = 0.0;
-			v10._42 = 0.0;
-			v10._41 = 0.0;
-			v10._34 = 0.0;
-			v10._32 = 0.0;
-			v10._31 = 0.0;
-			v10._24 = 0.0;
-			v10._23 = 0.0;
-			v10._21 = 0.0;
-			v10._14 = 0.0;
-			v10._13 = 0.0;
-			v10._12 = 0.0;
-			v10._44 = 1.0;
-			v10._33 = 1.0;
-			v10._22 = 1.0;
 			v10._11 = 1.0;
+			v10._12 = 0.0;
+			v10._13 = 0.0;
+			v10._14 = 0.0;
+
+			v10._21 = 0.0;
+			v10._22 = 1.0;
+			v10._23 = 0.0;
+			v10._24 = 0.0;
+
+			v10._31 = 0.0;
+			v10._32 = 0.0;
+			v10._33 = 1.0;
+			v10._34 = 0.0;
+
+			v10._41 = 0.0;
+			v10._42 = 0.0;
+			v10._43 = 0.0;
+			v10._44 = 1.0;
 
 			D3DDevice_SetTransform(D3DTS_WORLD, &v10);
 
@@ -2782,8 +2807,6 @@ unsigned int TransformShadowVertices(const D3DXVECTOR3* p_vertices, int num_vert
 /******************************************************************/
 void render_shadow_meshes( sScene *p_scene, sMesh **p_mesh_indices, int num_meshes )
 {
-	// LWSS: NOTE: This is un-called in the PC binary (wtf)
-	return;
 	// LWSS: reworked for PC
 	
 	// No anisotropic filtering for the base texture.
@@ -2801,7 +2824,8 @@ void render_shadow_meshes( sScene *p_scene, sMesh **p_mesh_indices, int num_mesh
 	// Scan through each entry in the TextureProjectionDetails table, and see whether it relates to this scene.
 	pTextureProjectionDetailsTable->IterateStart();
 	sTextureProjectionDetails *p_details = pTextureProjectionDetailsTable->IterateNext();
-	while( p_details )
+	//while( p_details )
+	while (false) // lwss: this loop NEVER goes off in retail PC version. (KISAKTODO?)
 	{
 		XGMATRIX	stored_view_matrix			= EngineGlobals.view_matrix;
 		XGMATRIX	stored_projection_matrix	= EngineGlobals.projection_matrix;
@@ -2813,18 +2837,22 @@ void render_shadow_meshes( sScene *p_scene, sMesh **p_mesh_indices, int num_mesh
 		identity._12 = 0.0;
 		identity._13 = 0.0;
 		identity._14 = 0.0;
+
 		identity._21 = 0.0;
 		identity._22 = -0.5;
 		identity._23 = 0.0;
 		identity._24 = 0.0;
+
 		identity._31 = 0.0;
 		identity._32 = 0.0;
 		identity._33 = 1.0;
 		identity._34 = 0.0;
+
 		identity._41 = 0.5;
 		identity._42 = 0.5;
 		identity._43 = 0.0;
 		identity._44 = 1.0;
+
 		XGMatrixMultiply(&viewXproj, &p_details->view_matrix, &p_details->texture_projection_matrix);
 		XGMatrixMultiply(&v14, &viewXproj, &identity);
 
@@ -2882,27 +2910,36 @@ void render_shadow_meshes( sScene *p_scene, sMesh **p_mesh_indices, int num_mesh
 			D3DDevice_SetSamplerState(0, D3DSAMP_BORDERCOLOR, 0);
 		}
 
-		D3DDevice_SetSamplerState(0, D3DSAMP_MINFILTER, 2);
+		D3DDevice_SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+		D3DDevice_SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR); // KISAKTODO: Twice???
 		D3DDevice_SetTransform(D3DTS_PROJECTION, &EngineGlobals.projection_matrix);
 		D3DDevice_SetTransform(D3DTS_VIEW, &EngineGlobals.view_matrix);
 
 		D3DXMATRIX world_matrix;
-		world_matrix._43 = 0.0;
-		world_matrix._42 = 0.0;
-		world_matrix._41 = 0.0;
-		world_matrix._34 = 0.0;
-		world_matrix._32 = 0.0;
-		world_matrix._31 = 0.0;
-		world_matrix._24 = 0.0;
-		world_matrix._23 = 0.0;
-		world_matrix._21 = 0.0;
-		world_matrix._14 = 0.0;
-		world_matrix._13 = 0.0;
-		world_matrix._12 = 0.0;
-		world_matrix._44 = 1.0;
-		world_matrix._33 = 1.0;
-		world_matrix._22 = 1.0;
 		world_matrix._11 = 1.0;
+		world_matrix._12 = 0.0;
+		world_matrix._13 = 0.0;
+		world_matrix._14 = 0.0;
+
+		world_matrix._21 = 0.0;
+		world_matrix._22 = 1.0;
+		world_matrix._23 = 0.0;
+		world_matrix._24 = 0.0;
+
+		world_matrix._31 = 0.0;
+		world_matrix._32 = 0.0;
+		world_matrix._33 = 1.0;
+		world_matrix._34 = 0.0;
+
+		world_matrix._41 = 0.0;
+		world_matrix._42 = 0.0;
+		world_matrix._43 = 0.0;
+		world_matrix._44 = 1.0;
+
+
+
+
+
 
 		D3DDevice_SetTransform(D3DTS_WORLD, &world_matrix);
 
@@ -2959,10 +2996,16 @@ void render_shadow_meshes( sScene *p_scene, sMesh **p_mesh_indices, int num_mesh
 		EngineGlobals.projection_matrix	= p_details->projection_matrix;
 		EngineGlobals.is_orthographic	= true;
 
+		set_render_state(RS_ZBIAS, 10); // lwss add
+
 		// Draw the meshes.
 		for( int i = 0; i < num_meshes; ++i )
 		{
 			sMesh *p_mesh = p_mesh_indices[i];
+			if (!p_mesh)
+			{
+				continue;
+			}
 				
 			// Check this mesh is okay for shadow rendering.
 			if( !( p_mesh->m_flags & sMesh::MESH_FLAG_NO_SKATER_SHADOW ))
@@ -2970,11 +3013,12 @@ void render_shadow_meshes( sScene *p_scene, sMesh **p_mesh_indices, int num_mesh
 				// Cull this mesh against the second view frustum.
 				if( frustum_check_sphere( &p_mesh->m_sphere_center, p_mesh->m_sphere_radius ))
 				{
-					set_vertex_shader(258);
+					set_vertex_shader(D3DFVF_TEX1 | D3DFVF_XYZ); // 0x102
+
 //					if( frustum_check_box( &p_mesh->m_bbox ))
 					{
 						// KISAKTODO: Transform and GenerateShadowVertices()
-						//TransformShadowVertices(p_mesh->mp_index_buffer)
+						TransformShadowVertices((const D3DXVECTOR3 *)p_mesh->m_vertices_raw, p_mesh->m_num_vertices_raw, &v14);
 						//// Here we want to set up texture 0 as per the material on the mesh. This way we can use it as an alpha
 						//// mask to avoid drawing the shadow on transparent pixels.
 						////if( p_mesh->mp_material->mp_tex[0] )
@@ -2999,6 +3043,33 @@ void render_shadow_meshes( sScene *p_scene, sMesh **p_mesh_indices, int num_mesh
 		EngineGlobals.is_orthographic	= false;
 
 		p_details = pTextureProjectionDetailsTable->IterateNext();
+	}
+
+	if (NxXbox::EngineGlobals.hasHLSLv101)
+	{
+		if (!NxXbox::EngineGlobals.pixel_shader_override && NxXbox::EngineGlobals.pixel_shader_id)
+		{
+			D3DDevice_SetPixelShader(NULL);
+			NxXbox::EngineGlobals.pixel_shader_id = NULL;
+		}
+		NxXbox::EngineGlobals.upload_pixel_shader_constants = false;
+	}
+
+	D3DDevice_SetSamplerState(0, D3DSAMP_MINFILTER, stage_zero_minfilter);
+	set_render_state(RS_FOGENABLE, stored_fog_state);
+	D3DDevice_SetTextureStageState(0, D3DTSS_COLOROP, 4);
+	D3DDevice_SetTextureStageState(0, D3DTSS_ALPHAOP, 4);
+	D3DDevice_SetTextureStageState(0, D3DTSS_COLORARG1, 2);
+	D3DDevice_SetTextureStageState(0, D3DTSS_ALPHAARG1, 2);
+	D3DDevice_SetTextureStageState(1, D3DTSS_COLOROP, 1);
+	D3DDevice_SetRenderState(D3DRS_TEXTUREFACTOR, -1);
+	set_render_state(RS_ZBIAS, 0);
+	D3DDevice_SetRenderState(D3DRS_ZENABLE, 1);
+
+	if (NxXbox::EngineGlobals.p_texture[0])
+	{
+		D3DDevice_SetTexture(0, 0);
+		NxXbox::EngineGlobals.p_texture[0] = NULL;
 	}
 
 	// Turn off z-offset.
@@ -3034,7 +3105,7 @@ static bool debug_shadow_volumes = false;
 /*                                                                */
 /*                                                                */
 /******************************************************************/
-// LWSS: This function is done.
+// LWSS: This function is done. ++
 void render_shadow_volumes( sScene *p_scene, uint32 viewport )
 {
 	// Switch viewport from value to bitfield value.
@@ -3221,22 +3292,21 @@ void render_scene( sScene *p_scene, uint32 flags, uint32 viewport )
 		// Now draw the opaque meshes with shadow mapped on them.
 		if( p_scene->m_flags & SCENE_FLAG_RECEIVE_SHADOWS )
 		{
-			// LWSS: Change for PC
-			//set_render_state( RS_ZWRITEENABLE,	0 );
-			//DWORD min_filter;
-			//D3DDevice_GetTextureStageState( 0, D3DTSS_MINFILTER, &min_filter );
-			//if( min_filter == D3DTEXF_ANISOTROPIC )
-			//{
-			//	D3DDevice_SetTextureStageState( 0, D3DTSS_MINFILTER, D3DTEXF_LINEAR );
-			//}
+			set_render_state( RS_ZWRITEENABLE,	0 );
+			DWORD min_filter;
+			D3DDevice_GetSamplerState( 0, D3DSAMP_MINFILTER, &min_filter );
+			if( min_filter == D3DTEXF_ANISOTROPIC )
+			{
+				D3DDevice_SetSamplerState( 0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR );
+			}
 		
 			render_shadow_meshes( p_scene, visible_mesh_array, visible_mesh_array_index );
 
-			//if( min_filter == D3DTEXF_ANISOTROPIC )
-			//{
-			//	D3DDevice_SetTextureStageState( 0, D3DTSS_MINFILTER, D3DTEXF_ANISOTROPIC );
-			//}
-			//set_render_state( RS_ZWRITEENABLE,	1 );
+			if( min_filter == D3DTEXF_ANISOTROPIC )
+			{
+				D3DDevice_SetSamplerState( 0, D3DSAMP_MINFILTER, D3DTEXF_ANISOTROPIC );
+			}
+			set_render_state( RS_ZWRITEENABLE,	1 );
 		}
 
 		// Reset mesh array
@@ -3291,11 +3361,12 @@ void render_scene( sScene *p_scene, uint32 flags, uint32 viewport )
 				if( render )
 				{
 					// If the material has changed, submit the new material.
-					if( p_mesh->mp_material != p_material )
-					{
-						p_material = p_mesh->mp_material;
-						p_material->Submit();
-					}
+					// LWSS: Remove for PC
+					//if( p_mesh->mp_material != p_material )
+					//{
+					//	p_material = p_mesh->mp_material;
+					//	p_material->Submit();
+					//}
 					p_mesh->Submit();
 
 					// Add this mesh to the visible list, providing it is within bounds.
@@ -3406,11 +3477,12 @@ void render_scene( sScene *p_scene, uint32 flags, uint32 viewport )
 					if( render )
 					{
 						// If the material has changed, submit the new material.
-						if( p_mesh->mp_material != p_material )
-						{
-							p_material = p_mesh->mp_material;
-							p_material->Submit();
-						}
+						// LWSS: Remove for PC
+						//if( p_mesh->mp_material != p_material )
+						//{
+						//	p_material = p_mesh->mp_material;
+						//	p_material->Submit();
+						//}
 						p_mesh->Submit();
 
 						// Add this mesh to the visible list, providing it is within bounds.

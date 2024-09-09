@@ -69,7 +69,7 @@ static void DrawLoadScreenTexture()
 	D3DDevice_SetRenderState(D3DRS_LIGHTING, FALSE);
 
 	NxXbox::set_pixel_shader(NULL);
-	NxXbox::set_vertex_shader(260);
+	NxXbox::set_vertex_shader(D3DFVF_TEX1 | D3DFVF_XYZRHW);
 	NxXbox::set_blend_mode(0);
 	NxXbox::set_texture(0, 0);
 
@@ -159,7 +159,7 @@ void CALLBACK loadingBarTimerCallback( UINT uTimerID, UINT uMsg, DWORD_PTR dwUse
 
 		NxXbox::set_texture(0, 0);
 		D3DDevice_SetRenderState(D3DRS_ZENABLE, 0);
-		NxXbox::set_vertex_shader(0x44);
+		NxXbox::set_vertex_shader(D3DFVF_DIFFUSE | D3DFVF_XYZRHW);
 		D3DDevice_DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, vertexes, 20);
 
 		vertexes[0] = fHalfWidthOffset;

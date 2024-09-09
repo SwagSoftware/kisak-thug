@@ -837,7 +837,7 @@ void sMesh::TransformVertexBuffer_CASE2(BYTE* a2)
 			*&pOut.y = *&pOut.y * v6;
 			*&pOut.z = v6 * *&pOut.z;
 			const D3DXMATRIX* v7 = (D3DXMATRIX*)&v11[p_rawdata[61]];
-			float a2a = *(p_rawdata + 0x44);
+			float a2a = *(float*)(p_rawdata + 0x44);
 			D3DXVECTOR3 v15;
 			XGVec3TransformCoord(&v15, (D3DXVECTOR3*)p_rawdata, v7);
 			*&v13.x = *&v15.x * a2a + *&v13.x;
@@ -900,7 +900,7 @@ void sMesh::TransformVertexBuffer_CASE3(BYTE* a2)
 			*&pOut.y = *&pOut.y * v6;
 			*&pOut.z = v6 * *&pOut.z;
 			D3DXMATRIX* v7 = (D3DXMATRIX*)&pBoners[p_rawdata[61]];
-			float a2b = *(p_rawdata + 0x44);
+			float a2b = *(float*)(p_rawdata + 0x44);
 			D3DXVECTOR3 v16;
 			XGVec3TransformCoord(&v16, (D3DXVECTOR3*)p_rawdata, v7);
 			*&v14.x = *&v16.x * a2b + *&v14.x;
@@ -910,7 +910,7 @@ void sMesh::TransformVertexBuffer_CASE3(BYTE* a2)
 			*&pOut.x = *&v16.x * a2b + *&pOut.x;
 			*&pOut.y = *&v16.y * a2b + *&pOut.y;
 			*&pOut.z = a2b * *&v16.z + *&pOut.z;
-			float a2a = *(p_rawdata + 0x48);
+			float a2a = *(float*)(p_rawdata + 0x48);
 			if (0.0f != a2a)
 			{
 				D3DXMATRIX* v8 = (D3DXMATRIX*)&pBoners[p_rawdata[62]];
@@ -1693,7 +1693,7 @@ void sMesh::RawVertexFuckery()
 	p_vert0->d3dlockFlags = 16;
 	
 	this->m_num_vertices_raw = this->m_num_vertices;
-	this->m_vertices_raw = (char*)malloc(12 * m_num_vertices);
+	this->m_vertices_raw = (char*)malloc(sizeof(D3DXVECTOR3) * m_num_vertices);
 	
 	int offset = 0;
 	DWORD* v10 = (DWORD*)(this->m_vertices_raw);
@@ -2077,6 +2077,7 @@ void sMesh::Initialize(int				num_vertices,
 	{
 		size_t sz = 76 * this->m_num_vertices;
 		this->p_rawdata = new BYTE[sz];
+		memset(this->p_rawdata, 0x00, sz);
 		rawdata = this->p_rawdata;
 	}
 	else
@@ -2120,7 +2121,8 @@ void sMesh::Initialize(int				num_vertices,
 	}
 
 	byte_write_offset += sizeof(float) * 3;
-	m_vertex_shader[0] |= D3DFVF_XYZ;
+	//m_vertex_shader[0] |= D3DFVF_XYZ;
+	m_vertex_shader[0] = D3DFVF_XYZ;
 
 	// Copy in vertex weight data.
 	// LWSS: Seems removed in PC

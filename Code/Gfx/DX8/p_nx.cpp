@@ -258,7 +258,7 @@ static void plat_post_render_DrawPrimitiveUP()
 	v25 = v2;
 	v29 = v2;
 	v31 = v2;
-	NxXbox::set_vertex_shader(0x44u);
+	NxXbox::set_vertex_shader(D3DFVF_DIFFUSE | D3DFVF_XYZRHW);
 
 	D3DDevice_DrawPrimitiveUP(D3DPT_TRIANGLELIST, 4, v8, 20);
 }
@@ -381,7 +381,7 @@ void CEngine::s_plat_render_world( void )
 
 		NxXbox::render_shadow_targets();
 
-		CEngine::sGetImposterManager()->ProcessImposters();
+		//CEngine::sGetImposterManager()->ProcessImposters(); // lwss remove for PC
 
 		// Start up the screen blur if we're using it.
 		NxXbox::start_screen_blur();
@@ -481,8 +481,11 @@ void CEngine::s_plat_render_world( void )
 			// matrix to ensure a constant z=1, but which breaks the fog interpolation value.
 			float fog_start = NxXbox::EngineGlobals.fog_start;
 			float fog_end	= NxXbox::EngineGlobals.fog_end;
-			NxXbox::EngineGlobals.fog_start	= -20.0f;
-			NxXbox::EngineGlobals.fog_end	= -21.0f;
+			//NxXbox::EngineGlobals.fog_start	= -20.0f;
+			//NxXbox::EngineGlobals.fog_end	= -21.0f;
+			// lwss: un-negatize these for PC
+			NxXbox::EngineGlobals.fog_start	= 20.0f;
+			NxXbox::EngineGlobals.fog_end	= 21.0f;
 			D3DDevice_SetRenderState( D3DRS_FOGSTART,	*((DWORD*)( &NxXbox::EngineGlobals.fog_start )));
 			D3DDevice_SetRenderState( D3DRS_FOGEND,		*((DWORD*)( &NxXbox::EngineGlobals.fog_end )));
 
@@ -566,7 +569,7 @@ void CEngine::s_plat_render_world( void )
 			render_particles();
 
 			// New style particles. Update should probably be somewhere else.
-			mp_particle_manager->UpdateParticles();
+			//mp_particle_manager->UpdateParticles(); // LWSS: Remove
 			mp_particle_manager->RenderParticles();
 
 			// Render weather effects.

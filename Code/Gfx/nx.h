@@ -210,7 +210,7 @@ public:
 		MAX_LOADED_SCENES = 4
 	};
 
-private:
+//private:
 	// Platform specific function calls	
 	static void					s_plat_start_engine();
 	static void					s_plat_suspend_engine();
