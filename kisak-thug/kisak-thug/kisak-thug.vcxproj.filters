@@ -262,14 +262,14 @@
     <Filter Include="Source Files\Sys\MemCard\Win32">
       <UniqueIdentifier>{364e6f3f-9b2a-4de5-936a-bd3adf167e6a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Sys\MemCard\Win32\Mem">
-      <UniqueIdentifier>{f0ef1541-47ac-4519-907e-4cac4e61f121}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Gel\SoundFX\SDL">
       <UniqueIdentifier>{c522ee69-f153-4fa1-b7f8-83ba12456cbd}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Gel\Music\SDL">
       <UniqueIdentifier>{64abab48-c414-4853-8dee-ca71522a18da}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Sys\Mem">
+      <UniqueIdentifier>{f0ef1541-47ac-4519-907e-4cac4e61f121}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -1168,34 +1168,34 @@
       <Filter>Source Files\Sys\Replay</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Code\Sys\Mem\alloc.cpp">
-      <Filter>Source Files\Sys\MemCard\Win32\Mem</Filter>
+      <Filter>Source Files\Sys\Mem</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Code\Sys\Mem\CompactPool.cpp">
-      <Filter>Source Files\Sys\MemCard\Win32\Mem</Filter>
+      <Filter>Source Files\Sys\Mem</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Code\Sys\Mem\heap.cpp">
-      <Filter>Source Files\Sys\MemCard\Win32\Mem</Filter>
+      <Filter>Source Files\Sys\Mem</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Code\Sys\Mem\memman.cpp">
-      <Filter>Source Files\Sys\MemCard\Win32\Mem</Filter>
+      <Filter>Source Files\Sys\Mem</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Code\Sys\Mem\memtest.cpp">
-      <Filter>Source Files\Sys\MemCard\Win32\Mem</Filter>
+      <Filter>Source Files\Sys\Mem</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Code\Sys\Mem\pile.cpp">
-      <Filter>Source Files\Sys\MemCard\Win32\Mem</Filter>
+      <Filter>Source Files\Sys\Mem</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Code\Sys\Mem\pool.cpp">
-      <Filter>Source Files\Sys\MemCard\Win32\Mem</Filter>
+      <Filter>Source Files\Sys\Mem</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Code\Sys\Mem\Poolable.cpp">
-      <Filter>Source Files\Sys\MemCard\Win32\Mem</Filter>
+      <Filter>Source Files\Sys\Mem</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Code\Sys\Mem\PoolManager.cpp">
-      <Filter>Source Files\Sys\MemCard\Win32\Mem</Filter>
+      <Filter>Source Files\Sys\Mem</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Code\Sys\Mem\region.cpp">
-      <Filter>Source Files\Sys\MemCard\Win32\Mem</Filter>
+      <Filter>Source Files\Sys\Mem</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Code\Sys\File\AsyncFilesys.cpp">
       <Filter>Source Files\Sys\File</Filter>
@@ -2652,43 +2652,43 @@
       <Filter>Source Files\Sys\Replay</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Code\Sys\Mem\alloc.h">
-      <Filter>Source Files\Sys\MemCard\Win32\Mem</Filter>
+      <Filter>Source Files\Sys\Mem</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Code\Sys\Mem\CompactPool.h">
-      <Filter>Source Files\Sys\MemCard\Win32\Mem</Filter>
+      <Filter>Source Files\Sys\Mem</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Code\Sys\Mem\handle.h">
-      <Filter>Source Files\Sys\MemCard\Win32\Mem</Filter>
+      <Filter>Source Files\Sys\Mem</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Code\Sys\Mem\heap.h">
-      <Filter>Source Files\Sys\MemCard\Win32\Mem</Filter>
+      <Filter>Source Files\Sys\Mem</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Code\Sys\Mem\memdbg.h">
-      <Filter>Source Files\Sys\MemCard\Win32\Mem</Filter>
+      <Filter>Source Files\Sys\Mem</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Code\Sys\Mem\memman.h">
-      <Filter>Source Files\Sys\MemCard\Win32\Mem</Filter>
+      <Filter>Source Files\Sys\Mem</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Code\Sys\Mem\memptr.h">
-      <Filter>Source Files\Sys\MemCard\Win32\Mem</Filter>
+      <Filter>Source Files\Sys\Mem</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Code\Sys\Mem\memtest.h">
-      <Filter>Source Files\Sys\MemCard\Win32\Mem</Filter>
+      <Filter>Source Files\Sys\Mem</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Code\Sys\Mem\pile.h">
-      <Filter>Source Files\Sys\MemCard\Win32\Mem</Filter>
+      <Filter>Source Files\Sys\Mem</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Code\Sys\Mem\pool.h">
-      <Filter>Source Files\Sys\MemCard\Win32\Mem</Filter>
+      <Filter>Source Files\Sys\Mem</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Code\Sys\Mem\Poolable.h">
-      <Filter>Source Files\Sys\MemCard\Win32\Mem</Filter>
+      <Filter>Source Files\Sys\Mem</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Code\Sys\Mem\PoolManager.h">
-      <Filter>Source Files\Sys\MemCard\Win32\Mem</Filter>
+      <Filter>Source Files\Sys\Mem</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Code\Sys\Mem\region.h">
-      <Filter>Source Files\Sys\MemCard\Win32\Mem</Filter>
+      <Filter>Source Files\Sys\Mem</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Code\Sys\File\AsyncFilesys.h">
       <Filter>Source Files\Sys\File</Filter>

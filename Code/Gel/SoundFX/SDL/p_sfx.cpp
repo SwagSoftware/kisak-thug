@@ -203,8 +203,9 @@ namespace Sfx
 		Dbg_Assert(pInfo);
 
 		// Open sound file
-		std::string sound_name = "sounds/" + std::string(sfxName) + ".snd";
-		void *fp = File::Open(sound_name.c_str(), "rb");
+		char sound_name[256]{ 0 };
+		snprintf(sound_name, 255, "sounds/%s.snd", sfxName);
+		void *fp = File::Open(sound_name, "rb");
 		if (!fp)
 			return false;
 

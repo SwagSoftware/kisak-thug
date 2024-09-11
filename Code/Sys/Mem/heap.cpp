@@ -567,7 +567,7 @@ void*	Heap::allocate( size_t size, bool assert_on_fail )
 		if ( p_header->mSize >= adjusted_size )
 #else
 #ifdef __PLAT_WN32__
-		if ( p_header->mSize >= (size + (BlockHeader::sSize * 4)) ) // LWSS: this is needed because the below calculations aren't checked. Need at least 2 (start/leftover) blockheaders
+		if ( p_header->mSize >= (size + (BlockHeader::sSize * 8)) ) // LWSS: this is needed because the below calculations aren't checked. Need at least 2 (start/leftover) blockheaders
 #else
 		if ( p_header->mSize >= size )
 #endif

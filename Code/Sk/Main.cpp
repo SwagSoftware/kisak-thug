@@ -718,8 +718,9 @@ extern uint8 * RES_gamecube;
 				so that the game can be launched from a startup script without problems
 			
 			*/
-			
+#ifndef NO_SCRIPT_CACHING
 			mdl_manager->RegisterModule ( *script_cache );
+#endif
 			mdl_manager->RegisterModule ( *grandpas_park_editor );
 			mdl_manager->RegisterModule ( *front );
 			mdl_manager->RegisterModule ( *skate_mod );
@@ -732,7 +733,9 @@ extern uint8 * RES_gamecube;
 			Start modules section
 			************************************************/
 			
+#ifndef NO_SCRIPT_CACHING
 			mdl_manager->StartModule( *script_cache );
+#endif
 			mdl_manager->StartModule( *front );
 			mdl_manager->StartModule( *skate_mod );      
 			mdl_manager->StartModule ( *grandpas_park_editor );
