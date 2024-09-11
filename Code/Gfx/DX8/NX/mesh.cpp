@@ -264,7 +264,7 @@ sMesh::~sMesh( void )
 			p_buff->indexBuffer = NULL;
 
 			LinkedList* p_list = g_meshIndexBuffers;
-			if (g_meshIndexBuffers)
+			if (p_list)
 			{
 				while (p_list->data != p_buff)
 				{
@@ -293,7 +293,7 @@ sMesh::~sMesh( void )
 				p_list->data = NULL;
 				p_list->prev = NULL;
 				p_list->next = NULL;
-				free(p_list);
+				delete p_list;
 			}
 
 			if (p_buff->indexBuffer)
@@ -310,7 +310,7 @@ sMesh::~sMesh( void )
 			p_buff->indexBuffer = NULL;
 			p_buff->rawdata = NULL;
 			p_buff->unk4 = NULL;
-			free(p_buff);
+			delete p_buff;
 
 			mp_index_buffer[ib] = NULL;
 		}

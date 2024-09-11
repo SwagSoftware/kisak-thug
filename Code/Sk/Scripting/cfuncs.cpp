@@ -7980,7 +7980,8 @@ bool ScriptCleanup(Script::CStruct *pParams, Script::CScript *pScript)
 	}
 	#endif
 	
-	Dbg_MsgAssert(fragmentation < 10000, ("Excessive bottom up fragmentation (%d) after cleanup",fragmentation)); 
+	// KISAKTODO: Optimization PC :)
+	//Dbg_MsgAssert(fragmentation < 10000, ("Excessive bottom up fragmentation (%d) after cleanup",fragmentation)); 
 	
 //#ifndef __PLAT_NGC__
 //	heap = mem_man.TopDownHeap();

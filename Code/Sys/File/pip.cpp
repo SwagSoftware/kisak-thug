@@ -339,7 +339,16 @@ void LoadPre(const char *p_preFileName)
 
 
 	// Reallocate the buffer.
-	char *p_new_file_data=NULL;
+#ifdef __PLAT_WN32__
+	char* p_new_file_data = (char*)Mem::Malloc(new_pre_buffer_size);
+	memcpy(p_new_file_data + new_pre_buffer_size - old_pre_buffer_size + name_size, p_old_file_data + name_size, old_pre_buffer_size - name_size);
+	memcpy(p_new_file_data, p_old_file_data, name_size);
+
+	// Now update p_old_file_data to point where it should.
+	Mem::Free(p_old_file_data);
+	p_old_file_data = p_new_file_data + new_pre_buffer_size - old_pre_buffer_size;
+#else
+	char* p_new_file_data = NULL;
 	if (Mem::Manager::sHandle().GetContextDirection()==Mem::Allocator::vTOP_DOWN)
 	{
 		// If using the top-down heap expand the buffer downwards ...
@@ -383,6 +392,7 @@ void LoadPre(const char *p_preFileName)
 	{
 		p_new_file_data[i]=p_old_file_data[i];
 	}
+#endif
 
 	// Write in the new pre header
 	SPreHeader *p_source_header=(SPreHeader*)(p_old_file_data+name_size);

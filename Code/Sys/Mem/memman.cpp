@@ -167,8 +167,8 @@ Manager::Manager( void )
 	//_mem_start	= (char *)malloc( 38 * 1024 * 1024 );
 	//_mem_end	= _mem_start + ( 38 * 1024 * 1024 );
 	// LWSS: greatly increase this.
-	_mem_start	= (char *)malloc( 200 * 1024 * 1024 );
-	_mem_end	= _mem_start + ( 200 * 1024 * 1024 );
+	_mem_start	= (char *)malloc( 512 * 1024 * 1024 );
+	_mem_end	= _mem_start + (512 * 1024 * 1024 );
 	_std_mem_end = _mem_end;
 
 #	endif 

@@ -135,5 +135,21 @@
 #endif // __PLAT_NGC__
 
 
+// LWSS ADD
+#ifdef __PLAT_WN32__
+#define	_SCRIPT_HEAP_SIZE				(1024 * 1024 * 40)
+#define	SCRIPT_CACHE_HEAP_SIZE			(1024 * 1024 * 40)
+#define	FRONTEND_HEAP_SIZE				(1024 * 1024 * 40)
+#define	NETWORK_HEAP_qSIZE				(1024 * 1024 * 40)
+#define PROFILER_HEAP_SIZE					(1024 * 1024 * 40)
+#define	SKATERINFO_HEAP_SIZE			(1024 * 1024 * 40)
+#define	SKATER_HEAP_SIZE				(1024 * 1024 * 40)		// default size of skater heap
+#define SKATER_GEOM_HEAP_SIZE			(1024 * 1024 * 40)
+#define BOOTSTRAP_FRONTEND_HEAP_SIZE	(1024 * 1024 * 40)
+#define INTERNET_HEAP_SIZE				(1024 * 1024 * 40)
+#define NETMISC_HEAP_SIZE				(1024 * 1024 * 40)
+#define	THEME_HEAP_SIZE     			 (1024 * 1024 * 40)		// theme textures heap size
+#endif
+
 #endif // __SK_HEAP_SIZES_H
 

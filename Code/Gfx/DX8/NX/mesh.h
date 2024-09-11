@@ -115,7 +115,7 @@ struct IndexBufferWrapper
 			itr->data = 0;
 			itr->prev = 0;
 			itr->next = 0;
-			free(itr);
+			delete itr;
 		}
 	}
 

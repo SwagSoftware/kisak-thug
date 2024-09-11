@@ -656,7 +656,7 @@ typedef	sint64				nID64;
 #endif
 
 // lwss: this custom allocator is annoying.
-#define KISAK_THUG_ALLOC 1
+//#define KISAK_THUG_ALLOC 1
 
 // Lwss: Used to unfk the cursor in early init code debugging.
 //#define KISAK_EARLY_CURSOR_FIX 1
