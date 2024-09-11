@@ -27,7 +27,7 @@ struct sTexture
 	//IDirect3DTexture8*	pD3DTexture;
 	IDirect3DTexture9*	pD3DTexture; // +16
 	//IDirect3DPalette8*	pD3DPalette;
-	void* unk;
+	void* rawdata;
 	//IDirect3DSurface8*	pD3DSurface;
 	IDirect3DSurface9*	pD3DSurface; // 24
 };

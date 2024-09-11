@@ -137,12 +137,18 @@ bool			CMesh::LoadCollision(const char *p_name)
 		uint8 *p_node_array_size = p_base_face_addr + ( p_header->m_total_num_faces * Nx::CCollObjTriData::GetFaceElemSize() );
 		p_node_array_size += ( p_header->m_total_num_faces & 1 ) ? 2 : 0;
 #endif		// __PLAT_NGC__
+		uint32 node_array_size = *((uint32*)p_node_array_size);
 		uint8 *p_base_node_addr = p_node_array_size + 4;
-		uint8 *p_base_face_idx_addr = p_base_node_addr + *((int *) p_node_array_size);
+		uint8 *p_base_face_idx_addr = p_base_node_addr + node_array_size;
 
 		// Read objects
 		for (int oidx = 0; oidx < p_header->m_num_objects; oidx++)
 		{
+			if (!node_array_size)
+			{
+				m_num_coll_objects = 0;
+				break;
+			}
 #ifdef __PLAT_NGC__
 			CScene * p_scene = static_cast<CScene*>( (static_cast<CNgcMesh*>( this ))->GetScene() );
 			mp_coll_objects[oidx].InitCollObjTriData(p_scene, p_base_vert_addr, NULL, p_base_face_addr, p_base_node_addr, p_base_face_idx_addr);

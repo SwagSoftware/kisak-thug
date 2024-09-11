@@ -117,7 +117,7 @@
     <ClCompile Include="..\..\Code\Gel\Music\SDL\p_music.cpp" />
     <ClCompile Include="..\..\Code\Gel\Music\SDL\usersoundtrack.cpp" />
     <ClCompile Include="..\..\Code\Gel\Music\Win32\p_adpcmfilestream.cpp" />
-    <ClCompile Include="..\..\Code\Gel\Music\Win32\p_music.cpp" />
+    <ClCompile Include="..\..\Code\Gel\Music\Win32\win32_music.cpp" />
     <ClCompile Include="..\..\Code\Gel\Music\Win32\p_soundtrack.cpp" />
     <ClCompile Include="..\..\Code\Gel\Music\Win32\p_wmafilestream.cpp" />
     <ClCompile Include="..\..\Code\Gel\Net\App\netapp.cpp" />
@@ -162,7 +162,7 @@
     <ClCompile Include="..\..\Code\Gel\SoundFX\SDL\p_sfx.cpp" />
     <ClCompile Include="..\..\Code\Gel\SoundFX\SDL\snd.cpp" />
     <ClCompile Include="..\..\Code\Gel\SoundFX\soundfx.cpp" />
-    <ClCompile Include="..\..\Code\Gel\SoundFX\Win32\p_sfx.cpp" />
+    <ClCompile Include="..\..\Code\Gel\SoundFX\Win32\win32_sfx.cpp" />
     <ClCompile Include="..\..\Code\Gfx\2D\BlurEffect.cpp" />
     <ClCompile Include="..\..\Code\Gfx\2D\Element3d.cpp" />
     <ClCompile Include="..\..\Code\Gfx\2D\Menu2.cpp" />
@@ -1012,7 +1012,7 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
-    <EnableASAN>true</EnableASAN>
+    <EnableASAN>false</EnableASAN>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -1076,6 +1076,8 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <Optimization>MaxSpeed</Optimization>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

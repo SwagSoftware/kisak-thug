@@ -3,7 +3,7 @@
 
 namespace Mem
 {
-
+#ifdef KISAK_ORIGINAL_ALLOCATOR
 	int gHeapPools = false;			// set to true to use debug heap instead of pools
 
 
@@ -27,5 +27,5 @@ PoolTest::~PoolTest()
 
 
 
-
+#endif
 }

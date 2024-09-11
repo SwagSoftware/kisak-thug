@@ -544,6 +544,11 @@ Lst::HashTable<Nx::CTexture>* LoadTextureFileFromMemory( void **pp_mem, Lst::Has
 		}
 
 		// LWSS: DX9 does not have palettes
+		// LWSS2: We need to Read the palette data anyway to advance the File Read Pointer. (Multiple textures are read from 1 File in a loop)
+		// KISAKTODO: This needs more logic I think, but might work (with fked up textures)
+		static char palette_dummy[2048];
+		MemoryRead(palette_dummy, palette_size, 1, p_data);
+		Dbg_Assert(palette_size < 2048);
 		// KISAKTODO: This needs more logic I think, but might work (with fked up textures)
 		//if( palette_size > 0 )
 		//{
@@ -572,6 +577,8 @@ Lst::HashTable<Nx::CTexture>* LoadTextureFileFromMemory( void **pp_mem, Lst::Has
 			//p_texture->pD3DPalette = NULL;
 		}
 
+
+
 		for( uint32 mip_level = 0; mip_level < p_texture->Levels; ++mip_level )
 		{
 			uint32 texture_level_data_size;
@@ -585,6 +592,7 @@ Lst::HashTable<Nx::CTexture>* LoadTextureFileFromMemory( void **pp_mem, Lst::Has
 			else
 			{
 				MemoryRead( locked_rect.pBits, texture_level_data_size, 1, p_data );
+				p_texture->pD3DTexture->UnlockRect(mip_level); // lwss add
 			}
 		}
 
@@ -629,14 +637,13 @@ Lst::HashTable<Nx::CTexture>* LoadTextureFile( const char *Filename, Lst::HashTa
 			if(( optimal_table_size <= test ) || ( size >= 12 ))
 			{
 				Mem::Allocator::BlockHeader*	p_bheader	= Mem::Allocator::BlockHeader::sRead( p_texture_table );
-				//Mem::Allocator*					p_allocater	= p_bheader->mpAlloc;
+				Mem::Allocator*					p_allocater	= p_bheader->mpAlloc;
 
 				delete p_texture_table;
 				
-				// lwss: remove allocator aids
-				//Mem::Manager::sHandle().PushContext( p_allocater );
+				Mem::Manager::sHandle().PushContext( p_allocater );
 				p_texture_table = new Lst::HashTable<Nx::CTexture>( size );
-				//Mem::Manager::sHandle().PopContext();
+				Mem::Manager::sHandle().PopContext();
 				break;
 			}
 		}
@@ -682,7 +689,8 @@ Lst::HashTable<Nx::CTexture>* LoadTextureFile( const char *Filename, Lst::HashTa
 		}
 		else if( p_texture->TexelDepth == 8 )
 		{
-			texture_format = D3DFMT_P8;
+			//texture_format = D3DFMT_P8;
+			texture_format = D3DFMT_A8R8G8B8; // lwss change for pc
 		}
 		else if( p_texture->TexelDepth == 16 )
 		{
@@ -706,7 +714,11 @@ Lst::HashTable<Nx::CTexture>* LoadTextureFile( const char *Filename, Lst::HashTa
 		}
 
 		// LWSS: DX9 does not have palettes
+		// LWSS2: We need to Read the palette data anyway to advance the File Read Pointer. (Multiple textures are read from 1 File in a loop)
 		// KISAKTODO: This needs more logic I think, but might work (with fked up textures)
+		static char palette_dummy[2048];
+		File::Read(palette_dummy, palette_size, 1, p_FH);
+		Dbg_Assert(palette_size < 2048);
 		//if( palette_size > 0 )
 		//{
 		//	// Create and lock the palette.
@@ -747,6 +759,7 @@ Lst::HashTable<Nx::CTexture>* LoadTextureFile( const char *Filename, Lst::HashTa
 			else
 			{
 				File::Read( locked_rect.pBits, texture_level_data_size, 1, p_FH );
+				p_texture->pD3DTexture->UnlockRect(mip_level); // lwss add
 			}
 		}
 

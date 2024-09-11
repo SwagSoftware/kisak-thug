@@ -10,6 +10,7 @@
 #include <sys/mem/CompactPool.h>
 #include <sys/mem/memman.h>
 
+#ifdef KISAK_ORIGINAL_ALLOCATOR
 #define DefinePoolableClass(_T)										\
 namespace Mem														\
 {																	\
@@ -18,16 +19,18 @@ namespace Mem														\
 	int Mem::CPoolable< _T >::s_currentPool=0;						\
 }																	\
 
+#else
+#define DefinePoolableClass(_T)
+#endif
+
 
 namespace Mem
 {
-
-
 	extern int gHeapPools;
 
 //class CCompactPool;
 
-
+#ifdef KISAK_ORIGINAL_ALLOCATOR
 template <class _T>
 class CPoolable
 {
@@ -235,9 +238,29 @@ void CPoolable<_T>::SPrintInfo()
 	printf("pool is at %p\n", sp_pool[s_currentPool]);
 }
 
+#else // KISAK_ORIGINAL_ALLOCATOR
+	template <class _T>
+	class CPoolable
+	{
+	public:
+		static void							SCreatePool(int num_items, const char* name) { }
+		static void							SAttachPool(CCompactPool* pPool) { }
+		static void							SRemovePool() {}
+		static size_t						SGetMaxUsedItems() { return 0; }
+		static size_t						SGetNumUsedItems() { return 0; }
+		static size_t						SGetTotalItems() { return 0; }
+
+		static void							SPrintInfo() {}
+
+		static void							SSwitchToNextPool() {}
+		static void							SSwitchToPreviousPool() {}
+
+		static int							SGetCurrentPoolIndex() { return 0; }
+		static bool							SPoolExists() { return false; }
+	};
+#endif // KISAK_ORIGINAL_ALLOCATOR
 
 
-
-}
+} // namespace Mem
 
 #endif

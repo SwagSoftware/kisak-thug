@@ -656,7 +656,7 @@ typedef	sint64				nID64;
 #endif
 
 // lwss: this custom allocator is annoying.
-//#define KISAK_THUG_ALLOC 1
+//#define KISAK_ORIGINAL_ALLOCATOR 1
 
 // Lwss: Used to unfk the cursor in early init code debugging.
 //#define KISAK_EARLY_CURSOR_FIX 1
@@ -713,9 +713,12 @@ static inline void operator delete[]   ( void* block ) ;
 inline void* 	operator new( size_t size )
 {
 #ifdef KISAK_THUG_ALLOC
-	return malloc(size);
+	return Mem::Manager::sHandle().New(size, true);
+#else
+	void* mem = malloc(size);
+	memset(mem, 0x00, size);
+	return mem;
 #endif
-	return Mem::Manager::sHandle().New( size, true );
 }
 /******************************************************************/
 /*                                                                */
@@ -724,10 +727,13 @@ inline void* 	operator new( size_t size )
 
 inline void* 	operator new[] ( size_t size )
 {
-#ifdef KISAK_THUG_ALLOC
-	return malloc(size);
+#ifdef KISAK_ORIGINAL_ALLOCATOR
+	return Mem::Manager::sHandle().New(size, true);
+#else
+	void* mem = malloc(size);
+	memset(mem, 0x00, size);
+	return mem;
 #endif
-	return Mem::Manager::sHandle().New( size, true );
 }
 #endif		// __PLAT_NGC__
 
@@ -738,10 +744,13 @@ inline void* 	operator new[] ( size_t size )
 
 inline void* 	operator new( size_t size, bool assert_on_fail )
 {
-#ifdef KISAK_THUG_ALLOC
-	return malloc(size);
+#ifdef KISAK_ORIGINAL_ALLOCATOR
+	return Mem::Manager::sHandle().New(size, assert_on_fail);
+#else
+	void* mem = malloc(size);
+	memset(mem, 0x00, size);
+	return mem;
 #endif
-	return Mem::Manager::sHandle().New( size, assert_on_fail );
 }
 
 /******************************************************************/
@@ -751,10 +760,13 @@ inline void* 	operator new( size_t size, bool assert_on_fail )
 
 inline void* 	operator new[] ( size_t size, bool assert_on_fail )
 {
-#ifdef KISAK_THUG_ALLOC
-	return malloc(size);
+#ifdef KISAK_ORIGINAL_ALLOCATOR
+	return Mem::Manager::sHandle().New(size, assert_on_fail);
+#else
+	void* mem = malloc(size);
+	memset(mem, 0x00, size);
+	return mem;
 #endif
-	return Mem::Manager::sHandle().New( size, assert_on_fail );
 }
 
 /******************************************************************/
@@ -764,10 +776,13 @@ inline void* 	operator new[] ( size_t size, bool assert_on_fail )
 
 inline void*	operator new( size_t size, Mem::Allocator* pAlloc, bool assert_on_fail = true )
 {
-#ifdef KISAK_THUG_ALLOC
-	return malloc(size);
+#ifdef KISAK_ORIGINAL_ALLOCATOR
+	return Mem::Manager::sHandle().New(size, assert_on_fail, pAlloc);
+#else
+	void* mem = malloc(size);
+	memset(mem, 0x00, size);
+	return mem;
 #endif
-	return Mem::Manager::sHandle().New( size, assert_on_fail, pAlloc );
 }
 /******************************************************************/
 /*                                                                */
@@ -776,10 +791,13 @@ inline void*	operator new( size_t size, Mem::Allocator* pAlloc, bool assert_on_f
 
 inline void*	operator new[]( size_t size, Mem::Allocator* pAlloc, bool assert_on_fail = true )
 {
-#ifdef KISAK_THUG_ALLOC
-	return malloc(size);
+#ifdef KISAK_ORIGINAL_ALLOCATOR
+	return Mem::Manager::sHandle().New(size, assert_on_fail, pAlloc);
+#else
+	void* mem = malloc(size);
+	memset(mem, 0x00, size);
+	return mem;
 #endif
-	return Mem::Manager::sHandle().New( size, assert_on_fail, pAlloc );
 }
 
 #ifndef __PLAT_WN32__
@@ -812,11 +830,11 @@ inline void* 	operator new[]( size_t size, void* pLocation )
 
 inline void 	operator delete( void* pAddr )
 {
-#ifdef KISAK_THUG_ALLOC
+#ifdef KISAK_ORIGINAL_ALLOCATOR
+	Mem::Manager::sHandle().Delete(pAddr);
+#else
 	free(pAddr);
-	return;
 #endif
-	Mem::Manager::sHandle().Delete( pAddr );
 }
 
 /******************************************************************/
@@ -826,44 +844,51 @@ inline void 	operator delete( void* pAddr )
 
 inline void 	operator delete[]( void* pAddr )
 {
-#ifdef KISAK_THUG_ALLOC
+#ifdef KISAK_ORIGINAL_ALLOCATOR
+	Mem::Manager::sHandle().Delete(pAddr);
+#else
 	free(pAddr);
-	return;
 #endif
-	Mem::Manager::sHandle().Delete( pAddr );
 }
 #endif		// __PLAT_NGC__
 
 // LWSS: AFX garbage MSVC shit allocators
 inline void* __cdecl operator new(size_t nSize, LPCSTR lpszFileName, int nLine)
 {
-#ifdef KISAK_THUG_ALLOC
-	return malloc(nSize);
-#endif
+#ifdef KISAK_ORIGINAL_ALLOCATOR
 	return Mem::Manager::sHandle().New(nSize, true);
+#else
+	void* mem = malloc(nSize);
+	memset(mem, 0x00, nSize);
+	return mem;
+#endif
 }
 inline void __cdecl operator delete(void* p, LPCSTR lpszFileName, int nLine)
 {
-#ifdef KISAK_THUG_ALLOC
-	free(p);
-	return;
-#endif
+#ifdef KISAK_ORIGINAL_ALLOCATOR
 	Mem::Manager::sHandle().Delete(p);
+#else
+	free(p);
+#endif
 }
 
 inline void* __cdecl operator new[](size_t nSize, LPCSTR lpszFileName, int nLine)
 {
-#ifdef KISAK_THUG_ALLOC
-	return malloc(nSize);
-#endif
+#ifdef KISAK_ORIGINAL_ALLOCATOR
 	return Mem::Manager::sHandle().New(nSize, true);
+#else
+	void* mem = malloc(nSize);
+	memset(mem, 0x00, nSize);
+	return mem;
+#endif
 }
 inline void __cdecl operator delete[](void* p, LPCSTR lpszFileName, int nLine)
 {
-#ifdef KISAK_THUG_ALLOC
+#ifdef KISAK_ORIGINAL_ALLOCATOR
+	Mem::Manager::sHandle().Delete(p);
+#else
 	free(p);
 #endif
-	Mem::Manager::sHandle().Delete(p);
 }
 // LWSS end
 

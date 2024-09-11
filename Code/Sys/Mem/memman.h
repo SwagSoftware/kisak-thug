@@ -28,6 +28,8 @@
 #endif
 #include <core/singleton.h>
 #include <core/list.h>
+
+
 #include <sys\mem\region.h>
 #include "heap.h"
 #include "alloc.h"
@@ -55,6 +57,91 @@
 #endif
 #endif
 
+#ifndef KISAK_ORIGINAL_ALLOCATOR
+// dummy stub classes
+namespace Mem
+{
+	class  Record
+	{
+	public:
+		Record(void) : m_count(0), m_peak(0) {}
+
+		int		m_count;
+		int		m_peak;
+
+		Record& operator+=(int src){}
+		Record& operator-=(int src){}
+
+		const 	Record		operator++(int src){}
+		const 	Record		operator--(int src){}
+		Record& operator++(void){}
+		Record& operator--(void){}
+
+	};
+
+	class Allocator
+	{
+	public:
+		enum Direction
+		{
+			vBOTTOM_UP = +1,
+			vTOP_DOWN = -1
+		};
+		class BlockHeader
+		{
+		public:
+			static const uint sSize = 0x10;
+			static BlockHeader* sRead(void* addy)
+			{
+				static BlockHeader head;
+				return &head;
+			}
+			Allocator* mpAlloc;
+			int fk;
+		};
+		Record			mUsedBlocks;
+		Record			mFreeBlocks;
+		Record			mUsedMem;
+		Record			mFreeMem;
+	};
+	struct Region : public Allocator
+	{
+	public:
+		int MemAvailable()
+		{
+			return INT_MAX / 2;
+		}
+		int dummy; 
+	};
+	struct AllocRegion : Region
+	{
+		AllocRegion(int wow)
+		{
+		}
+		int fkyou;
+	};
+	struct Heap  : public Allocator
+	{
+		inline void PushContext()
+		{
+		}
+		inline void PopContext()
+		{
+		}
+		inline const char* GetName()
+		{
+			return "KISAKHEEP";
+		}
+		inline int LargestFreeBlock()
+		{
+			return 1;
+		}
+		int dummy;
+		Region* mp_region;
+	};
+}
+#endif
+
 /*****************************************************************************
 **								   Defines									**
 *****************************************************************************/
@@ -80,7 +167,6 @@ namespace Mem
 /*****************************************************************************
 **							     Type Defines								**
 *****************************************************************************/
-
 class CNamedHeapInfo
 {
 public:
@@ -105,6 +191,7 @@ public:
 	bool		m_used;
 };
 
+#ifdef KISAK_ORIGINAL_ALLOCATOR
 extern Manager* sp_instance;
 
 class Manager : public Spt::Class			
@@ -290,6 +377,257 @@ private :
 protected:
 	CNamedHeapInfo*				find_named_heap_info( uint32 name );
 };
+#else
+class Manager : public Spt::Class
+{
+
+public:
+
+	enum
+	{
+		vMAX_CONTEXT = 16,
+		vMAX_HEAPS = 32
+	};
+
+	void						PushContext(Allocator* alloc)
+	{}
+	void						PopContext(void)
+	{}
+
+	inline void* New(size_t size, bool assert_on_fail = true, Allocator* pAlloc = NULL)
+	{
+		return ::malloc(size);
+	}
+	inline int							Available()
+	{
+		return INT_MAX / 2;
+	}
+	inline void* ReallocateDown(size_t newSize, void* pOld, Allocator* pAlloc = NULL)
+	{
+		return ::realloc(pOld, newSize);
+	}
+	inline void* ReallocateUp(size_t newSize, void* pOld, Allocator* pAlloc = NULL)
+	{
+		return ::realloc(pOld, newSize);
+	}
+	inline void* ReallocateShrink(size_t newSize, void* pOld, Allocator* pAlloc = NULL)
+	{
+		return ::realloc(pOld, newSize);
+	}
+	inline void						Delete(void* pAddr)
+	{
+		::free(pAddr);
+	}
+	inline bool						Valid(void* pAddr)
+	{
+		return false;
+	}
+	inline size_t						GetAllocSize(void* pAddr)
+	{
+#ifdef __PLAT_WN32__
+		return _msize(pAddr);
+#endif
+	}
+
+	Heap dummy;
+
+	inline Heap* TopDownHeap(void) { return &dummy; }
+	inline Heap* BottomUpHeap(void) { return &dummy; }
+	inline Heap* FrontEndHeap(void) { return &dummy; }
+	inline Heap* ScriptHeap(void) { return &dummy; }
+	inline Heap* NetworkHeap(void) { return &dummy; }
+	inline Heap* NetMiscHeap(void) { return &dummy; }
+	inline Heap* ProfilerHeap(void) { return &dummy; }
+	inline Heap* DebugHeap(void) { return &dummy; }
+	inline Heap* SkaterHeap(int n) { return &dummy; }
+	inline Heap* SkaterInfoHeap() { return &dummy; }
+	inline Heap* SkaterGeomHeap(int n) { return &dummy; }
+	inline Heap* InternetTopDownHeap(void) { return &dummy; }
+	inline Heap* InternetBottomUpHeap(void) { return &dummy; }
+	inline Heap* ThemeHeap(void) { return &dummy; }
+	inline Heap* CutsceneTopDownHeap(void) { return &dummy; }
+	inline Heap* CutsceneBottomUpHeap(void) { return &dummy; }
+#ifdef __PLAT_NGC__
+	Heap* AudioHeap(void) { return mp_audio_heap; }
+#endif	
+	inline Heap* NamedHeap(uint32 name, bool assertOnFail = true)
+	{
+		return NULL;
+	}
+
+	inline void						RegisterPcsMemMan(Pcs::Manager*)
+	{}
+
+	/* Global versions for all memory allocations */
+	inline void						PushMemoryMarker(uint32 uiID)
+	{}
+	inline void						PopMemoryMarker(uint32 uiID)
+	{}
+
+	static void					sSetUp(void)
+	{}
+	static void					sSetUpDebugHeap(void)
+	{}
+
+	static void					sCloseDown(void)
+	{}
+	static Manager& sHandle(void);
+
+
+	inline void 						InitOtherHeaps()
+	{}
+	inline void 						DeleteOtherHeaps()
+	{}
+
+	inline void						InitInternetHeap()
+	{}
+	inline void						DeleteInternetHeap()
+	{}
+
+	inline void						InitNetMiscHeap()
+	{}
+	inline void						DeleteNetMiscHeap()
+	{}
+
+	inline void						InitCutsceneHeap(int heap_size)
+	{}
+	inline void						DeleteCutsceneHeap()
+	{}
+
+	inline void						InitDebugHeap()
+	{}
+
+	inline void 						InitSkaterHeaps(int players)
+	{}
+	inline void 						DeleteSkaterHeaps()
+	{}
+
+	inline void						InitNamedHeap(uint32 name, uint32 size, const char* pHeapName)
+	{}
+	inline bool						DeleteNamedHeap(uint32 name, bool assertOnFail = true)
+	{
+		return true;
+	}
+
+	inline const char* GetHeapName(uint32 whichHeap)
+	{
+		return "KISAK";
+	}
+	inline Heap* GetHeap(uint32 whichHeap)
+	{
+		return NULL;
+	}
+
+	inline Heap* CreateHeap(Region* region, Mem::Allocator::Direction dir /*= Mem::Allocator::vBOTTOM_UP*/, char* p_name)
+	{
+		return NULL;
+	}
+	inline void						RemoveHeap(Heap* pHeap)
+	{}
+	inline Heap* FirstHeap()
+	{
+		return NULL;
+	}
+	inline Heap* NextHeap(Heap* pHeap)
+	{
+		return NULL;
+	}
+
+
+	//	int 						GetContextNumber();
+	inline char* GetContextName()
+	{
+		return "KISAKCTX";
+	}
+	inline Allocator::Direction		GetContextDirection()
+	{
+		return (Allocator::Direction)0;
+	}
+	inline Allocator* GetContextAllocator()
+	{
+		return NULL;
+	}
+
+
+	~Manager(void)
+	{
+	}
+	Manager(void)
+	{
+	}
+
+	inline CNamedHeapInfo* find_named_heap_info(uint32 name)
+	{
+		return NULL;
+	}
+
+	//Ptr< MemManContext > 		mp_context;
+
+	// Mick: Contexts are now statically allocated off this 
+	// array, rather than off the heap, as that was causing fragmentation
+	// in rare but crash-worthy circumstances			
+	//MemManContext				m_contexts[vMAX_CONTEXT];
+	int							m_pushed_context_count;
+
+
+	Region* mp_region;
+	Heap* mp_top_heap;
+	Heap* mp_bot_heap;
+
+	Region* mp_frontend_region;
+	Heap* mp_frontend_heap;
+
+	Region* mp_script_region;
+	Heap* mp_script_heap;
+
+	Region* mp_network_region;
+	Heap* mp_network_heap;
+
+	Region* mp_net_misc_region;
+	Heap* mp_net_misc_heap;
+
+	Region* mp_internet_region;
+	Heap* mp_internet_top_heap;
+	Heap* mp_internet_bottom_heap;
+
+	Region* mp_cutscene_region;
+	Heap* mp_cutscene_top_heap;
+	Heap* mp_cutscene_bottom_heap;
+
+#ifdef __PLAT_NGC__
+	Region* mp_audio_region;
+	Heap* mp_audio_heap;
+#endif		// __PLAT_NGC__
+
+	Region* mp_debug_region;
+	Heap* mp_debug_heap;
+
+	Region* mp_profiler_region;
+	Heap* mp_profiler_heap;
+
+	Region* mp_skater_region[NUM_SKATER_HEAPS];
+	Heap* mp_skater_heap[NUM_SKATER_HEAPS];
+
+	Region* mp_skater_geom_region[NUM_SKATER_HEAPS];
+	Heap* mp_skater_geom_heap[NUM_SKATER_HEAPS];
+
+	CNamedHeapInfo				m_named_heap_info[NUM_NAMED_HEAPS];
+
+	Region* mp_skater_info_region;
+	Heap* mp_skater_info_heap;
+
+	Region* mp_theme_region;
+	Heap* mp_theme_heap;
+
+	Pcs::Manager* mp_process_man;
+	uint						m_current_id;
+
+};
+extern "C"
+{
+	extern class Manager* sp_instance;
+}
+#endif
 
 /*****************************************************************************
 **							 Private Declarations							**
@@ -307,9 +645,10 @@ protected:
 **							   Public Prototypes							**
 *****************************************************************************/
 
+
+#ifdef KISAK_ORIGINAL_ALLOCATOR
 extern "C"
 {
-
 int		Available();
 void*	Malloc( size_t size );
 void	Free( void* mem );
@@ -330,6 +669,74 @@ void	FreeMemProfile(Allocator::BlockHeader* p_block);
 
 void	SetThreadSafe(bool safe);
 bool	IsThreadSafe( void );
+#else // KISAK_ORIGINAL_ALLOCATOR
+extern "C"
+{
+	inline int		Available()
+	{
+		return INT_MAX / 2;
+	}
+	inline void* Malloc(size_t size)
+	{
+		return ::malloc(size);
+	}
+	inline void	Free(void* mem)
+	{
+		::free(mem);
+	}
+	inline bool	Valid(void* pAddr)
+	{
+		return false; 
+	}
+	inline size_t	GetAllocSize(void* pAddr)
+	{
+#ifdef __PLAT_WN32__
+		return _msize(pAddr);
+#endif
+	}
+	inline void* ReallocateDown(size_t newSize, void* pOld)
+	{
+		__debugbreak();
+		return ::realloc(pOld, newSize);
+	}
+	inline void* ReallocateUp(size_t newSize, void* pOld)
+	{
+		__debugbreak();
+		return ::realloc(pOld, newSize);
+	}
+	inline void* ReallocateShrink(size_t newSize, void* pOld)
+	{
+		__debugbreak();
+		return ::realloc(pOld, newSize);
+	}
+	inline void* Realloc(void* mem, size_t newSize)
+	{
+		return ::realloc(mem, newSize);
+	}
+	inline void* Calloc(size_t numObj, size_t sizeObj)
+	{
+		return ::malloc(numObj * sizeObj);
+	}
+}
+
+inline void	PushMemProfile(char* p_type)
+{}
+inline void	PopMemProfile()
+{}
+inline void	DumpMemProfile(int level, char* p_type = NULL)
+{}
+inline void	AllocMemProfile(Allocator::BlockHeader* p_block)
+{}
+inline void	FreeMemProfile(Allocator::BlockHeader* p_block)
+{}
+inline void	SetThreadSafe(bool safe)
+{}
+inline bool	IsThreadSafe(void)
+{
+	return false;
+}
+
+#endif // KISAK_ORIGINAL_ALLOCATOR 
 
 
 

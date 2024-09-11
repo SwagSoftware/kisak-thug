@@ -1050,10 +1050,12 @@ void * LoadAlloc(const char *p_fileName, int *p_filesize, void *p_dest, int maxS
 			File::Close(p_file);
 		}
 		// Shrink memory back down to accurate usage - saves 43K total in the school!!!
+#ifndef __PLAT_WN32__ // lwss: this sucks, realloc will free() the pointer unless it uses their wacky impl
 		if (!p_dest && p_file_data)
 		{
-			Mem::ReallocateShrink(file_size,p_file_data);
+			p_file_data = (uint8*)Mem::ReallocateShrink(file_size,p_file_data);
 		}
+#endif
 	}
 	if (p_filesize)
 	{

@@ -1383,10 +1383,10 @@
     <ClCompile Include="WinMain.cpp">
       <Filter>Source Files\Sys\Win32</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Code\Gel\SoundFX\Win32\p_sfx.cpp">
+    <ClCompile Include="..\..\Code\Gel\SoundFX\Win32\win32_sfx.cpp">
       <Filter>Source Files\Gel\SoundFX\Win32</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Code\Gel\Music\Win32\p_music.cpp">
+    <ClCompile Include="..\..\Code\Gel\Music\Win32\win32_music.cpp">
       <Filter>Source Files\Gel\Music\Win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Code\Gel\Music\Win32\p_wmafilestream.cpp">

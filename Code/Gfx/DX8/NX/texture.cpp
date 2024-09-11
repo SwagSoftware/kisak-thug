@@ -454,6 +454,7 @@ sTexture *LoadTexture( const char *p_filename )
 				DwordizeTexelData((int)locked_rect.pBits, (int)v10, num_bytes, (int)p_clut);
 			}
 
+			free(p_clut);
 			free(data);
 			free(v14);
 		}
@@ -469,8 +470,10 @@ sTexture *LoadTexture( const char *p_filename )
 		File::Close( p_FH );
 
 		// Set up some member values.
-		p_texture->PaletteDepth	= (uint8)header.clut_bit_depth;
-		p_texture->TexelDepth	= (uint8)header.bit_depth;
+		//p_texture->PaletteDepth	= (uint8)header.clut_bit_depth;
+		//p_texture->TexelDepth	= (uint8)header.bit_depth;
+		p_texture->PaletteDepth = 0; // lwss change
+		p_texture->TexelDepth = 32; // lwss change
 		p_texture->DXT			= 0;
 		p_texture->Levels		= 1;
 			

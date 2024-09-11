@@ -27,6 +27,8 @@
 #include <core/defines.h>
 #endif
 
+#ifdef KISAK_ORIGINAL_ALLOCATOR
+
 /*****************************************************************************
 **								   Defines									**
 *****************************************************************************/
@@ -142,3 +144,4 @@ inline int Region::TotalSize( void )
 } // namespace Mem
 
 #endif  // __SYS_MEM_REGION_H
+#endif // KISAK_ORIGINAL_ALLOCATOR

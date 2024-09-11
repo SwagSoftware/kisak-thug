@@ -18,7 +18,15 @@
 **																			**
 *****************************************************************************/
 
+#ifndef KISAK_ORIGINAL_ALLOCATOR
+#include "memman.h"
+extern "C"
+{
+	Mem::Manager* sp_instance = new Mem::Manager();
+}
+#endif
 
+#ifdef KISAK_ORIGINAL_ALLOCATOR
 
 /*****************************************************************************
 **							  	  Includes									**
@@ -1728,3 +1736,4 @@ void	FreeMemProfile(Allocator::BlockHeader* p_block)
 
 } // namespace Mem
 
+#endif // KISAK_ORIGINAL_ALLOCATOR

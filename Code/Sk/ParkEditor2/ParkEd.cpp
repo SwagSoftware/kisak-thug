@@ -806,12 +806,13 @@ void CParkEditor::Update()
 			Mem::Heap *p_bottom_up_heap = Mem::Manager::sHandle().BottomUpHeap();
 			Mem::Heap *p_top_down_heap = Mem::Manager::sHandle().TopDownHeap();
 			#ifdef	__NOPT_ASSERT__
-			if (Script::GetInteger(CRCD(0xe2ca7dfc,"show_actual_heap_status")))
-			{
-				printf("Bottom up = %d  Top down = %d\n",p_bottom_up_heap->mFreeMem.m_count,p_top_down_heap->mp_region->MemAvailable());
-			}	
+			//if (Script::GetInteger(CRCD(0xe2ca7dfc,"show_actual_heap_status")))
+			//{
+			//	printf("Bottom up = %d  Top down = %d\n",p_bottom_up_heap->mFreeMem.m_count,p_top_down_heap->mp_region->MemAvailable());
+			//}	
 			#endif
 			
+#ifdef KISAK_ORIGINAL_ALLOCATOR
 			// top_down_pct is a metric based on the amount of top down heap available. The reason for the 2.0 is to
 			// make the top_down_pct be >= 1.0 if there is less than TOP_DOWN_REQUIRED_MARGIN available, and < 1.0
 			// if there is more than that available.
@@ -891,7 +892,6 @@ void CParkEditor::Update()
 				}
 			}	
 
-			
 			// The old logic from THPS4, which would only defrag if this flag was set.
 			/*
 			if (usage_info.mIsFragmented)
@@ -984,6 +984,7 @@ void CParkEditor::Update()
 				Script::RunScript(CRCD(0x7a449180,"DestroyMemStatsScreenElements"));
 			}	
 
+#endif // KISAK_ORIGINAL_ALLOCATOR
 			// Update the clipboard usage bar.			
 			/*
 			Front::CScreenElement *p_clipboard_percent_bar = p_elem_man->GetElement(CRCD(0xf07100ce,"clipboard_percent_bar_colored_part"), Front::CScreenElementManager::DONT_ASSERT).Convert();

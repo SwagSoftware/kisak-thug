@@ -1339,6 +1339,7 @@ bool ScriptRemoveComponent(Script::CStruct *pParams, Script::CScript *pScript)
 
 static uint32 s_get_bottom_up_free(bool includeFrag)
 {
+#ifdef KISAK_ORIGINAL_ALLOCATOR
 	Mem::Manager& mem_man = Mem::Manager::sHandle();
 	Mem::Heap* p_heap = mem_man.GetHeap( CRCD(0xc7800b0,"BottomUpHeap") );
 	Mem::Region* p_region = p_heap->ParentRegion();
@@ -1348,6 +1349,8 @@ static uint32 s_get_bottom_up_free(bool includeFrag)
 		return p_heap->mFreeMem.m_count + p_region->MemAvailable();
 	}
 	return p_region->MemAvailable();
+#endif
+	return Mem::Available(); 
 }
 
 // @script | SetScriptString | 
@@ -5437,6 +5440,7 @@ bool ScriptCreateFromNode( Script::CStruct *pNode )
 	}
 
 #ifdef __NOPT_ASSERT__
+#ifdef KISAK_ORIGINAL_ALLOCATOR
 	Mem::Allocator* pCurrentHeapContext = Mem::Manager::sHandle().GetContextAllocator();
 	if ( !( pCurrentHeapContext == Mem::Manager::sHandle().CutsceneBottomUpHeap()
 		 || pCurrentHeapContext == Mem::Manager::sHandle().BottomUpHeap() ) )
@@ -5448,6 +5452,7 @@ bool ScriptCreateFromNode( Script::CStruct *pNode )
 		// was always the default context anyway...  i think.
 		Dbg_MsgAssert( 0, ( "Was expecting bottomupheap context" ) );
 	}
+#endif
 #endif
 
 	/*
@@ -13372,7 +13377,9 @@ bool ScriptMemPushContext( Script::CStruct *pParams, Script::CScript *pScript )
 		pParams->GetChecksum( NONAME, &whichHeap, true );
 		Mem::Manager& mem_man = Mem::Manager::sHandle();
 		Mem::Heap* pHeap = mem_man.GetHeap( whichHeap );
+#ifdef KISAK_ORIGINAL_ALLOCATOR
 		Dbg_Assert( pHeap );
+#endif
 
 		Mem::Manager::sHandle().PushContext( pHeap );
 	}
@@ -13533,6 +13540,7 @@ bool ScriptPrintMemInfo( Script::CStruct *pParams, Script::CScript *pScript )
 // @script | DisplayFreeMem | displays free mem info of specified heap
 bool ScriptDisplayFreeMem( Script::CStruct *pParams, Script::CScript *pScript )
 {
+#ifdef KISAK_ORIGINAL_ALLOCATOR
 	Mem::Manager& mem_man = Mem::Manager::sHandle();
 
 	Mem::Heap* heap;
@@ -13555,6 +13563,7 @@ bool ScriptDisplayFreeMem( Script::CStruct *pParams, Script::CScript *pScript )
 	}
 
 	delete params;
+#endif
 	return true;
 }
 

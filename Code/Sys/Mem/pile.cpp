@@ -18,6 +18,7 @@
 **																			**
 *****************************************************************************/
 
+#ifdef KISAK_ORIGINAL_ALLOCATOR
 
 /*****************************************************************************
 **							  	  Includes									**
@@ -201,3 +202,4 @@ void	Pile::PopContext( void )
 
 } // namespace Mem
 
+#endif // KISAK_ORIGINAL_ALLOCATOR

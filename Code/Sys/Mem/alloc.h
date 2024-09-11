@@ -30,6 +30,8 @@
 #include <sys\mem\region.h>
 #include <sys/mem/memdbg.h>
 
+#ifndef __PLAT_WN32__
+
 #ifdef __PLAT_NGC__
 #define __EFFICIENT__		// Comment in for efficient allocation.
 #endif		// __PLAT_NGC__
@@ -476,3 +478,4 @@ bool  SameContext(void *p_mem,  Allocator *p_alloc);
 } // namespace Mem
 
 #endif  // __SYS_MEM_ALLOC_H
+#endif 

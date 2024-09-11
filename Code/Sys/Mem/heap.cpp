@@ -18,6 +18,7 @@
 **																			**
 *****************************************************************************/
 
+#ifdef KISAK_ORIGINAL_ALLOCATOR
 
 // (Mick) undefine this line if you want the full PS2 callstack reporting on allocations
 // and the trashing of memory
@@ -1157,3 +1158,4 @@ Heap::Heap( Region* region, Direction dir, char *p_name )
 
 } // namespace Mem
 
+#endif

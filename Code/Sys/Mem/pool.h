@@ -28,6 +28,8 @@
 #endif
 #include "alloc.h"
 
+#ifdef KISAK_ORIGINAL_ALLOCATOR
+
 /*****************************************************************************
 **								   Defines									**
 *****************************************************************************/
@@ -93,3 +95,4 @@ private :
 } // namespace Mem
 
 #endif  // __SYS_MEM_POOL_H
+#endif // KISAK_ORIGINAL_ALLOCATOR

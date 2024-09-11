@@ -1864,10 +1864,12 @@ uint8 *SkipOverScript(uint8 *p_token)
 	// Include any line number info following the endscript. This is for use by the script
 	// debugger, so that GetLineNumber will still work if the passed pointer points to an
 	// endscript token.
+#ifndef __PLAT_WN32__ // KISAKTODO: line numbers aren't included in the retail scripts (this oob reads)
 	if (*p_token==ESCRIPTTOKEN_ENDOFLINENUMBER)
 	{
 		p_token=SkipToken(p_token);
 	}
+#endif
 		
 	return p_token;
 }
