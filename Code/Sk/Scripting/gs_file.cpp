@@ -35,6 +35,11 @@
 #include "sys/ngc/p_display.h"
 #endif		// __PLAT_NGC__
 
+#ifdef __PLAT_WN32__
+#include <filesystem>
+#include <Shlwapi.h>
+#endif
+
 char g_currentScriptFile[256]; // lwss add
 
 namespace SkateScript
@@ -45,6 +50,7 @@ using namespace Script;
 #define MAX_QB_FILENAME_CHARS_WITH_PATH 100
 
 #define QDIR_FILE "scripts\\qdir.txt"
+#define KISAK_QDIR_FILE "..\\kisak_qdir.txt"
 #define MAIN_QB_FILEPATH "scripts\\"
 
 void LoadAllStartupQBFiles()
@@ -78,7 +84,7 @@ void LoadAllStartupQBFiles()
     // Load each of the files listed.
 	#define MAX_FILENAME_CHARS 200
 	char p_file_name[MAX_FILENAME_CHARS+1];
-	
+
 	const char *p_scan=p_qdir;
 	while (p_scan < p_qdir+file_size)
 	{
@@ -98,7 +104,6 @@ void LoadAllStartupQBFiles()
 		if (*p_file_name)
 		{
 			// Note: p_file_name will contain the complete path, eg c:\skate5\data\scripts\blaa.qb
-
 			// Strip off any preceding data path.			
 			char *p_data_backslash=strstr(p_file_name,"data\\");
 			if (p_data_backslash)
@@ -109,18 +114,19 @@ void LoadAllStartupQBFiles()
 				strcpy( tmp, p_data_backslash+5);
 				strcpy(p_file_name, tmp);
 			}
-				
+			
 			// Make sure this script isn't already loaded.
 			SkateScript::UnloadQB( Crc::GenerateCRCFromString(p_file_name) );
-
+			
 			// lwss add
 			strncpy(g_currentScriptFile, p_file_name, 255);
 
 			SkateScript::LoadQB(p_file_name,
-								// We do want assertions if duplicate symbols when loading all 
-								// the qb's on startup. (Just not when reloading a qb)
-								ASSERT_IF_DUPLICATE_SYMBOLS);
+						// We do want assertions if duplicate symbols when loading all 
+						// the qb's on startup. (Just not when reloading a qb)
+						ASSERT_IF_DUPLICATE_SYMBOLS);
 			memset(g_currentScriptFile, 0x00, 256);
+
 		}	
 #ifdef __PLAT_NGC__
 		NsDisplay::doReset();
@@ -169,7 +175,23 @@ void LoadQB(const char *p_fileName, EBoolAssertIfDuplicateSymbols assertIfDuplic
 	//	printf("Loading %s\n",p_fileName); // REMOVE
 	//}
 	// Call the non-game-specific LoadQB, which open the qb and create all the symbols defined within.
-	Script::LoadQB(p_fileName, assertIfDuplicateSymbols);
+
+	// hack
+	char		nameConversionBuffer[256];
+	GetModuleFileNameA(NULL, nameConversionBuffer, 255);
+	PathRemoveFileSpecA(nameConversionBuffer);
+	std::string qbPath = nameConversionBuffer + (std::string) + "\\Data\\" + (std::string)p_fileName;
+
+	if (std::filesystem::exists(qbPath))
+	{
+		printf("blackops LoadQBFromFileSystem( %s )\n", p_fileName);
+		Script::LoadQBFromFilesystem(p_fileName, assertIfDuplicateSymbols);
+	}
+	else
+	{
+		printf("blackops LoadQB( %s )\n", p_fileName);
+		Script::LoadQB(p_fileName, assertIfDuplicateSymbols);
+	}
 	
 	CSymbolTableEntry *p_sym=GetNextSymbolTableEntry();
 	while (p_sym)
@@ -234,6 +256,8 @@ void LoadQB(const char *p_fileName, EBoolAssertIfDuplicateSymbols assertIfDuplic
 	// Make sure checksum name lookup table is removed since it is only needed for the node array.
 	RemoveChecksumNameLookupHashTable();
 }
+
+
 
 // Calls the Script::UnloadQB and then does any game-specific stuff that needs to be done 
 // when a qb is unloaded, such as resetting the node name hash table & prefix info.

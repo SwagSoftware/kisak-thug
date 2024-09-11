@@ -15,6 +15,7 @@
 #include <gel/scripting/checksum.h>
 #include <core/crc.h> // For Crc::GenerateCRCFromString
 #include <sys/file/pip.h>
+#include <Sys/File/filesys.h>
 
 namespace Script
 {
@@ -51,9 +52,25 @@ void restart_dirty_scripts()
 	}		
 }
 
+void LoadQBFromFilesystem(const char* p_fileName, EBoolAssertIfDuplicateSymbols assertIfDuplicateSymbols)
+{
+	//uint8 *p_qb=(uint8*)
+
+	// allocate memory, and load the file
+	int	file_size;
+	//Mem::Manager::sHandle().PushContext(Mem::Manager::sHandle().TopDownHeap());
+	uint8* p_file_data = (uint8*)File::LoadAllocNoPre(p_fileName);
+	//Mem::Manager::sHandle().PopContext();
+	Dbg_MsgAssert(p_file_data, ("Failsed to load %s\n", p_fileName));
+
+	ParseQB(p_fileName, p_file_data, assertIfDuplicateSymbols);
+	restart_dirty_scripts(); // hope this doesn't break anything lol!
+}
+
 // Loads a QB file.
 // It will open the file, load it into memory and parse it, creating all the
 // symbols (scripts, arrays, integers etc) defined within in.
+
 void LoadQB(const char *p_fileName, EBoolAssertIfDuplicateSymbols assertIfDuplicateSymbols)
 {
 	Dbg_MsgAssert(p_fileName,("NULL p_fileName"));
@@ -78,6 +95,7 @@ void LoadQB(const char *p_fileName, EBoolAssertIfDuplicateSymbols assertIfDuplic
 // Loads a QB file from memory
 void LoadQBFromMemory(const char* p_fileName, uint8* p_qb, EBoolAssertIfDuplicateSymbols assertIfDuplicateSymbols)
 {
+	printf("blackops LoadQBFromMemory %s", p_fileName);
 	// even though there's no actually filename,
 	// we'd still need a dummy string, which will
 	// be used for printing up Assert messages...
@@ -97,6 +115,7 @@ void LoadQBFromMemory(const char* p_fileName, uint8* p_qb, EBoolAssertIfDuplicat
 
 	restart_dirty_scripts();
 }
+
 
 // TODO: Need another UnloadQB in the game-specific script namespace, which will call this UnloadQB
 // and then do any game-specific stuff that needs to be done when a qb is unloaded, such as 

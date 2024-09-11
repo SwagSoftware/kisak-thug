@@ -68,7 +68,7 @@ uint32	CanFileBeLoadedQuickly( const char *filename );
 bool LoadFileQuicklyPlease( const char *filename, uint8 *addr );
 
 void   *LoadAlloc(const char *p_fileName, int *p_filesize=NULL, void *p_dest = NULL, int maxSize=0);
-
+void   *LoadAllocNoPre(const char* p_fileName);
 
 void StopStreaming( void );
 
@@ -78,6 +78,7 @@ void StopStreaming( void );
 bool   Exist( const char *filename );
 void * Open( const char *filename, const char *access );
 int    Close( void *pFP );
+size_t ReadNoPre(void* addr, size_t size, size_t count, void* pFP);
 size_t Read( void *addr, size_t size, size_t count, void *pFP );
 size_t ReadInt( void *addr, void *pFP );
 size_t Write( const void *addr, size_t size, size_t count, void *pFP );

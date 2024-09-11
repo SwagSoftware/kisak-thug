@@ -30,6 +30,8 @@
 #include <sys/file/filesys.h>
 #include <core/compress.h>
 
+#include <Shlwapi.h>
+
 namespace Pip
 {
 
@@ -922,6 +924,46 @@ bool ScriptDumpPipPreStatus(Script::CStruct *pParams, Script::CScript *pScript)
 namespace File
 {
 
+void* LoadAllocNoPre(const char* p_fileName)
+{
+	void* p_dest;
+	int file_size = 0;
+	uint8* p_file_data;
+
+	char		nameConversionBuffer[256];
+	GetModuleFileNameA(NULL, nameConversionBuffer, 255);
+	PathRemoveFileSpecA(nameConversionBuffer);
+	strcat(nameConversionBuffer, "\\Data\\");
+
+	std::string p_fullPath = nameConversionBuffer + (std::string)p_fileName;
+
+	HANDLE h_file = CreateFile((LPCSTR)p_fullPath.c_str(), GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+
+	void* p_file = h_file;
+
+	LARGE_INTEGER	li;
+	GetFileSizeEx((HANDLE)p_file, &li);
+	file_size = (long)li.LowPart;
+
+	if (!file_size)
+	{
+		Dbg_MsgAssert(0, ("Zero file size for file %s", p_fileName));
+	}
+
+	// Allocate memory.
+	// Just to be safe, allocate a buffer of size file_size rounded up to the
+	// next multiple of 2048, cos maybe loading a file off CD will always load
+	// whole numbers of sectors.
+	// Haven't checked that though.
+	p_file_data = (uint8*)Mem::Malloc(file_size);
+	Dbg_MsgAssert(p_file_data, ("Could not allocate memory for file %s", p_fileName));
+
+	File::ReadNoPre(p_file_data, 1, file_size, p_file);
+
+	File::Close(p_file);
+
+	return (void*)p_file_data;
+}
 
 // Load file as quickly as possible
 // Try loading from the pre manager first, then from the CD, using the "quick filesys"

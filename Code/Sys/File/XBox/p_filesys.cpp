@@ -455,6 +455,30 @@ int Close( void *pFP )
 /*                                                                */
 /*                                                                */
 /******************************************************************/
+size_t ReadNoPre(void* addr, size_t size, size_t count, void* pFP)
+{
+	DWORD bytes_read;
+	if( ReadFile((HANDLE)pFP, addr, size * count, &bytes_read, NULL ))
+	{
+		// All is well.
+		return bytes_read;
+	}
+	else
+	{
+		// Read error.
+		DWORD last_error = GetLastError();
+
+		if( last_error == ERROR_HANDLE_EOF )
+		{
+			// Continue in this case.
+			return bytes_read;
+		}
+
+		NxXbox::FatalFileError( last_error );
+		return bytes_read;
+	}
+}
+
 size_t Read( void *addr, size_t size, size_t count, void *pFP )
 {
     if (PreMgr::sPreEnabled())

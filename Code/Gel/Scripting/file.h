@@ -11,6 +11,7 @@ namespace Script
 void LoadQB(const char *p_fileName, 
 			EBoolAssertIfDuplicateSymbols assertIfDuplicateSymbols=NO_ASSERT_IF_DUPLICATE_SYMBOLS);
 void LoadQBFromMemory(const char* p_fileName, uint8* p_qb, EBoolAssertIfDuplicateSymbols assertIfDuplicateSymbols);
+void LoadQBFromFilesystem(const char* p_fileName, EBoolAssertIfDuplicateSymbols assertIfDuplicateSymbols);
 void UnloadQB(uint32 fileNameChecksum);
 
 } // namespace Script
