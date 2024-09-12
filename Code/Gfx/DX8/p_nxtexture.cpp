@@ -7,6 +7,12 @@
 
 #include "NX/nx_init.h"
 
+namespace NxXbox
+{
+	int sub_5C56F0(int a1, char* a2, int a3, int a4, size_t Size);
+	int DwordizeTexelData(int texel_data_dword_array, int texel_data_char_array, int numBytesChar, int data);
+}
+
 namespace Nx
 {
 
@@ -449,6 +455,7 @@ bool CXboxTexDict::plat_remove_texture( CTexture *p_texture )
 /******************************************************************/
 Lst::HashTable<Nx::CTexture>* LoadTextureFileFromMemory( void **pp_mem, Lst::HashTable<Nx::CTexture> *p_texture_table, bool okay_to_rebuild_texture_table )
 {
+	__debugbreak(); // lwss: this isn't actually called ever afaik. (maybe create-a-park?)
 	uint8 *p_data = (uint8*)( *pp_mem );
 
 	// Read the texture file version and number of textures.
@@ -713,12 +720,25 @@ Lst::HashTable<Nx::CTexture>* LoadTextureFile( const char *Filename, Lst::HashTa
 			Dbg_Assert( 0 );
 		}
 
+		p_texture->texrawdata = NULL;
+
+		static char palette_data[1024];
+		bool read_palette_data = false;
+		memset(palette_data, 0x00, 1024);
 		// LWSS: DX9 does not have palettes
 		// LWSS2: We need to Read the palette data anyway to advance the File Read Pointer. (Multiple textures are read from 1 File in a loop)
 		// KISAKTODO: This needs more logic I think, but might work (with fked up textures)
-		static char palette_dummy[2048];
-		File::Read(palette_dummy, palette_size, 1, p_FH);
-		Dbg_Assert(palette_size < 2048);
+		if (palette_size)
+		{
+			read_palette_data = true;
+			File::Read(palette_data, palette_size, 1, p_FH);
+			Dbg_Assert(palette_size < 2048);
+		}
+		else
+		{
+			p_texture->texrawdata = NULL;
+		}
+
 		//if( palette_size > 0 )
 		//{
 		//	// Create and lock the palette.
@@ -756,17 +776,49 @@ Lst::HashTable<Nx::CTexture>* LoadTextureFile( const char *Filename, Lst::HashTa
 			{
 				Dbg_Assert( 0 );
 			}
+
+			if (p_texture->DXT)
+			{
+				File::Read(locked_rect.pBits, texture_level_data_size, 1, p_FH);
+			}
 			else
 			{
-				File::Read( locked_rect.pBits, texture_level_data_size, 1, p_FH );
-				p_texture->pD3DTexture->UnlockRect(mip_level); // lwss add
+				char* p_tex_level_data = (char*)malloc(texture_level_data_size);
+				File::Read(p_tex_level_data, texture_level_data_size, 1, p_FH);
+				if (read_palette_data)
+				{
+					void* workspace = malloc(texture_level_data_size);
+					NxXbox::sub_5C56F0((int)workspace, p_tex_level_data, base_width, base_height, 1);
+					NxXbox::DwordizeTexelData((int)locked_rect.pBits, (int)workspace, base_width* base_height, (int)palette_data);
+					free(workspace);
+				}
+				else
+				{
+					NxXbox::sub_5C56F0((int)locked_rect.pBits, p_tex_level_data, base_width, base_height, 4);
+				}
+
+				free(p_tex_level_data);
 			}
+			if (base_width > 1)
+			{
+				base_width >>= 1;
+			}
+			if (base_height > 1)
+			{
+				base_height >>= 1;
+			}
+
+			p_texture->pD3DTexture->UnlockRect(mip_level); // lwss add
 		}
 
-		// Add this texture to the table.
-		Nx::CXboxTexture *p_xbox_texture = new Nx::CXboxTexture();
-		p_xbox_texture->SetEngineTexture( p_texture );
-		p_texture_table->PutItem( p_texture->Checksum, p_xbox_texture );
+		// lwss: add hack from PC
+		if (p_texture->Checksum != 0x749DB390 && p_texture->Checksum != 0xD1CE9FFC)
+		{
+			// Add this texture to the table.
+			Nx::CXboxTexture* p_xbox_texture = new Nx::CXboxTexture();
+			p_xbox_texture->SetEngineTexture(p_texture);
+			p_texture_table->PutItem(p_texture->Checksum, p_xbox_texture);
+		}
 	}
 	File::Close( p_FH );
 

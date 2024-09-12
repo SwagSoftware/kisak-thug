@@ -262,7 +262,6 @@ void	CEventHandlerTable::AddEvent(uint32 ex, uint32 scr, uint32 group, bool exce
 			mp_tab[i] = p_old_tab[i];
 		}
 		delete [] p_old_tab;
-		p_old_tab = NULL; // lwss add
 		p_entry = &mp_tab[m_num_entries];
 		m_num_entries++;
 	
@@ -738,6 +737,7 @@ void CEventHandlerTable::pass_event(CEvent *pEvent, Script::CScript *pScript, bo
 					pScript->SetOnExceptionScriptChecksum(0);	// clear it once it has been run
 					pScript->Interrupt(checksum, pFoo);
 					delete pFoo;
+					p_entry = mp_tab + i; // lwss hack: The mp_tab can be reallocated when the spawned script is ran. Reset p_entry value here.
 				}
 				
 				// the OnException script may alter the table
@@ -747,6 +747,7 @@ void CEventHandlerTable::pass_event(CEvent *pEvent, Script::CScript *pScript, bo
 					// the object reamins the same
 					pScript->SetScript(p_entry->script,p_passed_params,pScript->mpObject);
 					pScript->Update();
+					p_entry = mp_tab + i; // lwss hack: The mp_tab can be reallocated when the spawned script is ran. Reset p_entry value here.
 				}
 			}
 			else
@@ -765,11 +766,13 @@ void CEventHandlerTable::pass_event(CEvent *pEvent, Script::CScript *pScript, bo
 					#endif
 					p_new_script->mpObject = pScript->mpObject;	   
 					p_new_script->Update(); 
+					p_entry = mp_tab + i; // lwss hack: The mp_tab can be reallocated when the spawned script is ran. Reset p_entry value here.
 				}
 				else
 				{
 					// Instead of spawning, just interrupt the current script
-					pScript->Interrupt(p_entry->script, p_passed_params);					
+					pScript->Interrupt(p_entry->script, p_passed_params);	
+					p_entry = mp_tab + i; // lwss hack: The mp_tab can be reallocated when the spawned script is ran. Reset p_entry value here.
 				}				
 			}
 

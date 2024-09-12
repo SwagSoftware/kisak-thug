@@ -27,9 +27,10 @@ struct sTexture
 	//IDirect3DTexture8*	pD3DTexture;
 	IDirect3DTexture9*	pD3DTexture; // +16
 	//IDirect3DPalette8*	pD3DPalette;
-	void* rawdata;
+	void* texrawdata;
 	//IDirect3DSurface8*	pD3DSurface;
 	IDirect3DSurface9*	pD3DSurface; // 24
+	int texunk2;
 };
 
 extern class LinkedList* g_sTexturesList;

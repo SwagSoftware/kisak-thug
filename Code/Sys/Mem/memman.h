@@ -515,22 +515,22 @@ public:
 	}
 	inline Heap* GetHeap(uint32 whichHeap)
 	{
-		return NULL;
+		return &dummy;
 	}
 
 	inline Heap* CreateHeap(Region* region, Mem::Allocator::Direction dir /*= Mem::Allocator::vBOTTOM_UP*/, char* p_name)
 	{
-		return NULL;
+		return &dummy;
 	}
 	inline void						RemoveHeap(Heap* pHeap)
 	{}
 	inline Heap* FirstHeap()
 	{
-		return NULL;
+		return &dummy;
 	}
 	inline Heap* NextHeap(Heap* pHeap)
 	{
-		return NULL;
+		return &dummy;
 	}
 
 

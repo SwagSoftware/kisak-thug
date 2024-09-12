@@ -21,7 +21,10 @@ sTexture::sTexture()
 {
 	pD3DTexture = NULL;
 	//pD3DPalette	= NULL;
+	texrawdata = NULL;
 	pD3DSurface	= NULL;		// If used as a render target.
+	texunk2 = 0;
+	
 	// lwss add
 	LinkedList* newEntry = new LinkedList();
 	NxXbox::LinkedList* v3 = g_sTexturesList;
@@ -79,12 +82,14 @@ sTexture::~sTexture()
 	if (pD3DSurface)
 	{
 		rr = pD3DSurface->Release();
+		pD3DSurface = NULL;
 		//Dbg_Assert(rr == 0);
 	}
 
 	if( pD3DTexture )
 	{
 		rr = pD3DTexture->Release();
+		pD3DSurface = NULL;
 		Dbg_Assert( rr == 0 );
 
 		// Ensure that this texture is no longer referenced in the EngineGlobals.
@@ -129,11 +134,13 @@ bool sTexture::SetRenderTarget( int width, int height, int depth, int z_depth )
 	if( pD3DTexture )
 	{
 		pD3DTexture->Release();
+		pD3DTexture = NULL;
 	}
 
 	if (pD3DSurface)
 	{
 		pD3DSurface->Release();
+		pD3DSurface = NULL;
 	}
 
 	//if( pD3DPalette )
@@ -197,7 +204,7 @@ static bool is_power_of_two( uint32 a )
 }
 
 
-static int sub_5C56F0(int a1, char* a2, int a3, int a4, size_t Size)
+int sub_5C56F0(int a1, char* a2, int a3, int a4, size_t Size)
 {
 	unsigned int v5; // esi
 	int v6; // eax
@@ -323,6 +330,8 @@ sTexture *LoadTexture( const char *p_filename )
 		// Create the texture object.
 		sTexture *p_texture = new sTexture();
 
+		p_texture->texrawdata = NULL;
+
 		// lwss: no palette in dx9
 		// Create palette if required.
 		//if( header.clut_bit_depth == 0 )
@@ -423,40 +432,44 @@ sTexture *LoadTexture( const char *p_filename )
 			Dbg_Assert( 0 );
 		}
 
-		void* v10;
+		void* pBits;
 
 		if (!arbitrary_texture_size || had_clut_depth)
 		{
 			void* data = malloc(num_bytes);
-			void* v14 = NULL;
+			void* pBits = NULL;
+			bool pBitsNeedFree = false;
 
 			File::Read(data, num_bytes, 1, p_FH);
 
 			if (arbitrary_texture_size)
 			{
-				v10 = data;
+				pBits = data;
 			}
 			else
 			{
 				if (had_clut_depth)
 				{
-					v14 = malloc(num_bytes);
-					v10 = v14;
+					pBits = malloc(num_bytes);
+					pBitsNeedFree = true;
 				}
 				else
 				{
-					v10 = locked_rect.pBits;
+					pBits = locked_rect.pBits;
 				}
-				sub_5C56F0((int)v10, (char*)data, header.width, header.height, (unsigned int)header.bit_depth >> 3);
+				sub_5C56F0((int)pBits, (char*)data, header.width, header.height, (unsigned int)header.bit_depth >> 3);
 			}
 			if (had_clut_depth)
 			{
-				DwordizeTexelData((int)locked_rect.pBits, (int)v10, num_bytes, (int)p_clut);
+				DwordizeTexelData((int)locked_rect.pBits, (int)pBits, num_bytes, (int)p_clut);
 			}
 
 			free(p_clut);
 			free(data);
-			free(v14);
+			if (pBitsNeedFree)
+			{
+				free(pBits);
+			}
 		}
 		else
 		{
