@@ -44,7 +44,7 @@ static uint32		loadingBarBorderColor;
 /*                                                                */
 /*                                                                */
 /******************************************************************/
-// LWSS Add
+// LWSS Add ++
 static void DrawLoadScreenTexture()
 {
 	if (!sp_load_screen_texture)

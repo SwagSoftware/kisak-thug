@@ -1031,6 +1031,7 @@ static HRESULT focus_blur( int blurFlagsOverride )
     return D3DDevice_SetRenderState(D3DRS_DESTBLEND, destBlend);
 }
 
+// KISAKTODO: check calls vs. retail
 static HRESULT draw_focus_effect_using_planes( void )
 {
 #if 0

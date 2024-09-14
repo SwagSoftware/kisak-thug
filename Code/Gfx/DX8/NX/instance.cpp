@@ -83,6 +83,7 @@ static int sort_by_bone_transform( const void *p1, const void *p2 )
 /*                                                                */
 /*                                                                */
 /******************************************************************/
+// LWSS: Looks good
 void render_instance( CInstance* p_instance, uint32 flags )
 {
 	// Seed the static pointer off to NULL, otherwise if there is only one object with bone transforms, it will never update.
@@ -451,7 +452,34 @@ void CInstance::Render( uint32 flags )
 				{
 					Nx::CLightManager::sUpdateEngine();
 				}
+				// lwss add
+				D3DDevice_SetRenderState(D3DRS_LIGHTING, TRUE);
+				l0.Diffuse.r = EngineGlobals.directional_light_color[4];
+				l0.Diffuse.g =   EngineGlobals.directional_light_color[5];
+				l0.Diffuse.b =   EngineGlobals.directional_light_color[6];
+				l0.Direction.x = EngineGlobals.directional_light_color[0];
+				l0.Direction.y = EngineGlobals.directional_light_color[1];
+				l0.Direction.z = EngineGlobals.directional_light_color[2];
+				D3DDevice_SetLight(0, &l0);
+				l1.Diffuse.r =   EngineGlobals.directional_light_color[12];
+				l1.Diffuse.g =   EngineGlobals.directional_light_color[13];
+				l1.Diffuse.b =   EngineGlobals.directional_light_color[14];
+				l1.Direction.x = EngineGlobals.directional_light_color[8];
+				l1.Direction.y = EngineGlobals.directional_light_color[9];
+				l1.Direction.z = EngineGlobals.directional_light_color[10];
+				D3DDevice_SetLight(1, &l1);
+				D3DDevice_SetRenderState(D3DRS_AMBIENT, D3DCOLOR_RGBA(Ftoi_ASM(EngineGlobals.ambient_light_color[0] * 255.0f),
+					Ftoi_ASM(EngineGlobals.ambient_light_color[1] * 255.0f),
+					Ftoi_ASM(EngineGlobals.ambient_light_color[2] * 255.0f),
+					0xFF));
+				// lwss end
 			}
+			// lwss add
+			else
+			{
+				D3DDevice_SetRenderState(D3DRS_LIGHTING, FALSE);
+			}
+			// lwss end
 			
 			pLastBoneTransforms = GetBoneTransforms();
 			//int num_bones = ( GetNumBones() < MAX_SUPPORTED_BONES ) ? GetNumBones() : MAX_SUPPORTED_BONES;
@@ -463,9 +491,9 @@ void CInstance::Render( uint32 flags )
 		renderFlags = m_flags;
 		render_scene(GetScene(), flags | vRENDER_NO_CULLING, 0);
 		EngineGlobals.texture_stage_override &= ~(1 << 3);
-		//dword_72E14C = 0;
+		EngineGlobals.vertex_shader_override = 0;
 		EngineGlobals.pixel_shader_override = 0;
-		//dword_72E154 = 0;
+		EngineGlobals.material_override = 0;
 		set_texture(3, 0);
 		pBoneTransforms = 0;
 		numBones = 0;

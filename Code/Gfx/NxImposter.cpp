@@ -192,7 +192,7 @@ void CImposterManager::DrawImposters( void )
 		p_imposter_group = mp_group_table->IterateNext();
 	}
 
-	plat_post_render_imposters();
+	plat_post_render_imposters(); // LWSS: Inlined!
 }
 
 

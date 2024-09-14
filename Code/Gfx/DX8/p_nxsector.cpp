@@ -479,13 +479,12 @@ bool CXboxSector::LoadFromFile( void* p_file, const char* debug_name)
 		p_geom->mp_scene->GetEngineScene()->m_bbox.AddPoint( inf );
 		p_geom->mp_scene->GetEngineScene()->m_bbox.AddPoint( sup );
 
-		// KISAKTODO: TEMP COMMENTTED! OUT
 		// Set up as a billboard if required.
-		//if( m_flags & 0x00800000UL )
-		//{
-		//	p_mesh->SetBillboardData( billboard_type, billboard_pivot_pos, billboard_pivot_axis );
-		//	NxXbox::BillboardManager.AddEntry( p_mesh );
-		//}
+		if( m_flags & 0x00800000UL )
+		{
+			p_mesh->SetBillboardData( billboard_type, billboard_pivot_pos, billboard_pivot_axis );
+			NxXbox::BillboardManager.AddEntry( p_mesh );
+		}
 
 		// Flag the mesh as being a shadow volume if applicable.
 		if( m_flags & 0x200000 )

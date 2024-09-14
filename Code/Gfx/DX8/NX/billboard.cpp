@@ -238,6 +238,7 @@ sBillboardMaterialBatch::~sBillboardMaterialBatch( void )
 	delete mp_entries[0];
 	delete mp_entries[1];
 	delete mp_entries[2];
+	mp_material = NULL;
 }
 
 
@@ -334,6 +335,8 @@ void sBillboardMaterialBatch::RemoveEntry( sMesh *p_mesh )
 // LWSS: All new for PC
 void sBillboardMaterialBatch::DrawIndexedVertices( int negaOne/*always -1*/, Lst::Node<sBillboardEntry>* node, sMesh* p_mesh )
 {
+	// KISAKTODO
+#if 0
 	if ( p_mesh->m_vertex_stride < 0x10 || p_mesh->m_vertex_stride > 0x30 )
 	{
 		Dbg_Assert(0);
@@ -367,8 +370,20 @@ void sBillboardMaterialBatch::DrawIndexedVertices( int negaOne/*always -1*/, Lst
 		}
 	}
 
-	// KISAKTODO finish
-	//p_mesh->AllocateVertexBuffer
+	D3DVIEWPORT9 viewport;
+	D3DDevice_GetViewport(&viewport);
+	//     STDMETHOD(GetStreamSource)(
+	// THIS_ 
+	// UINT StreamNumber,
+	// IDirect3DVertexBuffer9** ppStreamData,
+	// UINT* pOffsetInBytes,
+	// UINT* pStride
+	// ) PURE;
+	D3DDevice_GetStreamSource(0, &)
+
+	D3DDevice_SetIndices()
+	Nx::CFog::sEnableFog(false);
+#endif
 }
 
 

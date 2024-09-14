@@ -1036,7 +1036,7 @@ DISABLE_FOG:
 	}
 	else
 	{
-		// sMaterial::Submit2() -- call the non-shader version of sMaterail submit (fk this)
+		// sMaterial::Submit2() -- call the non-shader version of sMaterial submit (fk this)
 	}
 
 	// Deal with meshes that set no anisotropic filtering.
@@ -1470,7 +1470,6 @@ void sMesh::Crunch( void )
 /******************************************************************/
 void sMesh::SetBillboardData( uint32 type, Mth::Vector & pivot_pos, Mth::Vector & pivot_axis )
 {
-	return; // KISAKTODO
 	Dbg_Assert( mp_billboard_data == NULL );
 
 	// Create the billboard data.
@@ -1585,51 +1584,62 @@ void sMesh::SetBillboardData( uint32 type, Mth::Vector & pivot_pos, Mth::Vector 
 		}
 	}
 
-	// KISAKTODO: ugh this logic is annoying to follow
-	//for( int i = 0; i < 4; ++i )
-	//{
-	//	// The new position is actually the position of the pivot point for the billboard.
-	//	float *p_pos_old	= (float*)( p_old_vb_data + ( i * old_vertex_stride ));
-	//	float *p_pos_new	= (float*)( p_new_vb_data + ( i * new_vertex_stride ));
-	//	p_pos_new[0]		= pivot_pos[X];
-	//	p_pos_new[1]		= pivot_pos[Y];
-	//	p_pos_new[2]		= pivot_pos[Z];
-	//
-	//	// Introduce normal (which is actually the position of the vertex relative to the pivot).
-	//	Mth::Vector pos_relative_to_pivot( p_pos_old[0] - pivot_pos[X], p_pos_old[1] - pivot_pos[Y], p_pos_old[2] - pivot_pos[Z] );
-	//
-	//	p_pos_new[3]		= Mth::DotProduct( pos_relative_to_pivot, u );
-	//	p_pos_new[4]		= Mth::DotProduct( pos_relative_to_pivot, v );
-	//	p_pos_new[5]		= Mth::DotProduct( pos_relative_to_pivot, normal );
-	//
-	//	// Copy color.
-	//	D3DCOLOR *p_col_old	= (D3DCOLOR*)( p_old_vb_data + ( i * old_vertex_stride ) + m_diffuse_offset );
-	//	D3DCOLOR *p_col_new	= (D3DCOLOR*)( p_new_vb_data + ( i * new_vertex_stride ) + m_diffuse_offset + ( sizeof( float ) * 3 ));
-	//	p_col_new[0]		= p_col_old[0];
-	//
-	//	// Copy uv0...
-	//	float *p_uv0_old	= (float*)( p_old_vb_data + ( i * old_vertex_stride ) + m_uv0_offset );
-	//	float *p_uv0_new	= (float*)( p_new_vb_data + ( i * new_vertex_stride ) + m_uv0_offset + ( sizeof( float ) * 3 ));
-	//	p_uv0_new[0]		= p_uv0_old[0];
-	//	p_uv0_new[1]		= p_uv0_old[1];
-	//
-	//	// ...and additional uv's if present.
-	//	if(( m_vertex_shader[0] & D3DFVF_TEXCOUNT_MASK ) > D3DFVF_TEX1 )
-	//	{
-	//		p_uv0_new[2]		= p_uv0_old[2];
-	//		p_uv0_new[3]		= p_uv0_old[3];
-	//	}
-	//	if(( m_vertex_shader[0] & D3DFVF_TEXCOUNT_MASK ) > D3DFVF_TEX2 )
-	//	{
-	//		p_uv0_new[4]		= p_uv0_old[4];
-	//		p_uv0_new[5]		= p_uv0_old[5];
-	//	}
-	//	if(( m_vertex_shader[0] & D3DFVF_TEXCOUNT_MASK ) > D3DFVF_TEX3 )
-	//	{
-	//		p_uv0_new[6]		= p_uv0_old[6];
-	//		p_uv0_new[7]		= p_uv0_old[7];
-	//	}
-	//}
+	// KISAKTODO: ugh this logic is annoying to follow, should be pretty accurate
+	for( int i = 0; i < 4; ++i )
+	{
+		float *p_pos = (float*)(p_old_vb_data + (i * old_vertex_stride));
+
+		// The new position is actually the position of the pivot point for the billboard.
+		//float *p_pos_old	= (float*)( p_old_vb_data + ( i * old_vertex_stride ));
+		//float *p_pos_new	= (float*)( p_new_vb_data + ( i * new_vertex_stride ));
+		//p_pos_new[0]		= pivot_pos[X];
+		//p_pos_new[1]		= pivot_pos[Y];
+		//p_pos_new[2]		= pivot_pos[Z];
+	
+		// Introduce normal (which is actually the position of the vertex relative to the pivot).
+		//Mth::Vector pos_relative_to_pivot( p_pos_old[0] - pivot_pos[X], p_pos_old[1] - pivot_pos[Y], p_pos_old[2] - pivot_pos[Z] );
+		Mth::Vector pos_relative_to_pivot(
+			p_pos[0] - pivot_pos[X],
+			p_pos[1] - pivot_pos[Y],
+			p_pos[2] - pivot_pos[Z] 
+		);
+	
+		//p_pos_new[3]		= Mth::DotProduct( pos_relative_to_pivot, u );
+		//p_pos_new[4]		= Mth::DotProduct( pos_relative_to_pivot, v );
+		//p_pos_new[5]		= Mth::DotProduct( pos_relative_to_pivot, normal );
+
+		p_pos[0]		= Mth::DotProduct( pos_relative_to_pivot, u );
+		p_pos[1]		= Mth::DotProduct( pos_relative_to_pivot, v );
+		p_pos[2]		= Mth::DotProduct( pos_relative_to_pivot, normal );
+	
+		//// Copy color.
+		//D3DCOLOR *p_col_old	= (D3DCOLOR*)( p_old_vb_data + ( i * old_vertex_stride ) + m_diffuse_offset );
+		//D3DCOLOR *p_col_new	= (D3DCOLOR*)( p_new_vb_data + ( i * new_vertex_stride ) + m_diffuse_offset + ( sizeof( float ) * 3 ));
+		//p_col_new[0]		= p_col_old[0];
+		//
+		//// Copy uv0...
+		//float *p_uv0_old	= (float*)( p_old_vb_data + ( i * old_vertex_stride ) + m_uv0_offset );
+		//float *p_uv0_new	= (float*)( p_new_vb_data + ( i * new_vertex_stride ) + m_uv0_offset + ( sizeof( float ) * 3 ));
+		//p_uv0_new[0]		= p_uv0_old[0];
+		//p_uv0_new[1]		= p_uv0_old[1];
+	
+		// ...and additional uv's if present.
+		//if(( m_vertex_shader[0] & D3DFVF_TEXCOUNT_MASK ) > D3DFVF_TEX1 )
+		//{
+		//	p_uv0_new[2]		= p_uv0_old[2];
+		//	p_uv0_new[3]		= p_uv0_old[3];
+		//}
+		//if(( m_vertex_shader[0] & D3DFVF_TEXCOUNT_MASK ) > D3DFVF_TEX2 )
+		//{
+		//	p_uv0_new[4]		= p_uv0_old[4];
+		//	p_uv0_new[5]		= p_uv0_old[5];
+		//}
+		//if(( m_vertex_shader[0] & D3DFVF_TEXCOUNT_MASK ) > D3DFVF_TEX3 )
+		//{
+		//	p_uv0_new[6]		= p_uv0_old[6];
+		//	p_uv0_new[7]		= p_uv0_old[7];
+		//}
+	}
 
 	// Now fix up the mesh. Flag the mesh as being a billboard (stop the mesh being rendered by the regular pathway).
 	m_flags |= sMesh::MESH_FLAG_BILLBOARD;

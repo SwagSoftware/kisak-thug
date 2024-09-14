@@ -1788,8 +1788,7 @@ void set_pixel_shader(IDirect3DPixelShader9* shader_id, uint32 num_passes )
 		}
 			
 		// Upload any pixel shader constants if required.
-		//if( EngineGlobals.upload_pixel_shader_constants && ( shader_id > 0 ))
-		if( shader_id )
+		if( EngineGlobals.upload_pixel_shader_constants && ( shader_id > 0 ))
 		{
 			D3DDevice_SetPixelShaderConstantF( 0, &EngineGlobals.pixel_shader_constants[0], num_passes );
 			D3DDevice_SetPixelShaderConstantF( 4, &EngineGlobals.pixel_shader_constants[16], 1 );
@@ -3164,6 +3163,7 @@ static sMesh	*visible_mesh_array[VISIBLE_MESH_ARRAY_SIZE];
 /*                                                                */
 /*                                                                */
 /******************************************************************/
+// LWSS: Function looks good
 void render_scene( sScene *p_scene, uint32 flags, uint32 viewport )
 {
 	sMaterial		*p_material					= NULL;
@@ -3367,6 +3367,11 @@ void render_scene( sScene *p_scene, uint32 flags, uint32 viewport )
 					//	p_material = p_mesh->mp_material;
 					//	p_material->Submit();
 					//}
+					// LWSS: Add hack from PC.
+					if (p_mesh->mp_material->m_checksum == 0x5C738D12)
+					{
+						p_mesh->mp_material->mp_tex[0] = p_mesh->mp_material->mp_tex[1];
+					}
 					p_mesh->Submit();
 
 					// Add this mesh to the visible list, providing it is within bounds.

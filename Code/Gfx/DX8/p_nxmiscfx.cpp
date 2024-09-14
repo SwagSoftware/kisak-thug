@@ -870,6 +870,7 @@ bool plat_texture_splat( Nx::CSector **pp_sectors, Nx::CCollStatic **pp_collisio
 /*                                                                */
 /*                                                                */
 /******************************************************************/
+// LWSS: looks good
 void plat_texture_splat_render( void )
 {
 	sXboxSplatInstanceDetails *p_xbox_details;
@@ -1167,6 +1168,7 @@ void plat_shatter_update( sShatterInstanceDetails *p_details, float framelength 
  *
  * 
  *****************************************************************************/
+// LWSS: looks good.
 void plat_shatter_render( sShatterInstanceDetails *p_details )
 {
 	sXboxShatterInstanceDetails *p_xbox_details = static_cast<sXboxShatterInstanceDetails*>( p_details );
