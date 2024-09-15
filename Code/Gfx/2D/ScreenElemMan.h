@@ -128,6 +128,7 @@ bool ScriptTextElementConcatenate(Script::CScriptStructure *pParams, Script::CSc
 bool ScriptTextElementBackspace(Script::CScriptStructure *pParams, Script::CScript *pScript);
 bool ScriptGetTextElementString(Script::CScriptStructure *pParams, Script::CScript *pScript);
 bool ScriptGetTextElementLength(Script::CScriptStructure *pParams, Script::CScript *pScript);
+bool ScriptGetTextElementLengthTrim(Script::CScriptStructure* pParams, Script::CScript* pScript);
 bool ScriptGetScreenElementPosition(Script::CScriptStructure *pParams, Script::CScript *pScript);
 bool ScriptMenuSelectedIndexIs(Script::CScriptStructure *pParams, Script::CScript *pScript);
 bool ScriptScreenElementExists(Script::CScriptStructure *pParams, Script::CScript *pScript);

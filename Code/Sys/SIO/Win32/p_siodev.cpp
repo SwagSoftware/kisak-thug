@@ -185,6 +185,7 @@ void Device::read_data ( void )
 	//}
 
 	// Slurp up all the SDL events.
+
 	SDL_Event e;
 	while (SDL_PollEvent(&e) != 0)
 	{

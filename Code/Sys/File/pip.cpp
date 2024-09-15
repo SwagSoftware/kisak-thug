@@ -519,6 +519,33 @@ bool UnloadPre(const char *p_preFileName)
 	return success;
 }
 
+// Cucky Pasta
+void UnloadUnusedPres()
+{
+	for (int i = 0; i < MAX_PRE_FILES; ++i)
+	{
+		if (spp_pre_files[i] != nullptr)
+		{
+			SPreHeader* p_pre_header = sSkipOverPreName(spp_pre_files[i]);
+			int num_files = p_pre_header->mNumFiles;
+
+			SPreContained* p_contained = (SPreContained*)(p_pre_header + 1);
+			uint16 usage = 0;
+			for (int f = 0; f < num_files; ++f)
+			{
+				if ((usage |= p_contained->mUsage) != 0)
+					break;
+			}
+			if (usage != 0)
+				continue;
+
+			// Delete it.
+			delete[] spp_pre_files[i];
+			spp_pre_files[i] = nullptr;
+		}
+	}
+}
+
 // Searches each of the loaded pre files for the passed contained file.
 // Returns NULL if not found.
 static SPreContained *sSeeIfFileIsInAnyPre(uint32 fileNameCRC)

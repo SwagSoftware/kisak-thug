@@ -76,7 +76,6 @@ namespace Mdl
 {
 DefineSingletonClass( FrontEnd, "Frontend module" );
 
-
 FrontEnd::FrontEnd()
 {
 
@@ -593,13 +592,29 @@ void FrontEnd::s_handle_keyboard_code( const Tsk::Task< FrontEnd >& task )
 		
 	num_chars = SIO::KeyboardRead( makes );
 
+	// Clear the key array
+	for (int i = 0;i < sizeof(g_charsPressed);i++)
+	{
+		g_charsPressed[i] = false;
+	}
+
 	for( i = 0; i < num_chars; i++ )
 	{
-		if((( makes[i] >= 32 ) && ( makes[i] <= 126 ) ) || ( makes[i] == SIO::vKB_ENTER ) || ( makes[i] == SIO::vKB_BACKSPACE ))
+		if((( makes[i] >= 32 ) && ( makes[i] <= 126 ) )
+			|| ( makes[i] == SIO::vKB_ENTER )
+			|| ( makes[i] == SIO::vKB_BACKSPACE )
+			|| ( makes[i] == VK_RETURN )
+			|| ( makes[i] == VK_BACK )
+			)
 		{
 			Script::CStruct* pParams;
 			
 			pParams = new Script::CStruct;
+
+			// blackops: Probably better to use SDL keyboard input, but we are already using the WINApi sirs.
+			// blackops TODO: add arrow keys.
+
+#ifndef __PLAT_WN32__
 			if( makes[i] == SIO::vKB_ENTER )
 			{
 				pParams->AddChecksum( NONAME, Script::GenerateCRC( "got_enter" ));
@@ -608,6 +623,16 @@ void FrontEnd::s_handle_keyboard_code( const Tsk::Task< FrontEnd >& task )
 			{
 				pParams->AddChecksum( NONAME, Script::GenerateCRC( "got_backspace" ));
 			}
+#else
+			if (makes[i] == VK_RETURN)
+			{
+				pParams->AddChecksum( NONAME, Script::GenerateCRC( "got_enter" ));
+			}
+			else if (makes[i] == VK_BACK)
+			{
+				pParams->AddChecksum( NONAME, Script::GenerateCRC( "got_backspace" ));
+			}
+#endif
 			else
 			{
 				char text_string[2];

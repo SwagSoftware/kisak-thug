@@ -1009,6 +1009,7 @@ SCFunction CFunctionLookupTable[]=
 	{"TextElementBackspace",	Front::ScriptTextElementBackspace},
 	{"GetTextElementString",	Front::ScriptGetTextElementString},
 	{"GetTextElementLength",	Front::ScriptGetTextElementLength},
+	{"GetTextElementLengthTrim",	Front::ScriptGetTextElementLengthTrim},
 	{"GetScreenElementDims", 	Front::ScriptGetScreenElementDims},
 	{"GetScreenElementPosition", Front::ScriptGetScreenElementPosition},
 	{"LaunchViewer",			CFuncs::ScriptLaunchViewer},

@@ -1288,6 +1288,42 @@ bool ScriptGetTextElementString(Script::CScriptStructure *pParams, Script::CScri
 	return false;
 }
 
+// @script | GetTextElementLengthTrim | blackops: not sure??? missing in this codebase but used in keyboard.cpp. 
+// Likely added in PC?
+// Guessing this trims special characters that are easily input on PC?
+// @parm name + | id | the text element's id
+bool ScriptGetTextElementLengthTrim(Script::CScriptStructure* pParams, Script::CScript* pScript)
+{
+	// blackops: Copying ScriptGetTextElementLength for now, i think it should be fine.
+
+	CScreenElementManager* pManager = CScreenElementManager::Instance();
+	CScreenElementPtr p_elem = pManager->GetElement(pParams, CRCD(0x40c698af, "id"), CScreenElementManager::ASSERT);
+
+	uint32 type = (uint32)p_elem->GetType();
+	int length = 0;
+	switch ( type )
+	{
+		case CRCC( 0x5200dfb6, "TextElement" ):
+		{
+			CTextElement* p_text_element = (CTextElement*) p_elem.Convert();
+			length = p_text_element->GetLength();
+			break;
+		}
+		case CRCC( 0x40d92263, "TextBlockElement" ):
+		{
+			CTextBlockElement* p_text_block_element = (CTextBlockElement*) p_elem.Convert();
+			length = p_text_block_element->GetLength();
+			break;
+		}
+		default:
+			Dbg_MsgAssert( 0, ("GetTextElementLength called on screen element with type 0x%x", type ) );
+			return false;
+			break;
+	}
+	pScript->GetParams()->AddInteger( "length", length );
+	return true;
+}
+
 // @script | GetTextElementLength | returns the length of the specified text element
 // in the scripts params (length)
 // @parm name | id | the text element's id

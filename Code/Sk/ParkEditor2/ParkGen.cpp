@@ -508,7 +508,9 @@ int	CParkGenerator::GetResourceSize(char *name)
 
 Mem::Heap *CParkGenerator::GetParkEditorHeap()
 {
+#ifdef KISAK_ORIGINAL_ALLOCATOR
 	Dbg_MsgAssert(mp_mem_heap, ("no park editor heap"));
+#endif
 	return mp_mem_heap;
 }
 
@@ -1721,7 +1723,7 @@ void CParkGenerator::ReadInRailInfo()
 	// BAD MEM
 	m_processed_node_tab = new int[256];
 	m_processed_node_tab_entries = 0;
-	m_temp_node_tab = new TempNodeInfo[2048];
+	m_temp_node_tab = new TempNodeInfo[pNodeArray->GetSize()]; // fix value larger than 2048 sir
 
 	
 	int index = 0;

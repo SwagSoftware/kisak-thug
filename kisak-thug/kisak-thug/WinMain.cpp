@@ -19,6 +19,7 @@ bool g_windowJustWentOutOfFocus = false;
 bool g_windowHasBeenDisplayedEver = false;
 bool gbQuit = false;
 bool g_hasJustEnteredNetworkGame = false; // KISAKTODO: add more xrefs for this var
+bool g_charsPressed[256] = {};
 
 BOOL(__cdecl* g_downloadCompletionFunc)(DWORD) = NULL;
 
@@ -396,10 +397,21 @@ void __stdcall Win32_ParseCommandLineForNetplayOptions(const char* a1)
 void Handle_WM_CHAR(WPARAM wParam, LPARAM lParam)
 {
     // KISAKTODO
+    g_charsPressed[(uint8)wParam] = true;
+    
 }
 void Handle_WM_KEYDOWN(WPARAM wParam, LPARAM lParam)
 {
     // KISAKTODO
+    switch ((uint8)wParam)
+    {
+        case VK_BACK:
+            g_charsPressed[(uint8)wParam] = true;
+            break;
+        case VK_RETURN:
+            g_charsPressed[(uint8)wParam] = true;
+            break;
+    }
 }
 
 LRESULT __stdcall Win32_WNDPROC(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)

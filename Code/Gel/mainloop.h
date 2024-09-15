@@ -30,6 +30,7 @@
 **								   Defines									**
 *****************************************************************************/
    
+
 namespace Mlp
 {
 
@@ -88,7 +89,8 @@ public :
 	void				SetLogicMask ( uint mask );
 
 	bool				IsProfiling(){return currently_profiling;}
-	
+
+
 private :
 						Manager ( void );
 						~Manager ( void );

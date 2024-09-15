@@ -7921,19 +7921,21 @@ bool ScriptCleanup(Script::CStruct *pParams, Script::CScript *pScript)
 		Mem::Manager::sHandle().DeleteSkaterHeaps();
 	}
 
-
+	// New tonyre pasta
 	// Unload any pip pre files that are no longer being used (eg, collision)
-	const char *p_pre_name=Pip::GetNextLoadedPre();
-	while (p_pre_name)
-	{
-		const char *p_next=Pip::GetNextLoadedPre(p_pre_name);
-		if (!Pip::PreFileIsInUse(p_pre_name))
-		{
-			Pip::UnloadPre(p_pre_name);
-		}
-		p_pre_name=p_next;
-	}	
-		
+	//const char *p_pre_name=Pip::GetNextLoadedPre();
+	//while (p_pre_name)
+	//{
+	//	const char *p_next=Pip::GetNextLoadedPre(p_pre_name);
+	//	if (!Pip::PreFileIsInUse(p_pre_name))
+	//	{
+	//		Pip::UnloadPre(p_pre_name);
+	//	}
+	//	p_pre_name=p_next;
+	//}	
+	//	
+	Pip::UnloadUnusedPres();
+
 	// unload the skater parts pre file if it is currently loaded
 	File::PreMgr* pre_mgr = File::PreMgr::Instance();
 	pre_mgr->UnloadPre( "skaterparts.pre", true );			

@@ -471,7 +471,7 @@ TRY_THE_FUCK_AGAIN:
 
 	EngineGlobals.dontConvertBlendModes = true;
 
-	if ((deviceCaps.SrcBlendCaps & 0x2000 == 0) || (deviceCaps.DestBlendCaps & 0x2000 == 0))
+	if (((deviceCaps.SrcBlendCaps & 0x2000) == 0) || (deviceCaps.DestBlendCaps & 0x2000 == 0))
 	{
 		EngineGlobals.dontConvertBlendModes = false;
 	}

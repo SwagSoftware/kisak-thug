@@ -36,7 +36,7 @@ namespace SIO
 	
 
 #define KEYBOARD_ON	(1)
-			
+
 enum
 {
 	vKB_LEFT	= 20,	// start it high so as not to interfere with button/pad enums 

@@ -25,6 +25,9 @@
 
 #include <core/defines.h>
 #include <sys/sio/keyboard.h>
+#include <SDL.h>
+#undef main // nice sdl shit
+#include <SDL_keyboard.h>
 
 /*****************************************************************************
 **								DBG Information								**
@@ -94,6 +97,39 @@ int KeyboardDeinit(void)
 
 int KeyboardRead( char* makes )
 {
+	// blackops: not sure why i couldn't get SDL keyboard input working so we doin this
+	int total_pressed = 0;
+	for (int i = 0; i < 256; i++)
+	{
+		if (g_charsPressed[i]) 
+		{
+			makes[total_pressed] = (char)i;
+			total_pressed++;
+		}
+	}
+
+	return total_pressed;
+}
+
+int KeyboardReadText(char* makes)
+{
+	//int num_chars = 0;
+	//SDL_StartTextInput();
+	//SDL_Event e;
+	//while (SDL_PollEvent(&e))
+	//{
+	//	switch (e.type)
+	//	{
+	//	case SDL_TEXTINPUT:
+	//		strcat(makes, e.text.text);
+	//		num_chars++;
+	//		printf(e.text.text);
+	//		break;
+	//	}
+	//}
+
+	//SDL_StopTextInput();
+	//return num_chars;
 	return 0;
 }
 
@@ -101,6 +137,7 @@ int KeyboardRead( char* makes )
 /*                                                                */
 /*                                                                */
 /******************************************************************/
+
 
 void KeyboardClear( void )
 {

@@ -65,6 +65,7 @@ extern bool g_windowJustWentOutOfFocus;
 extern bool g_windowHasBeenDisplayedEver;
 extern bool gbQuit;
 extern bool g_hasJustEnteredNetworkGame;
+extern bool g_charsPressed[256];
 
 // LWSS: Seems to be used to Navmesh
 #define TESTING_GUNSLINGER 1

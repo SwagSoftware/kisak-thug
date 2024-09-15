@@ -121,7 +121,6 @@ DefineSingletonClass( Manager, "Main Loop Manager" );
 Manager::Manager( void )
 {
 	
-	
 	start_render_hook = NULL;
 	end_render_hook = NULL;
 	done = false;
