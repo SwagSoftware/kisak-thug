@@ -1781,6 +1781,26 @@ void sMesh::RawVertexFuckery()
 	free(workspace);
 }
 
+// LWSS ADD
+void sMesh::sub_4B3A90(VertexMysteryMeat* p_meat)
+{
+	VertexBufferWrapper* buff0 = this->mp_vertex_buffer[0];
+	if (buff0->vertexBuffer)
+	{
+		p_meat->streamOffset = p_meat->streamOffset; // ?? 
+	}
+	else
+	{
+		size_t len = buff0->len;
+		buff0->vertexBuffer = p_meat->vertexBuffer;
+		void* rawdata = buff0->rawdata;
+		buff0->streamOffset = p_meat->streamOffset;
+		memcpy((char*)p_meat->lockedPtr + p_meat->streamOffset, rawdata, len);
+		p_meat->vertexBuffer->AddRef();
+		p_meat->streamOffset += (buff0->len + 31) & 0xFFFFFFE0;
+	}
+}
+
 LinkedList* g_meshIndexBuffers = NULL;
 LinkedList* g_meshVertexBuffers = NULL;
 
@@ -1802,6 +1822,7 @@ void sMesh::Initialize(int				num_vertices,
 	uint16* p_matrix_indices,
 	uint32* p_weights,
 	char* p_vc_wibble_anims,
+	VertexMysteryMeat* p_meat, // lwss add
 	bool is_billboard, // lwss add
 	const char* debug_name // lwss add
 )
@@ -2041,7 +2062,7 @@ void sMesh::Initialize(int				num_vertices,
 		vertex_wrapper_flags = 1;
 	}
 
-	char* wibble_ptr_thing = NULL;
+	int* wibble_ptr_thing = NULL;
 
 	if (p_vc_wibble_anims)
 	{
@@ -2051,7 +2072,7 @@ void sMesh::Initialize(int				num_vertices,
 	}
 	else
 	{
-		wibble_ptr_thing = p_vc_wibble_anims;
+		wibble_ptr_thing = (int*)p_meat;
 	}
 
 	if (is_billboard)
@@ -2072,8 +2093,7 @@ void sMesh::Initialize(int				num_vertices,
 
 	if (wibble_ptr_thing)
 	{
-		int* i_wibble = (int*)wibble_ptr_thing;
-		i_wibble[2] += (vertex_size * vertices_for_this_mesh + 31) & 0xFFFFFFE0;
+		wibble_ptr_thing[2] += (vertex_size * vertices_for_this_mesh + 31) & 0xFFFFFFE0;
 	}
 
 	if (p_weights && this->m_biggest_index_used == -1)

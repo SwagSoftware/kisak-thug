@@ -46,7 +46,7 @@ public:
 	void						AddMesh( NxXbox::sMesh * );
 	Lst::Head< NxXbox::sMesh >	*GetMeshList();
 
-	void						CreateMeshArray();
+	void						CreateMeshArray(NxXbox::VertexMysteryMeat* p_meat);
 	bool						RegisterMeshArray( bool just_count );
 	void						DestroyMeshArray( void );
 

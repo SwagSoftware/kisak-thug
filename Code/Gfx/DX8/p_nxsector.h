@@ -21,7 +21,7 @@ class CXboxSector : public CSector
 	public:
 									CXboxSector();
 
-	bool							LoadFromFile( void* p_file, const char* debug_name = NULL); // lwss: add debug name
+	bool							LoadFromFile( void* p_file, NxXbox::VertexMysteryMeat* p_meat, const char* debug_name = NULL); // lwss: add debug name
 	bool							LoadFromMemory( void **p_mem );
 
 	NxXbox::sScene					*GenerateScene( void );

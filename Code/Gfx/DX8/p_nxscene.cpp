@@ -51,8 +51,23 @@ void CXboxScene::DestroySectorMeshes( void )
 /*                                                                */
 /*                                                                */
 /******************************************************************/
-void CXboxScene::plat_post_load()
+void CXboxScene::plat_post_load(NxXbox::VertexMysteryMeat* p_meat)
 {
+	// LWSS add
+	if (p_meat)
+	{
+		if (D3D_OK != D3DDevice_CreateVertexBuffer(p_meat->length, 8, 0, D3DPOOL_DEFAULT, &p_meat->vertexBuffer, 0))
+		{
+			__debugbreak();
+		}
+		p_meat->vertexBuffer->Lock(0, 0, &p_meat->lockedPtr, 0);
+		p_meat->streamOffset = 0;
+		this->p_vertex_buffer = p_meat->vertexBuffer;
+		this->p_vertex_buffer_len = p_meat->length;
+	}
+	// LWSS end
+	 
+	
 	// Now turn the temporary mesh lists into mesh arrays.
 	mp_sector_table->IterateStart();
 	CSector* pSector = mp_sector_table->IterateNext();
@@ -60,13 +75,21 @@ void CXboxScene::plat_post_load()
 	{
 		CXboxGeom *p_xbox_geom = static_cast<CXboxGeom*>(pSector->GetGeom());
 
-		p_xbox_geom->CreateMeshArray();
+		p_xbox_geom->CreateMeshArray(p_meat);
 
 		// First time through we just want to count the meshes,
 		p_xbox_geom->RegisterMeshArray( true );
 
 		pSector = mp_sector_table->IterateNext();
 	}
+
+	// LWSS add
+	if (p_meat)
+	{
+		p_meat->vertexBuffer->Unlock();
+		p_meat->lockedPtr = NULL;
+	}
+	// LWSS end
 
 	// Now we have counted all the meshes, tell the engine to create the arrays to hold them.
 	GetEngineScene()->CreateMeshArrays();

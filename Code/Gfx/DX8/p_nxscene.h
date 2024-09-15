@@ -24,7 +24,7 @@ public:
 	void						DestroySectorMeshes( void );
 
 private:		// It's all private, as it is machine specific
-	virtual void				plat_post_load();	
+	virtual void				plat_post_load(NxXbox::VertexMysteryMeat* p_meat);
 	virtual bool				plat_load_textures( const char *p_name );	// load textures 
 	virtual bool				plat_load_collision( const char *p_name );	// load collision data
 	virtual bool				plat_unload_add_scene( void );
@@ -32,7 +32,10 @@ private:		// It's all private, as it is machine specific
 
 
 	NxXbox::sScene				*mp_engine_scene; // 0x280
-
+	// lwss add: new for PC
+	IDirect3DVertexBuffer9* p_vertex_buffer;
+	int p_vertex_buffer_len;
+	// lwss end
 };
 
 } // Namespace Nx  			

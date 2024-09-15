@@ -100,7 +100,8 @@ void CXboxGeom::AddMesh( NxXbox::sMesh *mesh )
 /*                                                                */
 /*                                                                */
 /******************************************************************/
-void CXboxGeom::CreateMeshArray( void )
+//LWSS: OK
+void CXboxGeom::CreateMeshArray(NxXbox::VertexMysteryMeat* p_meat)
 {
 	if( !m_mesh_array )
 	{
@@ -118,6 +119,12 @@ void CXboxGeom::CreateMeshArray( void )
 				next			= mesh->GetNext();
 				m_mesh_array[k]	= mesh->GetData();
 				delete mesh;
+				// LWSS add
+				if (p_meat)
+				{
+					m_mesh_array[k]->sub_4B3A90(p_meat);
+				}
+				// LWSS end
 				k++;
 			}
 		}

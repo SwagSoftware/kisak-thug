@@ -31,6 +31,7 @@
 //#include <sk/modules/skate/skate.h>		// For getting list of movable objects
 
 #include <sys/replay/replay.h>
+#include <Gfx/DX8/NX/mesh.h>
 
 #ifdef	__PLAT_NGPS__
 namespace NxPs2
@@ -259,14 +260,16 @@ CScene	*		CEngine::sLoadScene(const char *p_name, CTexDict *p_tex_dict,
 
 	Mem::PushMemProfile((char*)full_name);
 
-	CScene *loaded_scene = s_plat_load_scene(full_name, p_tex_dict, add_super_sectors, is_sky, is_dictionary);
+	NxXbox::VertexMysteryMeat meat;
+	memset(&meat, 0x00, sizeof(NxXbox::VertexMysteryMeat));
+	CScene *loaded_scene = s_plat_load_scene(full_name, p_tex_dict, add_super_sectors, is_sky, is_dictionary, &meat);
 
 	loaded_scene->SetID(Script::GenerateCRC(p_name)); 	// store the checksum of the scene name
 
 	loaded_scene->SetTexDict(p_tex_dict);					  
 					  
 	// Do post-load processing
-	loaded_scene->PostLoad(full_name);
+	loaded_scene->PostLoad(full_name, &meat);
 
 	// Put in scene array
 	int i;

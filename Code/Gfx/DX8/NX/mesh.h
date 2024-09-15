@@ -179,6 +179,15 @@ struct IndexBufferWrapper
 	}
 }; // size: 24
 
+// Related to Billboards
+struct VertexMysteryMeat
+{
+	IDirect3DVertexBuffer9* vertexBuffer;
+	int streamOffset;
+	int length;
+	void* lockedPtr;
+};
+
 #define FLAG_NO_ALLOC_RAWDATABUFFER 1
 #define FLAG_NO_CREATE_VERTEX_BUFFER 4
 struct VertexBufferWrapper
@@ -382,6 +391,7 @@ public:
 
 	// lwss add
 	void			RawVertexFuckery();
+	void			sub_4B3A90(NxXbox::VertexMysteryMeat* p_meat);
 
 	// Grabs memory chunk and builds vertex buffer from heap memory, rather than getting DX to do it.
 	static VertexBufferWrapper *AllocateVertexBuffer(uint32 size, int d3dusage, int a3, const char* debug_name = NULL); // lwss: add debug_name
@@ -410,6 +420,7 @@ public:
 								uint16			*p_matrix_indices	= NULL,
 								uint32			*p_weights			= NULL,
 								char			*p_vc_wibble_anims	= NULL,
+								VertexMysteryMeat* p_meat = NULL,
 								bool			is_billboard = false,
 								const char* debug_name = NULL);
 

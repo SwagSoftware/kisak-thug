@@ -396,11 +396,11 @@ bool 			CScene::DeleteSector(CSector *p_sector)
 /*                                                                */
 /******************************************************************/
 
-void			CScene::PostLoad(const char *p_name)
+void			CScene::PostLoad(const char *p_name, NxXbox::VertexMysteryMeat* p_meat)
 {
 	strcpy(m_scene_filename, p_name);	// needs name for Pip::Unload()
 
-	plat_post_load();
+	plat_post_load(p_meat);
 }
 
 /******************************************************************/
@@ -1179,7 +1179,7 @@ Image::RGBA	CScene::GetMajorityColor() const
 /*                                                                */
 /******************************************************************/
 
-void			CScene::plat_post_load()
+void			CScene::plat_post_load(NxXbox::VertexMysteryMeat* p_meat)
 {
 	printf ("STUB: PostLoad\n");
 }

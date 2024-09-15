@@ -35,6 +35,7 @@ CXboxSector::CXboxSector()
 /******************************************************************/
 bool CXboxSector::LoadFromMemory( void **pp_mem )
 {
+	__debugbreak();
 	Dbg_Assert( mp_geom );
 
 	uint8		*p_data	= (uint8*)( *pp_mem );
@@ -279,7 +280,7 @@ bool CXboxSector::LoadFromMemory( void **pp_mem )
 /*                                                                */
 /*                                                                */
 /******************************************************************/
-bool CXboxSector::LoadFromFile( void* p_file, const char* debug_name)
+bool CXboxSector::LoadFromFile( void* p_file, NxXbox::VertexMysteryMeat* p_meat, const char* debug_name)
 {
 	Dbg_Assert( mp_geom );
 
@@ -468,6 +469,8 @@ bool CXboxSector::LoadFromFile( void* p_file, const char* debug_name)
 							p_vertex_bone_indices,
 							p_vertex_weights,
 							( flags & 0x800 ) ? p_vc_wibble_indices : NULL,
+							//is_billboard ? p_meat : NULL,
+							p_meat,
 							is_billboard,
 							debug_name
 		);

@@ -778,7 +778,7 @@ CScene *CEngine::s_plat_load_scene_from_memory( void *p_mem, CTexDict *p_tex_dic
 /*                                                                */
 /******************************************************************/
 static int swag = 0;
-CScene *CEngine::s_plat_load_scene( const char *p_name, CTexDict *p_tex_dict, bool add_super_sectors, bool is_sky, bool is_dictionary )
+CScene *CEngine::s_plat_load_scene( const char *p_name, CTexDict *p_tex_dict, bool add_super_sectors, bool is_sky, bool is_dictionary, NxXbox::VertexMysteryMeat* p_meat)
 {
 	swag++;
 	CSector*		pSector;
@@ -850,9 +850,9 @@ CScene *CEngine::s_plat_load_scene( const char *p_name, CTexDict *p_tex_dict, bo
 		p_xbox_geom->InitMeshList();
 		
 		// Load sector data.
-		char debug[64]{ 0 };
+		char debug[64]{ 0 }; // LWSS ADD
 		snprintf(debug, 63, "%s[%d]", p_name, s);
-		if( pXboxSector->LoadFromFile( p_file, debug))
+		if( pXboxSector->LoadFromFile( p_file, p_meat, debug))
 		{
 			new_scene->AddSector( pSector );
 		}
@@ -1007,13 +1007,13 @@ void CEngine::s_plat_uninit_quick_anim(CQuickAnim* pQuickAnim)
 CMesh* CEngine::s_plat_load_mesh( const char* pMeshFileName, Nx::CTexDict* pTexDict, uint32 texDictOffset, bool isSkin, bool doShadowVolume )
 {
 	// Load the scene.
-	Nx::CScene *p_scene = Nx::CEngine::s_plat_load_scene( pMeshFileName, pTexDict, false, false, false );
+	Nx::CScene *p_scene = Nx::CEngine::s_plat_load_scene( pMeshFileName, pTexDict, false, false, false, NULL );
 
 	// Store the checksum of the scene name.
 	p_scene->SetID(Script::GenerateCRC( pMeshFileName )); 	// store the checksum of the scene name
 
 	p_scene->SetTexDict( pTexDict );
-	p_scene->PostLoad( pMeshFileName );
+	p_scene->PostLoad( pMeshFileName, NULL);
 	
 	// Disable any scaling.
 	NxXbox::DisableMeshScaling();
@@ -1035,6 +1035,7 @@ CMesh* CEngine::s_plat_load_mesh( const char* pMeshFileName, Nx::CTexDict* pTexD
 /******************************************************************/
 CMesh* CEngine::s_plat_load_mesh( uint32 id, uint32 *p_model_data, int model_data_size, uint8 *p_cas_data, Nx::CTexDict* pTexDict, uint32 texDictOffset, bool isSkin, bool doShadowVolume )
 {
+	__debugbreak();
 	// Convert the id into a usable string.
 	Dbg_Assert( id > 0 );
 	char id_as_string[16];
@@ -1047,7 +1048,7 @@ CMesh* CEngine::s_plat_load_mesh( uint32 id, uint32 *p_model_data, int model_dat
 	p_scene->SetID( Script::GenerateCRC( id_as_string ));
 
 	p_scene->SetTexDict( pTexDict );
-	p_scene->PostLoad( id_as_string );
+	p_scene->PostLoad( id_as_string, NULL );
 	
 	CXboxMesh *pMesh = new CXboxMesh();
 
