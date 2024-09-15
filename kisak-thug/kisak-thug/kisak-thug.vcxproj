@@ -1055,7 +1055,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>$(ProjectDir)\..\..\Code\Sk;$(ProjectDir)\..\..\Code;$(ProjectDir)\..\..\SDL2\include</IncludePath>
-    <LibraryPath>$(ProjectDir)\..\..\SDL2;$(ProjectDir)\..\..\dxvk_dx9_debug;C:\Program Files %28x86%29\Microsoft DirectX SDK %28June 2010%29\Lib\x86;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(ProjectDir)\..\..\SDL2;C:\Program Files %28x86%29\Microsoft DirectX SDK %28June 2010%29\Lib\x86;$(LibraryPath)</LibraryPath>
     <ExternalIncludePath>$(ExternalIncludePath);C:\Program Files %28x86%29\Microsoft DirectX SDK %28June 2010%29\Include</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
