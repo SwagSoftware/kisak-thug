@@ -410,43 +410,44 @@ void sMesh::PopVertexShader( void )
 /*                                                                */
 /*                                                                */
 /******************************************************************/
-void sMesh::wibble_normals( void )
-{
-	if( m_flags & 0 )
-	{
-		// Angle in the range [-PI/16, PI/16], period is 1 second.
-		float time = (float)Tmr::GetTime() * 0.0005f;
-
-		BYTE		*p_byte;
-		float		*p_normal;
-		float		*p_pos;
-		mp_vertex_buffer[m_current_write_vertex_buffer]->Lock( 0, 0, (void**)&p_byte, 0);
-		p_pos		= (float*)( p_byte + 0 );
-		p_normal	= (float*)( p_byte + m_normal_offset );
-
-		for( uint32 i = 0; i < m_num_vertices; ++i )
-		{
-			float x				= p_pos[0] - m_sphere_center.x;
-			float z				= p_pos[2] - m_sphere_center.z;
-			
-			float time_offset_x	= time + (( x / m_sphere_radius ) * 0.5f );
-			float time_offset_z	= time + (( z / m_sphere_radius ) * 0.5f );
-
-			float angle_x		= ( Mth::PI * ( 1.0f / 64.0f ) * (float)fabs( sinf( time_offset_x * Mth::PI ))) - ( Mth::PI * ( 1.0f / 128.0f ));
-			float angle_z		= ( Mth::PI * ( 1.0f / 64.0f ) * (float)fabs( sinf( time_offset_z * Mth::PI ))) - ( Mth::PI * ( 1.0f / 129.0f ));
-			
-			Mth::Vector	n( sinf( angle_x ), cosf(( angle_x + angle_z ) * 0.5f ), sinf( angle_z ));
-			n.Normalize();
-			
-			p_normal[0]			= n[X];
-			p_normal[1]			= n[Y];
-			p_normal[2]			= n[Z];
-			
-			p_pos				= (float*)((BYTE*)p_pos + m_vertex_stride );
-			p_normal			= (float*)((BYTE*)p_normal + m_vertex_stride );
-		}
-	}
-}
+// LWSS: Commented out. Seems unused.
+//void sMesh::wibble_normals( void )
+//{
+//	if( m_flags & 0 )
+//	{
+//		// Angle in the range [-PI/16, PI/16], period is 1 second.
+//		float time = (float)Tmr::GetTime() * 0.0005f;
+//
+//		BYTE		*p_byte;
+//		float		*p_normal;
+//		float		*p_pos;
+//		mp_vertex_buffer[m_current_write_vertex_buffer]->Lock( 0, 0, (void**)&p_byte, 0);
+//		p_pos		= (float*)( p_byte + 0 );
+//		p_normal	= (float*)( p_byte + m_normal_offset );
+//
+//		for( uint32 i = 0; i < m_num_vertices; ++i )
+//		{
+//			float x				= p_pos[0] - m_sphere_center.x;
+//			float z				= p_pos[2] - m_sphere_center.z;
+//			
+//			float time_offset_x	= time + (( x / m_sphere_radius ) * 0.5f );
+//			float time_offset_z	= time + (( z / m_sphere_radius ) * 0.5f );
+//
+//			float angle_x		= ( Mth::PI * ( 1.0f / 64.0f ) * (float)fabs( sinf( time_offset_x * Mth::PI ))) - ( Mth::PI * ( 1.0f / 128.0f ));
+//			float angle_z		= ( Mth::PI * ( 1.0f / 64.0f ) * (float)fabs( sinf( time_offset_z * Mth::PI ))) - ( Mth::PI * ( 1.0f / 129.0f ));
+//			
+//			Mth::Vector	n( sinf( angle_x ), cosf(( angle_x + angle_z ) * 0.5f ), sinf( angle_z ));
+//			n.Normalize();
+//			
+//			p_normal[0]			= n[X];
+//			p_normal[1]			= n[Y];
+//			p_normal[2]			= n[Z];
+//			
+//			p_pos				= (float*)((BYTE*)p_pos + m_vertex_stride );
+//			p_normal			= (float*)((BYTE*)p_normal + m_vertex_stride );
+//		}
+//	}
+//}
 
 
 
@@ -602,7 +603,22 @@ void sMesh::SetPosition( Mth::Vector &pos )
 			((D3DVECTOR*)p_byte )->z += offset[Z];
 			p_byte += m_vertex_stride;
 		}
+
+		mp_vertex_buffer[vb]->Unlock(); // lwss add
 	}
+
+	// LWSS Add
+	for (int i = 0; i < m_num_vertices_raw; i++)
+	{
+		BYTE* p_byte = (BYTE*)m_vertices_raw;
+
+		((D3DVECTOR*)p_byte)->x += offset[X];
+		((D3DVECTOR*)p_byte)->y += offset[Y];
+		((D3DVECTOR*)p_byte)->z += offset[Z];
+
+		p_byte += 12;
+	}
+	// LWSS End
 
 	// We also need to adjust the bounding box and sphere information for this mesh.
 	m_sphere_center.x += offset[X];
@@ -708,7 +724,9 @@ void sMesh::SetYRotation( Mth::ERot90 rot )
 					m_sphere_center.z	= t + mp_transform->GetPos()[Z];
 					break;
 				}
-			}
+			} // switch()
+
+			mp_vertex_buffer[vb]->Unlock(); // lwss add
 		}
 	}
 }

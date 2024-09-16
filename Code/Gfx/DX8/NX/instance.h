@@ -39,7 +39,7 @@ public:
 					~CInstance();
 
 	void			Render( uint32 flags );
-	void			RenderShadowVolume( void );
+	//void			RenderShadowVolume( void ); // LWSS: commented out. seems unused.
 
 private:
 	uint32			m_flags;

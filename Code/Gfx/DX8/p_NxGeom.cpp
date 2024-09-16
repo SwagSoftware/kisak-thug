@@ -801,7 +801,6 @@ int CXboxGeom::plat_get_num_render_verts( void )
 // KISAKTODO: NOT?E: these below plat_render functions with changes.
 // Have a couple of new things I Didn't implement
 // 1) a simple getter for sMesh::GetVertexBuffer()
-// 2) another function for The VertexBuffer (seems to be a setter, cba to add it atm, probably not needed?)
 void CXboxGeom::plat_get_render_verts( Mth::Vector *p_verts )
 {
 	Dbg_MsgAssert( m_mesh_array, ( "Invalid for instanced sectors" ));
@@ -826,6 +825,8 @@ void CXboxGeom::plat_get_render_verts( Mth::Vector *p_verts )
 				++p_verts;
 				p_pos = (D3DVECTOR*)((BYTE*)p_pos + p_mesh->m_vertex_stride );
 			}
+
+			p_mesh->mp_vertex_buffer[0]->Unlock();
 		}
 	}
 }
@@ -864,6 +865,8 @@ void CXboxGeom::plat_get_render_colors( Image::RGBA *p_colors )
 				++p_colors;
 				p_col = (Image::RGBA*)((BYTE*)p_col + p_mesh->m_vertex_stride );
 			}
+
+			p_mesh->mp_vertex_buffer[0]->Unlock();
 		}
 	}
 }
@@ -913,6 +916,8 @@ void CXboxGeom::plat_set_render_verts( Mth::Vector *p_verts )
 			p_mesh->m_sphere_center.y	= sphere_center[Y];
 			p_mesh->m_sphere_center.z	= sphere_center[Z];
 			p_mesh->m_sphere_radius		= ( bbox.GetMax() - sphere_center ).Length();
+
+			p_mesh->mp_vertex_buffer[0]->Unlock();
 		}
 	}
 }
@@ -957,6 +962,8 @@ void CXboxGeom::plat_set_render_colors( Image::RGBA *p_colors )
 					++p_colors;
 					p_col = (Image::RGBA*)((BYTE*)p_col + p_mesh->m_vertex_stride );
 				}
+
+				p_mesh->mp_vertex_buffer[v]->Unlock();
 			}
 		}
 	}
@@ -998,6 +1005,8 @@ void CXboxGeom::plat_set_scale( const Mth::Vector & scale )
 
 				p_pos		= (D3DVECTOR*)((BYTE*)p_pos + p_mesh->m_vertex_stride );
 			}
+
+			p_mesh->mp_vertex_buffer[0]->Unlock();
 		}
 	}
 }

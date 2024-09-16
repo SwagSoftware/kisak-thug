@@ -281,20 +281,27 @@ bool AddWater( Nx::CXboxGeom *p_geom, NxXbox::sMesh *p_mesh )
 			p_write_byte	+= p_mesh->m_vertex_stride + 8;
 		}
 
-		NxXbox::VertexBufferWrapper* p_buffer0_2 = p_mesh->GetVertexBufferWrapper(0);
-		p_buffer0_2->Unlock();
-		NxXbox::VertexBufferWrapper* p_buffer0_3 = p_mesh->GetVertexBufferWrapper(0);
+
+		//NxXbox::VertexBufferWrapper* p_buffer0_2 = p_mesh->GetVertexBufferWrapper(0);
+		//p_buffer0_2->Unlock();
+		//NxXbox::VertexBufferWrapper* p_buffer0_3 = p_mesh->GetVertexBufferWrapper(0);
 
 		//delete p_mesh->mp_vertex_buffer[0];
-		delete p_buffer0_3;
+		//delete p_buffer0_3;
+		p_buffer0->Unlock();
+		delete p_buffer0;
 		//p_mesh->mp_vertex_buffer[0] = p_new_buffer;
+		p_mesh->m_d3dusage = 0;
 		p_mesh->SetVertexBufferWrapper(0, p_new_buffer);
+		p_new_buffer->Unlock();
 
 		p_mesh->m_vertex_stride += 8;
 
 		// Switch the vertex shader.
-		p_mesh->m_vertex_shader[0]	&= ~( D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE2( 0 ));
-		p_mesh->m_vertex_shader[0]	|= D3DFVF_TEX2 | D3DFVF_TEXCOORDSIZE2( 0 ) | D3DFVF_TEXCOORDSIZE2( 1 );
+		// LWSS change: Unsure if this is congruent logic. (KISAKTODO)
+		//p_mesh->m_vertex_shader[0]	&= ~( D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE2( 0 ));
+		//p_mesh->m_vertex_shader[0]	|= D3DFVF_TEX2 | D3DFVF_TEXCOORDSIZE2( 0 ) | D3DFVF_TEXCOORDSIZE2( 1 );
+		p_mesh->m_vertex_shader[0] = p_mesh->m_vertex_shader[0] & 0xFFFFFCFF | 0x200;
 	}
 
 	NxXbox::sMaterial *p_water_mat = p_mesh->mp_material;
@@ -333,8 +340,9 @@ bool AddWater( Nx::CXboxGeom *p_geom, NxXbox::sMesh *p_mesh )
 		p_tex[3]			= v1;
 	}
 
-	NxXbox::VertexBufferWrapper* p_buffer0_last = p_mesh->GetVertexBufferWrapper(0);
-	p_buffer0_last->Unlock();
+	//NxXbox::VertexBufferWrapper* p_buffer0_last = p_mesh->GetVertexBufferWrapper(0);
+	//p_buffer0_last->Unlock();
+	p_buffer0_again->Unlock();
 
 	return true;
 }
@@ -418,6 +426,8 @@ bool AddGrass( Nx::CXboxGeom *p_geom, NxXbox::sMesh *p_mesh )
 			p_tex[0]		= u;		
 			p_tex[1]		= v;
 		}
+
+		p_mesh->mp_vertex_buffer[0]->Unlock();
 
 		p_geom->AddMesh( p_grass_mesh );
 	}

@@ -375,7 +375,7 @@ public:
 
 	// Functions
 	void			wibble_vc( void );
-	void			wibble_normals( void );
+	//void			wibble_normals( void ); // LWSS: Commented out. Seems unused.
 	uint32			GetChecksum()	const			{ return Checksum; }
 	uint32			GetFlags()		const			{ return m_flags; }
 	void			SetActive( bool active )		{ if( active ) m_flags |= MESH_FLAG_ACTIVE; else m_flags &= ~MESH_FLAG_ACTIVE; }
