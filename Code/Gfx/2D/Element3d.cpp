@@ -53,7 +53,7 @@ static void sGetWorldMatrixFromScreenPosition(int camera_num, Mth::Matrix *p_wor
 
 	Mth::Vector camera_space_pos;
 
-#ifdef __PLAT_XBOX__
+#if defined(__PLAT_XBOX__) || defined(__PLAT_WN32__) // LWSS: This is set for PC
 	// Don't think Mick's assumption below is correct - for 3D objects going through the rendering pipeline, no screen correction is required.
 	screenX = screenX - ( 640 / 2 );
 	screenY = screenY - ( 448 / 2 );

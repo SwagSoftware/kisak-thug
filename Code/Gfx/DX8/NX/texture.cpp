@@ -89,8 +89,7 @@ sTexture::~sTexture()
 	if( pD3DTexture )
 	{
 		rr = pD3DTexture->Release();
-		pD3DSurface = NULL;
-		Dbg_Assert( rr == 0 );
+		//Dbg_Assert( rr == 0 );
 
 		// Ensure that this texture is no longer referenced in the EngineGlobals.
 		for( int p = 0; p < 4; ++p )

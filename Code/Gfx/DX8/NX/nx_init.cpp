@@ -29,6 +29,12 @@ int renderFlags = 0;
 /******************************************************************/
 void InitialiseRenderstates( void )
 {
+	// lwss add
+	XGMatrixIdentity(&EngineGlobals.world_matrix);
+	XGMatrixIdentity(&EngineGlobals.view_matrix);
+	XGMatrixIdentity(&EngineGlobals.projection_matrix);
+	// lwss end
+
 	D3DDevice_SetRenderState( D3DRS_LOCALVIEWER,		FALSE );
 	EngineGlobals.is_d3drs_localviewer_on = false; // lwss add
 	D3DDevice_SetRenderState( D3DRS_COLORVERTEX,		FALSE );

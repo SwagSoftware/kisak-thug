@@ -1506,7 +1506,7 @@ void set_focus_blur_focus( Mth::Vector & focal_point, float offset, float near_d
 void start_screen_blur( void )
 {
     // LWSS: Reworked for PC
-    if (!g_disableRendering)
+    if (g_disableRendering)
     {
         return;
     }

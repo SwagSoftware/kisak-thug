@@ -12340,6 +12340,9 @@ bool ScriptCheckForHoles( Script::CStruct* pParams, Script::CScript* pScript )
 // @script | OnXbox |
 bool ScriptOnXbox( Script::CStruct* pParams, Script::CScript* pScript )
 {
+#ifdef __PLAT_WN32__ 
+	return true; // LWSS: Accurate for PC
+#endif
 #ifdef __PLAT_XBOX__
 	return true;
 #else

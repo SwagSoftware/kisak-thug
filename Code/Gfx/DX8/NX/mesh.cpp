@@ -470,7 +470,7 @@ void sMesh::wibble_vc( void )
 
 		D3DCOLOR* p_color_array = mp_material->mp_wibble_vc_colors;
 
-		BYTE* v1 = this->mp_vertex_buffer[this->m_current_write_vertex_buffer]->rawdata;
+		BYTE* v1 = p_curr_buf->rawdata;
 		size_t size = m_vertex_stride - m_diffuse_offset - 4;
 
 		BYTE* p_rawdata = p_curr_buf->rawdata;
@@ -527,6 +527,7 @@ void sMesh::wibble_vc( void )
 /******************************************************************/
 void sMesh::CreateDuplicateVertexBuffers( int n )
 {
+	__debugbreak();
 	// Ensure this hasn't already been called.
 	Dbg_Assert( mp_vertex_buffer[0] != NULL );
 	Dbg_Assert( mp_vertex_buffer[1] == NULL );
@@ -1094,7 +1095,7 @@ DISABLE_FOG:
 
 		void* pMem = NULL;
 		// KISAKTODO: flag might be 0 here...
-		mp_vertex_buffer[m_current_write_vertex_buffer]->vertexBuffer->Lock(0, mp_vertex_buffer[m_current_write_vertex_buffer]->lockedSize, &pMem, D3DLOCK_DISCARD); 
+		mp_vertex_buffer[m_current_write_vertex_buffer]->Lock(0, mp_vertex_buffer[m_current_write_vertex_buffer]->lockedSize, &pMem, 0); 
 
 		switch (this->m_lastBiggestIndexUsed)
 		{

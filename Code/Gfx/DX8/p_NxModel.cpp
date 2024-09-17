@@ -44,7 +44,7 @@ bool CXboxModel::plat_init_skeleton( int num_bones )
 //	{
 //		p_bone[i].Identity();
 //	}
-	return true;
+	return true; // LWSS: Accurate for PC.
 }
 
 

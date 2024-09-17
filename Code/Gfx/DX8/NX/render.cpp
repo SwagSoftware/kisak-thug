@@ -2230,13 +2230,16 @@ void set_camera( Mth::Matrix *p_matrix, Mth::Vector *p_position, float screen_an
 	XGMatrixLookAtRH( &EngineGlobals.view_matrix, &EngineGlobals.cam_position, &at, &EngineGlobals.cam_up );
 
 	EngineGlobals.near_plane	= 2.0f;
-	EngineGlobals.far_plane		= 32000.0f;
+	//EngineGlobals.far_plane		= 32000.0f;
+	EngineGlobals.far_plane		= 64000.0f; // lwss change for PC
 	EngineGlobals.screen_angle	= screen_angle;
 
 	// Figure width and height of viewport at near clip plane.
 	float half_screen_angle_in_radians	= Mth::DegToRad( screen_angle * 0.5f );
 	float width							= EngineGlobals.near_plane * 2.0f * tanf( half_screen_angle_in_radians );
 
+// lwss Remove for PC
+#ifndef __PLAT_WN32__
 	if( EngineGlobals.backbuffer_width == 640.0f )
 	{
 		// We need to adjust the aspect ratio for the Xbox, since it is now rendering with D3DPRESENTFLAG_10X11PIXELASPECTRATIO
@@ -2244,6 +2247,7 @@ void set_camera( Mth::Matrix *p_matrix, Mth::Vector *p_position, float screen_an
 		// KISAKTODO: Change for PC later
 		aspect_ratio = aspect_ratio * (( 4.0f / 3.3f ) / ( 4.0f / 3.0f ));
 	}
+#endif
 	
 	float height	= width / aspect_ratio;
 	// LWSS: Swap out xbox function
