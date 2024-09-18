@@ -120,7 +120,7 @@ namespace Spt
 /*                                                                */
 /******************************************************************/
 
-//#if (defined ( ZERO_CLASS_MEM ) && !defined ( __PLAT_WN32__ ))
+#if (defined ( ZERO_CLASS_MEM ))// && !defined ( __PLAT_WN32__ ))
 
 void* 	Class::operator new( size_t size )
 {
@@ -304,6 +304,6 @@ void* 	Class::operator new[]( size_t size, void* pLocation )
 /*                                                                */
 /*                                                                */
 /******************************************************************/
-//#endif
+#endif
 } // namespace Spt
 

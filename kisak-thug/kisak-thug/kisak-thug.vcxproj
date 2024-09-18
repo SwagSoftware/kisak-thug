@@ -1071,7 +1071,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;__PLAT_WN32__;_CRT_SECURE_NO_WARNINGS;_WINSOCK_NO_DEPRECATED_NO_WARNINGS;GSI_NO_THREADS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;__PLAT_WN32__;_CRT_SECURE_NO_WARNINGS;_WINSOCK_NO_DEPRECATED_NO_WARNINGS;GSI_NO_THREADS;KISAK_ORIGINAL_ALLOCATOR;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>

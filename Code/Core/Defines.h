@@ -27,6 +27,13 @@
 **								   Includes									**
 *****************************************************************************/
 
+// lwss: Enable Original Allocator (Vs. Raw Malloc/Realloc/Free)
+// The original is better since it can actually go up/down the heap and resize things.
+// Calling plain realloc will reallocate things in a completely different location almost always.
+#define KISAK_ORIGINAL_ALLOCATOR 1
+
+// Lwss: Used to unfk the cursor in early init code debugging.
+//#define KISAK_EARLY_CURSOR_FIX 1
 
 #ifdef __PLAT_WN32__
 
@@ -655,12 +662,6 @@ typedef	sint64				nID64;
 #include <gfx/DX8/p_memview.h>
 #endif
 
-// lwss: this custom allocator is annoying.
-//#define KISAK_ORIGINAL_ALLOCATOR 1
-
-// Lwss: Used to unfk the cursor in early init code debugging.
-//#define KISAK_EARLY_CURSOR_FIX 1
-
 // Mick:  This check slows the game down quite a bit
 #if  1 && 	defined( __NOPT_ASSERT__ )
 
@@ -712,7 +713,7 @@ static inline void operator delete[]   ( void* block ) ;
 /******************************************************************/
 inline void* 	operator new( size_t size )
 {
-#ifdef KISAK_THUG_ALLOC
+#ifdef KISAK_ORIGINAL_ALLOCATOR
 	return Mem::Manager::sHandle().New(size, true);
 #else
 	void* mem = malloc(size);
