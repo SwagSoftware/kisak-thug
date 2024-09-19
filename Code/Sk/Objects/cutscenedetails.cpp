@@ -4238,7 +4238,8 @@ bool CCutsceneData::Load( const char* p_fileName, bool assertOnFail, bool async_
 		}
 #endif
 
-	Mem::Manager::sHandle().InitCutsceneHeap(512 * 1024);
+	//Mem::Manager::sHandle().InitCutsceneHeap(512 * 1024);
+	Mem::Manager::sHandle().InitCutsceneHeap(1024 * 1024); // lwss: increase
 	Mem::Manager::sHandle().PopContext(); 
 	//-------------------------------------------------------------
 #	if defined( __PLAT_NGC__ )

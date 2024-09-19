@@ -205,7 +205,7 @@ void*		Region::Allocate( Allocator* pAlloc, size_t size, bool assert_on_fail )
 			{
 				if( assert_on_fail )			// then fail
 				{
-					Dbg_MsgAssert( false,( "Failed to Allocate %d bytes", size ));
+					Dbg_MsgAssert( false,( "Failed to Allocate %d bytes", size )); // LWSS: if this goes off, you need to increase the heap_sizes.h for the allocator used. See Memman.cpp and correlate the allocator name there.
 				}
 				Dbg_Warning( "Failed to Allocate %d bytes", size ); 
 				return NULL;

@@ -7,20 +7,20 @@
 
 
 //#ifdef __PLAT_WN32__
-#ifdef KISAK_HEAP_SIZE
+#if 0 // lwss: Change heap size to Normal. I assume the PC values were for some sort of small tool
 
-#define	_SCRIPT_HEAP_SIZE				(1024 * 1024 * 40)
-#define	SCRIPT_CACHE_HEAP_SIZE			(1024 * 1024 * 40)
-#define	FRONTEND_HEAP_SIZE				(1024 * 1024 * 40)
-#define	NETWORK_HEAP_qSIZE				(1024 * 1024 * 40)
-#define PROFILER_HEAP_SIZE					(1024 * 1024 * 40)
-#define	SKATERINFO_HEAP_SIZE			(1024 * 1024 * 40)
-#define	SKATER_HEAP_SIZE				(1024 * 1024 * 40)		// default size of skater heap
-#define SKATER_GEOM_HEAP_SIZE			(1024 * 1024 * 40)
-#define BOOTSTRAP_FRONTEND_HEAP_SIZE	(1024 * 1024 * 40)
-#define INTERNET_HEAP_SIZE				(1024 * 1024 * 40)
-#define NETMISC_HEAP_SIZE				(1024 * 1024 * 40)
-#define	THEME_HEAP_SIZE     			 (1024 * 1024 * 40)		// theme textures heap size
+#define	_SCRIPT_HEAP_SIZE				(1024)
+#define	SCRIPT_CACHE_HEAP_SIZE			(1024)
+#define	FRONTEND_HEAP_SIZE				(1024)
+#define	NETWORK_HEAP_qSIZE				(1024)
+#define PROFILER_HEAP_SIZE					(1024)
+#define	SKATERINFO_HEAP_SIZE			(1024)
+#define	SKATER_HEAP_SIZE				(1024)		// default size of skater heap
+#define SKATER_GEOM_HEAP_SIZE			(1024)
+#define BOOTSTRAP_FRONTEND_HEAP_SIZE	(1024)
+#define INTERNET_HEAP_SIZE				(1024)
+#define NETMISC_HEAP_SIZE				(1024)
+#define	THEME_HEAP_SIZE     			 (1024)		// theme textures heap size
 
 #else
 
@@ -28,7 +28,8 @@
 // K: On debug builds line number info is included in the qb's so add in another 500K for it.
 // On release builds the line number info is excluded by passing the nolinenumbers switch to
 // cleanass when it is called from easyburn.bat
-#define	_SCRIPT_HEAP_SIZE					(3824000+500000+130000)
+//#define	_SCRIPT_HEAP_SIZE					(3824000+500000+130000)
+#define	_SCRIPT_HEAP_SIZE					(3824000+5000000+130000) // lwss: increase
 #else
 #define	_SCRIPT_HEAP_SIZE					(3824000+130000)	   
 #endif
@@ -50,7 +51,8 @@
 // 17K worth of temporary face texture data)
 //#define	SKATERINFO_HEAP_SIZE			 	(40000)
 // Mick: Increased it again for 2P
-#define	SKATERINFO_HEAP_SIZE			 	(60000+2000+20000)	// extra 2000 for skater cams +20K for 2p fragmentation concerns
+//#define	SKATERINFO_HEAP_SIZE			 	(60000+2000+20000)	// extra 2000 for skater cams +20K for 2p fragmentation concerns
+#define	SKATERINFO_HEAP_SIZE			 	(60000+100000+20000)	// LWSS: Increase
 
 #define	SKATER_HEAP_SIZE				 	(120000-40000+1000-2000)	// default size of skater heap, minus 2000 since skater cams moved to skater info heap
 #define	SKATER_GEOM_HEAP_SIZE			 	(680000 - 16000)		// default size of skater heap, plus a little extra cause we were running out for E3
@@ -94,13 +96,15 @@
 
 #endif // __PLAT_WN32__
 
-#if defined(__PLAT_XBOX__) || defined(__PLAT_WN32__) // lwss add
+#if defined (__PLAT_XBOX__) || defined(__PLAT_WN32__) // LWSS add Wn32
 // Just need to override some of these values - want to keep as much the same as possible tho.
 #undef	SKATER_HEAP_SIZE
-#define	SKATER_HEAP_SIZE				( 120000 - 40000 - 2000)
+//#define	SKATER_HEAP_SIZE				( 120000 - 40000 - 2000)
+#define	SKATER_HEAP_SIZE				( 120000 * 2 ) // lwss: increase
 
 #undef	SKATER_GEOM_HEAP_SIZE
-#define	SKATER_GEOM_HEAP_SIZE			( 480000 )
+//#define	SKATER_GEOM_HEAP_SIZE			( 480000 )
+#define	SKATER_GEOM_HEAP_SIZE			( 680000 ) // lwss: increase
 
 #undef	THEME_HEAP_SIZE
 #define	THEME_HEAP_SIZE					( 307200 )
@@ -134,22 +138,6 @@
 #define	SCRIPT_HEAP_SIZE _SCRIPT_HEAP_SIZE
 #endif // __PLAT_NGC__
 
-
-// LWSS ADD
-#ifdef __PLAT_WN32__
-#define	_SCRIPT_HEAP_SIZE				(1024 * 1024 * 40)
-#define	SCRIPT_CACHE_HEAP_SIZE			(1024 * 1024 * 40)
-#define	FRONTEND_HEAP_SIZE				(1024 * 1024 * 40)
-#define	NETWORK_HEAP_qSIZE				(1024 * 1024 * 40)
-#define PROFILER_HEAP_SIZE					(1024 * 1024 * 40)
-#define	SKATERINFO_HEAP_SIZE			(1024 * 1024 * 40)
-#define	SKATER_HEAP_SIZE				(1024 * 1024 * 40)		// default size of skater heap
-#define SKATER_GEOM_HEAP_SIZE			(1024 * 1024 * 40)
-#define BOOTSTRAP_FRONTEND_HEAP_SIZE	(1024 * 1024 * 40)
-#define INTERNET_HEAP_SIZE				(1024 * 1024 * 40)
-#define NETMISC_HEAP_SIZE				(1024 * 1024 * 40)
-#define	THEME_HEAP_SIZE     			 (1024 * 1024 * 40)		// theme textures heap size
-#endif
 
 #endif // __SK_HEAP_SIZES_H
 

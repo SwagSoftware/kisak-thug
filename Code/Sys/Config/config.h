@@ -76,7 +76,7 @@ inline EHardware GetHardware() {return gHardware;}
 
 extern bool gGotExtraMemory;
 //inline bool GotExtraMemory() {return gGotExtraMemory;}
-inline bool GotExtraMemory() {return true;} // lwss: fk off
+inline bool GotExtraMemory() {return false;} // lwss: this uses the debug heap (which is only on ps2 TOOL atm)
 
 extern ELanguage gLanguage;
 inline ELanguage GetLanguage() {return gLanguage;}
