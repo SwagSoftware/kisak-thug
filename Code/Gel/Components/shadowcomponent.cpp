@@ -24,7 +24,7 @@
 #include <gfx/nxlight.h>
 #include <gfx/shadow.h>
 
-#include <gfx/DX8/NX/nx_init.h>
+#include <gfx/DX9/NX/nx_init.h>
 
 namespace Obj
 {

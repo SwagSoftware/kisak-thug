@@ -659,7 +659,7 @@ typedef	sint64				nID64;
 #include <gfx/ngc/p_memview.h>
 //#include "libsn.h"
 #elif defined( __PLAT_XBOX__ )
-#include <gfx/DX8/p_memview.h>
+#include <gfx/DX9/p_memview.h>
 #endif
 
 // Mick:  This check slows the game down quite a bit

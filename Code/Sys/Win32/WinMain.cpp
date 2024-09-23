@@ -6,7 +6,7 @@
 
 #include <windows.h>
 
-#include <Gfx/DX8/NX/render.h>
+#include <Gfx/DX9/NX/render.h>
 
 // Temporarily in here
 #include <dsound.h>

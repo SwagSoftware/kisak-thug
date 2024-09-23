@@ -46,7 +46,7 @@
 //#ifdef __PLAT_XBOX__
 // Unfortunately, this has to be a platform-specific macro, since it references Xbox specific global structures to determine
 // the width and height of the back buffer.
-#include <gfx/DX8/nx/nx_init.h>
+#include <gfx/DX9/nx/nx_init.h>
 #define		SCREEN_CONV_X( x )				((( x ) * NxXbox::EngineGlobals.screen_conv_x_multiplier ) + NxXbox::EngineGlobals.screen_conv_x_offset )
 #define		SCREEN_CONV_Y( y )				((( y ) * NxXbox::EngineGlobals.screen_conv_y_multiplier ) + NxXbox::EngineGlobals.screen_conv_y_offset )
 //#else

@@ -37,7 +37,7 @@
 #include <sys/config/config.h>
 
 //#include <gfx/xbox/nx/nx_init.h>
-#include <gfx/DX8/nx/nx_init.h>
+#include <gfx/DX9/nx/nx_init.h>
 
 /*****************************************************************************
 **							  DBG Information								**

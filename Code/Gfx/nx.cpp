@@ -31,7 +31,7 @@
 //#include <sk/modules/skate/skate.h>		// For getting list of movable objects
 
 #include <sys/replay/replay.h>
-#include <Gfx/DX8/NX/mesh.h>
+#include <Gfx/DX9/NX/mesh.h>
 
 #ifdef	__PLAT_NGPS__
 namespace NxPs2
