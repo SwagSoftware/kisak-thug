@@ -12,6 +12,14 @@ Like the PC/MAC ports, it's based on the XBox port, but changed to DirectX9.
 
 This was done mainly with an IDA-minded approach to be 1:1 as possible.
 
+
+### How to build
+1) make a `build` folder and open a terminal inside it
+2) Run `CMAKE .. -G"Visual Studio 17 2022" -DCMAKE_GENERATOR_PLATFORM=WIN32` (This 32bit generator has to be on the cmdline, there is a bug in CMake+MSVC)
+3) Open the resulting .sln in Visual Studio and build all.
+4) Move your `Data/` Folder next to the .exe along with SDL2.dll from the SDL folder
+5) You can now run the game.
+
 ### Status
 #### Done
 - Window Handling
