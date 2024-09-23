@@ -22,8 +22,6 @@ This was done mainly with an IDA-minded approach to be 1:1 as possible.
 
 
 #### TODO
-- CMake Project
-- Fix Ped Models not attempting to load in
 - Fix NetPlay
 - Unstub Additional Gfx features (particles, billboards, ...)
 - Fix resolution code to not be hard-stuck at 640x480
