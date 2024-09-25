@@ -19,6 +19,7 @@ LinkedList* g_sTexturesList;
 /******************************************************************/
 sTexture::sTexture()
 {
+	memset(this, 0x00, sizeof(sTexture)); // lwss add
 	pD3DTexture = NULL;
 	//pD3DPalette	= NULL;
 	texrawdata = NULL;

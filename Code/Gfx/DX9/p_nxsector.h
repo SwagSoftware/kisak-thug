@@ -18,7 +18,7 @@ namespace Nx
 // Here's a machine specific implementation of the CSector
 class CXboxSector : public CSector
 {
-	public:
+public:
 									CXboxSector();
 
 	bool							LoadFromFile( void* p_file, NxXbox::VertexMysteryMeat* p_meat, const char* debug_name = NULL); // lwss: add debug name
@@ -42,6 +42,11 @@ class CXboxSector : public CSector
 	Mth::Vector						m_pos_offset;
 
 	Image::RGBA						m_rgba;
+
+// lwss Add
+private:
+	bool Load_Internal(void*& p_stream, bool is_file, NxXbox::VertexMysteryMeat* p_meat = NULL, const char* debug_name = NULL);
+// lwss end
 };
 
 } // Namespace Nx  			

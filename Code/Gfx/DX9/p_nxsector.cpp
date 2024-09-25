@@ -33,224 +33,250 @@ CXboxSector::CXboxSector()
 /*                                                                */
 /*                                                                */
 /******************************************************************/
-bool CXboxSector::LoadFromMemory( void **pp_mem )
+// LWSS Add
+static void Read(void* outAddr, size_t size, size_t count, uint8_t*& pFP, bool is_file)
 {
-	__debugbreak();
-	Dbg_Assert( mp_geom );
+	if (is_file)
+	{
+		File::Read(outAddr, size, count, pFP);
+	}
+	else
+	{
+		MemoryRead(outAddr, size, count, pFP);
+	}
+}
 
-	uint8		*p_data	= (uint8*)( *pp_mem );
-	CXboxGeom	*p_geom = static_cast<CXboxGeom*>( mp_geom );
-	
+bool CXboxSector::Load_Internal(void*& p_stream, bool is_file, NxXbox::VertexMysteryMeat* p_meat, const char* debug_name)
+{
+	Dbg_Assert(mp_geom);
+	CXboxGeom* p_geom = static_cast<CXboxGeom*>(mp_geom);
+
+	uint8_t* p_file = (uint8_t*)p_stream; // lwss hack
+
 	// Read sector checksum.
 	uint32 sector_checksum;
-	MemoryRead( &sector_checksum, sizeof( uint32 ), 1, p_data );
-	SetChecksum( sector_checksum );
+	Read(&sector_checksum, sizeof(uint32), 1, p_file, is_file);
+	SetChecksum(sector_checksum);
 
 	// Read bone index.
 	int bone_idx;
-	MemoryRead( &bone_idx, sizeof( int ), 1, p_data );
+	Read(&bone_idx, sizeof(int), 1, p_file, is_file);
 
 	// Read sector flags.
-	MemoryRead( &m_flags, sizeof( int ), 1, p_data );
+	Read(&m_flags, sizeof(int), 1, p_file, is_file);
 
 	// Read number of meshes.
-	MemoryRead( &p_geom->m_num_mesh, sizeof( uint ), 1, p_data );
+	Read(&p_geom->m_num_mesh, sizeof(uint), 1, p_file, is_file);
 
 	// Read bounding box.
 	float bbox[6];
-	MemoryRead( &bbox[0], sizeof( float ), 6, p_data );
-	Mth::Vector	inf( bbox[0], bbox[1], bbox[2] );
-	Mth::Vector	sup( bbox[3], bbox[4], bbox[5] );
-	p_geom->m_bbox.Set( inf, sup );
-		
+	Read(&bbox[0], sizeof(float), 6, p_file, is_file);
+	Mth::Vector	inf(bbox[0], bbox[1], bbox[2]);
+	Mth::Vector	sup(bbox[3], bbox[4], bbox[5]);
+	p_geom->m_bbox.Set(inf, sup);
+
 	// Read bounding sphere.
 	float bsphere[4];
-	MemoryRead( &bsphere[0], sizeof( float ), 4, p_data );
-		
+	Read(&bsphere[0], sizeof(float), 4, p_file, is_file);
+
 	// Read billboard data if present.
+	bool is_billboard = false; // lwss add
 	uint32		billboard_type;
 	Mth::Vector	billboard_origin;
 	Mth::Vector billboard_pivot_pos;
 	Mth::Vector billboard_pivot_axis;
-	if( m_flags & 0x00800000UL )
+	if (m_flags & 0x00800000UL)
 	{
-		MemoryRead( &billboard_type,			sizeof( uint32 ), 1, p_data );
-		MemoryRead( &billboard_origin[X],		sizeof( float ) * 3, 1, p_data );
-		MemoryRead( &billboard_pivot_pos[X],	sizeof( float ) * 3, 1, p_data );
-		MemoryRead( &billboard_pivot_axis[X],	sizeof( float ) * 3, 1, p_data );
+		Read(&billboard_type, sizeof(uint32), 1, p_file, is_file);
+		Read(&billboard_origin[X], sizeof(float) * 3, 1, p_file, is_file);
+		Read(&billboard_pivot_pos[X], sizeof(float) * 3, 1, p_file, is_file);
+		Read(&billboard_pivot_axis[X], sizeof(float) * 3, 1, p_file, is_file);
 
-		billboard_origin[Z]		= -billboard_origin[Z];
-		billboard_pivot_pos[Z]	= -billboard_pivot_pos[Z];
+		billboard_origin[Z] = -billboard_origin[Z];
+		billboard_origin[W] = 0.0f;
+
+		billboard_pivot_pos[Z] = -billboard_pivot_pos[Z];
+		billboard_pivot_pos[W] = 0.0f;
+
+		billboard_pivot_axis[W] = 0.0f;
+
+		is_billboard = true;
 	}
 
 	// Read num vertices.
 	int num_vertices;
-	MemoryRead( &num_vertices, sizeof( int ), 1, p_data );
-	
+	Read(&num_vertices, sizeof(int), 1, p_file, is_file);
+
 	// Read vertex data stride.
 	int vertex_data_stride;
-	MemoryRead( &vertex_data_stride, sizeof( int ), 1, p_data );
+	Read(&vertex_data_stride, sizeof(int), 1, p_file, is_file);
 
 	// We want all the temporary buffer allocations to come off of the top down heap.
-	Mem::Manager::sHandle().PushContext( Mem::Manager::sHandle().TopDownHeap());
-	
+	Mem::Manager::sHandle().PushContext(Mem::Manager::sHandle().TopDownHeap());
+
 	// Grab a buffer for the raw vertex data position stream, and read it.
 	float* p_vertex_positions = new float[num_vertices * 3];
-	MemoryRead( p_vertex_positions, sizeof( float ) * 3, num_vertices, p_data );
-	
+	Read(p_vertex_positions, sizeof(float) * 3, num_vertices, p_file, is_file);
+
 	// Grab a buffer for the raw vertex data normal stream (if present), and read it.
-	float* p_vertex_normals = ( m_flags & 0x04 ) ? new float[num_vertices * 3] : NULL;
-	if( p_vertex_normals )
+	float* p_vertex_normals = (m_flags & 0x04) ? new float[num_vertices * 3] : NULL;
+	if (p_vertex_normals)
 	{
-		MemoryRead( p_vertex_normals, sizeof( float ) * 3, num_vertices, p_data );
+		Read(p_vertex_normals, sizeof(float) * 3, num_vertices, p_file, is_file);
 	}
 
 	// Grab a buffer for the raw vertex data weights stream (if present), and read it.
-	uint32* p_vertex_weights = ( m_flags & 0x10 ) ? new uint32[num_vertices] : NULL;
-	if( p_vertex_weights )
+	uint32* p_vertex_weights = (m_flags & 0x10) ? new uint32[num_vertices] : NULL;
+	if (p_vertex_weights)
 	{
-		MemoryRead( p_vertex_weights, sizeof( uint32 ), num_vertices, p_data );
+		Read(p_vertex_weights, sizeof(uint32), num_vertices, p_file, is_file);
 	}
-	
+
 	// Grab a buffer for the raw vertex data bone indices stream (if present), and read it.
-	uint16* p_vertex_bone_indices = ( m_flags & 0x10 ) ? new uint16[num_vertices * 4] : NULL;
-	if( p_vertex_bone_indices )
+	uint16* p_vertex_bone_indices = (m_flags & 0x10) ? new uint16[num_vertices * 4] : NULL;
+	if (p_vertex_bone_indices)
 	{
-		MemoryRead( p_vertex_bone_indices, sizeof( uint16 ) * 4, num_vertices, p_data );
+		Read(p_vertex_bone_indices, sizeof(uint16) * 4, num_vertices, p_file, is_file);
 	}
 
 	// Grab a buffer for the raw vertex texture coordinate stream (if present), and read it.
-	int		num_tc_sets			= 0;
-	float*	p_vertex_tex_coords	= NULL;
-	if( m_flags & 0x01 )
+	int		num_tc_sets = 0;
+	float* p_vertex_tex_coords = NULL;
+	if (m_flags & 0x01)
 	{
-		MemoryRead( &num_tc_sets, sizeof( int ), 1, p_data );
-		
-		if( num_tc_sets > 0 )
+		Read(&num_tc_sets, sizeof(int), 1, p_file, is_file);
+
+		if (num_tc_sets > 0)
 		{
 			p_vertex_tex_coords = new float[num_vertices * 2 * num_tc_sets];
-			MemoryRead( p_vertex_tex_coords, sizeof( float ) * 2 * num_tc_sets, num_vertices, p_data );
+			Read(p_vertex_tex_coords, sizeof(float) * 2 * num_tc_sets, num_vertices, p_file, is_file);
 		}
 	}
-	
+
 	// Grab a buffer for the raw vertex colors stream (if present), and read it.
-	DWORD* p_vertex_colors = ( m_flags & 0x02 ) ? new DWORD[num_vertices] : NULL;
-	if( p_vertex_colors )
+	DWORD* p_vertex_colors = (m_flags & 0x02) ? new DWORD[num_vertices] : NULL;
+	if (p_vertex_colors)
 	{
-		MemoryRead( p_vertex_colors, sizeof( DWORD ), num_vertices, p_data );
+		Read(p_vertex_colors, sizeof(DWORD), num_vertices, p_file, is_file);
 	}
 
 	// Grab a buffer for the vertex color wibble stream (if present), and read it.
-	char* p_vc_wibble_indices = ( m_flags & 0x800 ) ? new char[num_vertices] : NULL;
-	if( p_vc_wibble_indices )
+	char* p_vc_wibble_indices = (m_flags & 0x800) ? new char[num_vertices] : NULL;
+	if (p_vc_wibble_indices)
 	{
-		MemoryRead( p_vc_wibble_indices, sizeof( char ), num_vertices, p_data );
+		Read(p_vc_wibble_indices, sizeof(char), num_vertices, p_file, is_file);
 	}
-	
+
 	// Remove TopDownHeap context.
 	Mem::Manager::sHandle().PopContext();
 
-	// Preprocess verts that require cutscene scaling.
-	NxXbox::ApplyMeshScaling( p_vertex_positions, num_vertices );
-
-	for( uint m = 0; m < p_geom->m_num_mesh; ++m )
+	for (uint m = 0; m < p_geom->m_num_mesh; ++m)
 	{
 		unsigned long	material_checksum;
 		unsigned int	flags, num_lod_index_levels;
 
-		NxXbox::sMesh*	p_mesh = new NxXbox::sMesh;
+		NxXbox::sMesh* p_mesh = new NxXbox::sMesh;
 
 		// Read bounding sphere and box data.
 		float		rad;
-		Mth::Vector inf, sup, cen;
-		MemoryRead( &cen[X], sizeof( float ), 3, p_data );
-		MemoryRead( &rad, sizeof( float ), 1, p_data );
-		MemoryRead( &inf[X], sizeof( float ), 3, p_data );
-		MemoryRead( &sup[X], sizeof( float ), 3, p_data );
+		Mth::Vector cen;
+		Read(&cen[X], sizeof(float), 3, p_file, is_file);
+		Read(&rad, sizeof(float), 1, p_file, is_file);
+		Read(&inf[X], sizeof(float), 3, p_file, is_file);
+		Read(&sup[X], sizeof(float), 3, p_file, is_file);
 
 		// Read and deal with flags, including skater shadow flag.
-		MemoryRead( &flags, sizeof( uint32 ), 1, p_data );
-		if( flags & 0x400 )
+		Read(&flags, sizeof(uint32), 1, p_file, is_file);
+		if (flags & 0x400)
 		{
 			p_mesh->m_flags |= NxXbox::sMesh::MESH_FLAG_NO_SKATER_SHADOW;
 		}
-		if( flags & NxXbox::sMesh::MESH_FLAG_UNLIT )
+		if (flags & NxXbox::sMesh::MESH_FLAG_UNLIT)
 		{
 			p_mesh->m_flags |= NxXbox::sMesh::MESH_FLAG_UNLIT;
 		}
 
 		// The material checksum for this mesh.
-		MemoryRead( &material_checksum,	sizeof( unsigned long ), 1, p_data );
+		Read(&material_checksum, sizeof(unsigned long), 1, p_file, is_file);
 
 		// How many levels of LOD indices? Should be at least 1!
-		MemoryRead( &num_lod_index_levels, sizeof( unsigned int ), 1, p_data );
+		Read(&num_lod_index_levels, sizeof(unsigned int), 1, p_file, is_file);
 
 		// Can have up to 8 levels of LOD indices.
-		uint16*	p_indices[8] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+		uint16* p_indices[8] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 		int		num_indices[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
-		for( unsigned int lod_level = 0; lod_level < num_lod_index_levels; ++lod_level )
+		for (unsigned int lod_level = 0; lod_level < num_lod_index_levels; ++lod_level)
 		{
-			MemoryRead( &num_indices[lod_level], sizeof( int ), 1, p_data );
-		
+			Read(&num_indices[lod_level], sizeof(int), 1, p_file, is_file);
+
 			// Again, we want all the temporary buffer allocations to come off of the top down heap.
-			Mem::Manager::sHandle().PushContext( Mem::Manager::sHandle().TopDownHeap());
+			Mem::Manager::sHandle().PushContext(Mem::Manager::sHandle().TopDownHeap());
 			p_indices[lod_level] = new uint16[num_indices[lod_level]];
 			Mem::Manager::sHandle().PopContext();
 
-			MemoryRead( p_indices[lod_level], sizeof( uint16 ), num_indices[lod_level], p_data );
+			Read(p_indices[lod_level], sizeof(uint16), num_indices[lod_level], p_file, is_file);
 		}
 
 		// Set the load order of this mesh.
 		p_mesh->m_load_order = m;
 
 		// Set up the mesh.
-		p_mesh->Initialize(	num_vertices,
-							p_vertex_positions,
-							p_vertex_normals,
-							p_vertex_tex_coords,
-							num_tc_sets,
-							p_vertex_colors,
-							num_lod_index_levels,
-							num_indices,
-							p_indices,
-							material_checksum,
-							p_geom->mp_scene->GetEngineScene(),
-							p_vertex_bone_indices,
-							p_vertex_weights,
-							( flags & 0x800 ) ? p_vc_wibble_indices : NULL );
-		
+		p_mesh->Initialize(num_vertices,
+			p_vertex_positions,
+			(m_flags & 0x00800000UL) ? NULL : p_vertex_normals,		// No normals allowed for billboards.
+			p_vertex_tex_coords,
+			num_tc_sets,
+			p_vertex_colors,
+			num_lod_index_levels,
+			num_indices,
+			p_indices,
+			material_checksum,
+			p_geom->mp_scene->GetEngineScene(),
+			p_vertex_bone_indices,
+			p_vertex_weights,
+			(flags & 0x800) ? p_vc_wibble_indices : NULL,
+			//is_billboard ? p_meat : NULL,
+			p_meat,
+			is_billboard,
+			debug_name
+		);
+
 		// Set the bounding data (sphere and box) for the mesh.
-		p_mesh->SetBoundingData( cen, rad, inf, sup );
+		p_mesh->SetBoundingData(cen, rad, inf, sup);
 
 		// Add the bounding data to the scene.
-		p_geom->mp_scene->GetEngineScene()->m_bbox.AddPoint( inf );
-		p_geom->mp_scene->GetEngineScene()->m_bbox.AddPoint( sup );
+		p_geom->mp_scene->GetEngineScene()->m_bbox.AddPoint(inf);
+		p_geom->mp_scene->GetEngineScene()->m_bbox.AddPoint(sup);
 
 		// Set up as a billboard if required.
-		if( m_flags & 0x00800000UL )
+		if (m_flags & 0x00800000UL)
 		{
-			p_mesh->SetBillboardData( billboard_type, billboard_pivot_pos, billboard_pivot_axis );
-			NxXbox::BillboardManager.AddEntry( p_mesh );
+			p_mesh->SetBillboardData(billboard_type, billboard_pivot_pos, billboard_pivot_axis);
+			NxXbox::BillboardManager.AddEntry(p_mesh);
 		}
 
 		// Flag the mesh as being a shadow volume if applicable.
-		if( m_flags & 0x200000 )
+		if (m_flags & 0x200000)
 		{
 			p_mesh->m_flags |= NxXbox::sMesh::MESH_FLAG_SHADOW_VOLUME;
 		}
 
 		// Add the mesh to the attached CXboxGeom.
-		p_geom->AddMesh( p_mesh );
+		p_geom->AddMesh(p_mesh);
 
 		// Set the mesh bone index (mostly not applicable).
-		p_mesh->SetBoneIndex( bone_idx );
-	
+		p_mesh->SetBoneIndex(bone_idx);
+
 		// Test code - if the mesh is mapped with a grass texture, add grass meshes.
-		AddGrass( p_geom, p_mesh );
-		
+		AddGrass(p_geom, p_mesh);
+
+		// lwss add: Satanic Billboard mesh copying code KISAKTODO: finish
+		//if (p_mesh->mp_material-> 
+		// lwss end
+
 		// Done with the raw index data.
-		for( int lod_level = 0; lod_level < 8; ++lod_level )
+		for (int lod_level = 0; lod_level < 8; ++lod_level)
 		{
 			delete[] p_indices[lod_level];
 		}
@@ -258,7 +284,7 @@ bool CXboxSector::LoadFromMemory( void **pp_mem )
 
 	// Recount the number of meshes in case any have been added.
 	p_geom->m_num_mesh = p_geom->mp_init_mesh_list->CountItems();
-	
+
 	// Done with the raw vertex data.
 	delete[] p_vc_wibble_indices;
 	delete[] p_vertex_colors;
@@ -267,11 +293,253 @@ bool CXboxSector::LoadFromMemory( void **pp_mem )
 	delete[] p_vertex_weights;
 	delete[] p_vertex_normals;
 	delete[] p_vertex_positions;
-	
-	// Set the data pointer to the new position on return.
-	*pp_mem = p_data;
+
+	// lwss Update argument pointer for MemoryRead
+	p_stream = (void*)p_file;
 
 	return true;
+}
+
+bool CXboxSector::LoadFromMemory( void **pp_mem )
+{
+	// LWSS: LoadFromMemory needs to modify pp_mem
+	return Load_Internal(*pp_mem, false);
+//	Dbg_Assert( mp_geom );
+//
+//	uint8		*p_data	= (uint8*)( *pp_mem );
+//	CXboxGeom	*p_geom = static_cast<CXboxGeom*>( mp_geom );
+//	
+//	// Read sector checksum.
+//	uint32 sector_checksum;
+//	MemoryRead( &sector_checksum, sizeof( uint32 ), 1, p_data );
+//	SetChecksum( sector_checksum );
+//
+//	// Read bone index.
+//	int bone_idx;
+//	MemoryRead( &bone_idx, sizeof( int ), 1, p_data );
+//
+//	// Read sector flags.
+//	MemoryRead( &m_flags, sizeof( int ), 1, p_data );
+//
+//	// Read number of meshes.
+//	MemoryRead( &p_geom->m_num_mesh, sizeof( uint ), 1, p_data );
+//
+//	// Read bounding box.
+//	float bbox[6];
+//	MemoryRead( &bbox[0], sizeof( float ), 6, p_data );
+//	Mth::Vector	inf( bbox[0], bbox[1], bbox[2] );
+//	Mth::Vector	sup( bbox[3], bbox[4], bbox[5] );
+//	p_geom->m_bbox.Set( inf, sup );
+//		
+//	// Read bounding sphere.
+//	float bsphere[4];
+//	MemoryRead( &bsphere[0], sizeof( float ), 4, p_data );
+//		
+//	// Read billboard data if present.
+//	uint32		billboard_type;
+//	Mth::Vector	billboard_origin;
+//	Mth::Vector billboard_pivot_pos;
+//	Mth::Vector billboard_pivot_axis;
+//	if( m_flags & 0x00800000UL )
+//	{
+//		MemoryRead( &billboard_type,			sizeof( uint32 ), 1, p_data );
+//		MemoryRead( &billboard_origin[X],		sizeof( float ) * 3, 1, p_data );
+//		MemoryRead( &billboard_pivot_pos[X],	sizeof( float ) * 3, 1, p_data );
+//		MemoryRead( &billboard_pivot_axis[X],	sizeof( float ) * 3, 1, p_data );
+//
+//		billboard_origin[Z]		= -billboard_origin[Z];
+//		billboard_pivot_pos[Z]	= -billboard_pivot_pos[Z];
+//	}
+//
+//	// Read num vertices.
+//	int num_vertices;
+//	MemoryRead( &num_vertices, sizeof( int ), 1, p_data );
+//	
+//	// Read vertex data stride.
+//	int vertex_data_stride;
+//	MemoryRead( &vertex_data_stride, sizeof( int ), 1, p_data );
+//
+//	// We want all the temporary buffer allocations to come off of the top down heap.
+//	Mem::Manager::sHandle().PushContext( Mem::Manager::sHandle().TopDownHeap());
+//	
+//	// Grab a buffer for the raw vertex data position stream, and read it.
+//	float* p_vertex_positions = new float[num_vertices * 3];
+//	MemoryRead( p_vertex_positions, sizeof( float ) * 3, num_vertices, p_data );
+//	
+//	// Grab a buffer for the raw vertex data normal stream (if present), and read it.
+//	float* p_vertex_normals = ( m_flags & 0x04 ) ? new float[num_vertices * 3] : NULL;
+//	if( p_vertex_normals )
+//	{
+//		MemoryRead( p_vertex_normals, sizeof( float ) * 3, num_vertices, p_data );
+//	}
+//
+//	// Grab a buffer for the raw vertex data weights stream (if present), and read it.
+//	uint32* p_vertex_weights = ( m_flags & 0x10 ) ? new uint32[num_vertices] : NULL;
+//	if( p_vertex_weights )
+//	{
+//		MemoryRead( p_vertex_weights, sizeof( uint32 ), num_vertices, p_data );
+//	}
+//	
+//	// Grab a buffer for the raw vertex data bone indices stream (if present), and read it.
+//	uint16* p_vertex_bone_indices = ( m_flags & 0x10 ) ? new uint16[num_vertices * 4] : NULL;
+//	if( p_vertex_bone_indices )
+//	{
+//		MemoryRead( p_vertex_bone_indices, sizeof( uint16 ) * 4, num_vertices, p_data );
+//	}
+//
+//	// Grab a buffer for the raw vertex texture coordinate stream (if present), and read it.
+//	int		num_tc_sets			= 0;
+//	float*	p_vertex_tex_coords	= NULL;
+//	if( m_flags & 0x01 )
+//	{
+//		MemoryRead( &num_tc_sets, sizeof( int ), 1, p_data );
+//		
+//		if( num_tc_sets > 0 )
+//		{
+//			p_vertex_tex_coords = new float[num_vertices * 2 * num_tc_sets];
+//			MemoryRead( p_vertex_tex_coords, sizeof( float ) * 2 * num_tc_sets, num_vertices, p_data );
+//		}
+//	}
+//	
+//	// Grab a buffer for the raw vertex colors stream (if present), and read it.
+//	DWORD* p_vertex_colors = ( m_flags & 0x02 ) ? new DWORD[num_vertices] : NULL;
+//	if( p_vertex_colors )
+//	{
+//		MemoryRead( p_vertex_colors, sizeof( DWORD ), num_vertices, p_data );
+//	}
+//
+//	// Grab a buffer for the vertex color wibble stream (if present), and read it.
+//	char* p_vc_wibble_indices = ( m_flags & 0x800 ) ? new char[num_vertices] : NULL;
+//	if( p_vc_wibble_indices )
+//	{
+//		MemoryRead( p_vc_wibble_indices, sizeof( char ), num_vertices, p_data );
+//	}
+//	
+//	// Remove TopDownHeap context.
+//	Mem::Manager::sHandle().PopContext();
+//
+//	// Preprocess verts that require cutscene scaling.
+//	NxXbox::ApplyMeshScaling( p_vertex_positions, num_vertices );
+//
+//	for( uint m = 0; m < p_geom->m_num_mesh; ++m )
+//	{
+//		unsigned long	material_checksum;
+//		unsigned int	flags, num_lod_index_levels;
+//
+//		NxXbox::sMesh*	p_mesh = new NxXbox::sMesh;
+//
+//		// Read bounding sphere and box data.
+//		float		rad;
+//		Mth::Vector inf, sup, cen;
+//		MemoryRead( &cen[X], sizeof( float ), 3, p_data );
+//		MemoryRead( &rad, sizeof( float ), 1, p_data );
+//		MemoryRead( &inf[X], sizeof( float ), 3, p_data );
+//		MemoryRead( &sup[X], sizeof( float ), 3, p_data );
+//
+//		// Read and deal with flags, including skater shadow flag.
+//		MemoryRead( &flags, sizeof( uint32 ), 1, p_data );
+//		if( flags & 0x400 )
+//		{
+//			p_mesh->m_flags |= NxXbox::sMesh::MESH_FLAG_NO_SKATER_SHADOW;
+//		}
+//		if( flags & NxXbox::sMesh::MESH_FLAG_UNLIT )
+//		{
+//			p_mesh->m_flags |= NxXbox::sMesh::MESH_FLAG_UNLIT;
+//		}
+//
+//		// The material checksum for this mesh.
+//		MemoryRead( &material_checksum,	sizeof( unsigned long ), 1, p_data );
+//
+//		// How many levels of LOD indices? Should be at least 1!
+//		MemoryRead( &num_lod_index_levels, sizeof( unsigned int ), 1, p_data );
+//
+//		// Can have up to 8 levels of LOD indices.
+//		uint16*	p_indices[8] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+//		int		num_indices[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+//
+//		for( unsigned int lod_level = 0; lod_level < num_lod_index_levels; ++lod_level )
+//		{
+//			MemoryRead( &num_indices[lod_level], sizeof( int ), 1, p_data );
+//		
+//			// Again, we want all the temporary buffer allocations to come off of the top down heap.
+//			Mem::Manager::sHandle().PushContext( Mem::Manager::sHandle().TopDownHeap());
+//			p_indices[lod_level] = new uint16[num_indices[lod_level]];
+//			Mem::Manager::sHandle().PopContext();
+//
+//			MemoryRead( p_indices[lod_level], sizeof( uint16 ), num_indices[lod_level], p_data );
+//		}
+//
+//		// Set the load order of this mesh.
+//		p_mesh->m_load_order = m;
+//
+//		// Set up the mesh.
+//		p_mesh->Initialize(	num_vertices,
+//							p_vertex_positions,
+//							p_vertex_normals,
+//							p_vertex_tex_coords,
+//							num_tc_sets,
+//							p_vertex_colors,
+//							num_lod_index_levels,
+//							num_indices,
+//							p_indices,
+//							material_checksum,
+//							p_geom->mp_scene->GetEngineScene(),
+//							p_vertex_bone_indices,
+//							p_vertex_weights,
+//							( flags & 0x800 ) ? p_vc_wibble_indices : NULL );
+//		
+//		// Set the bounding data (sphere and box) for the mesh.
+//		p_mesh->SetBoundingData( cen, rad, inf, sup );
+//
+//		// Add the bounding data to the scene.
+//		p_geom->mp_scene->GetEngineScene()->m_bbox.AddPoint( inf );
+//		p_geom->mp_scene->GetEngineScene()->m_bbox.AddPoint( sup );
+//
+//		// Set up as a billboard if required.
+//		if( m_flags & 0x00800000UL )
+//		{
+//			p_mesh->SetBillboardData( billboard_type, billboard_pivot_pos, billboard_pivot_axis );
+//			NxXbox::BillboardManager.AddEntry( p_mesh );
+//		}
+//
+//		// Flag the mesh as being a shadow volume if applicable.
+//		if( m_flags & 0x200000 )
+//		{
+//			p_mesh->m_flags |= NxXbox::sMesh::MESH_FLAG_SHADOW_VOLUME;
+//		}
+//
+//		// Add the mesh to the attached CXboxGeom.
+//		p_geom->AddMesh( p_mesh );
+//
+//		// Set the mesh bone index (mostly not applicable).
+//		p_mesh->SetBoneIndex( bone_idx );
+//	
+//		// Test code - if the mesh is mapped with a grass texture, add grass meshes.
+//		AddGrass( p_geom, p_mesh );
+//		
+//		// Done with the raw index data.
+//		for( int lod_level = 0; lod_level < 8; ++lod_level )
+//		{
+//			delete[] p_indices[lod_level];
+//		}
+//	}
+//
+//	// Recount the number of meshes in case any have been added.
+//	p_geom->m_num_mesh = p_geom->mp_init_mesh_list->CountItems();
+//	
+//	// Done with the raw vertex data.
+//	delete[] p_vc_wibble_indices;
+//	delete[] p_vertex_colors;
+//	delete[] p_vertex_tex_coords;
+//	delete[] p_vertex_bone_indices;
+//	delete[] p_vertex_weights;
+//	delete[] p_vertex_normals;
+//	delete[] p_vertex_positions;
+//	
+//	// Set the data pointer to the new position on return.
+//	*pp_mem = p_data;
+//
+//	return true;
 }
 
 
@@ -282,312 +550,313 @@ bool CXboxSector::LoadFromMemory( void **pp_mem )
 /******************************************************************/
 bool CXboxSector::LoadFromFile( void* p_file, NxXbox::VertexMysteryMeat* p_meat, const char* debug_name)
 {
-	Dbg_Assert( mp_geom );
-
-	CXboxGeom *p_geom = static_cast<CXboxGeom*>( mp_geom );
-	
-	// Read sector checksum.
-	uint32 sector_checksum;
-	File::Read( &sector_checksum, sizeof( uint32 ), 1, p_file );
-	SetChecksum( sector_checksum );
-
-	// Read bone index.
-	int bone_idx;
-	File::Read( &bone_idx, sizeof( int ), 1, p_file );
-
-	// Read sector flags.
-	File::Read( &m_flags, sizeof( int ), 1, p_file );
-
-	// Read number of meshes.
-	File::Read( &p_geom->m_num_mesh, sizeof( uint ), 1, p_file );
-
-	// Read bounding box.
-	float bbox[6];
-	File::Read( &bbox[0], sizeof( float ), 6, p_file );
-	Mth::Vector	inf( bbox[0], bbox[1], bbox[2] );
-	Mth::Vector	sup( bbox[3], bbox[4], bbox[5] );
-	p_geom->m_bbox.Set( inf, sup );
-		
-	// Read bounding sphere.
-	float bsphere[4];
-	File::Read( &bsphere[0], sizeof( float ), 4, p_file );
-		
-	// Read billboard data if present.
-	bool is_billboard = false; // lwss add
-	uint32		billboard_type;
-	Mth::Vector	billboard_origin;
-	Mth::Vector billboard_pivot_pos;
-	Mth::Vector billboard_pivot_axis;
-	if( m_flags & 0x00800000UL )
-	{
-		File::Read( &billboard_type,			sizeof( uint32 ), 1, p_file );
-		File::Read( &billboard_origin[X],		sizeof( float ) * 3, 1, p_file );
-		File::Read( &billboard_pivot_pos[X],	sizeof( float ) * 3, 1, p_file );
-		File::Read( &billboard_pivot_axis[X],	sizeof( float ) * 3, 1, p_file );
-
-		billboard_origin[Z]		= -billboard_origin[Z];
-		billboard_origin[W]		= 0.0f;
-
-		billboard_pivot_pos[Z]	= -billboard_pivot_pos[Z];
-		billboard_pivot_pos[W]	= 0.0f;
-
-		billboard_pivot_axis[W]	= 0.0f;
-
-		is_billboard = true;
-	}
-
-	// Read num vertices.
-	int num_vertices;
-	File::Read( &num_vertices, sizeof( int ), 1, p_file );
-	
-	// Read vertex data stride.
-	int vertex_data_stride;
-	File::Read( &vertex_data_stride, sizeof( int ), 1, p_file );
-
-	// We want all the temporary buffer allocations to come off of the top down heap.
-	Mem::Manager::sHandle().PushContext( Mem::Manager::sHandle().TopDownHeap());
-	
-	// Grab a buffer for the raw vertex data position stream, and read it.
-	float* p_vertex_positions = new float[num_vertices * 3];
-	File::Read( p_vertex_positions, sizeof( float ) * 3, num_vertices, p_file );
-	
-	// Grab a buffer for the raw vertex data normal stream (if present), and read it.
-	float* p_vertex_normals = ( m_flags & 0x04 ) ? new float[num_vertices * 3] : NULL;
-	if( p_vertex_normals )
-	{
-		File::Read( p_vertex_normals, sizeof( float ) * 3, num_vertices, p_file );
-	}
-
-	// Grab a buffer for the raw vertex data weights stream (if present), and read it.
-	uint32* p_vertex_weights = ( m_flags & 0x10 ) ? new uint32[num_vertices] : NULL;
-	if( p_vertex_weights )
-	{
-		File::Read( p_vertex_weights, sizeof( uint32 ), num_vertices, p_file );
-	}
-	
-	// Grab a buffer for the raw vertex data bone indices stream (if present), and read it.
-	uint16* p_vertex_bone_indices = ( m_flags & 0x10 ) ? new uint16[num_vertices * 4] : NULL;
-	if( p_vertex_bone_indices )
-	{
-		File::Read( p_vertex_bone_indices, sizeof( uint16 ) * 4, num_vertices, p_file );
-	}
-
-	// Grab a buffer for the raw vertex texture coordinate stream (if present), and read it.
-	int		num_tc_sets			= 0;
-	float*	p_vertex_tex_coords	= NULL;
-	if( m_flags & 0x01 )
-	{
-		File::Read( &num_tc_sets, sizeof( int ), 1, p_file );
-		
-		if( num_tc_sets > 0 )
-		{
-			p_vertex_tex_coords = new float[num_vertices * 2 * num_tc_sets];
-			File::Read( p_vertex_tex_coords, sizeof( float ) * 2 * num_tc_sets, num_vertices, p_file );
-		}
-	}
-	
-	// Grab a buffer for the raw vertex colors stream (if present), and read it.
-	DWORD* p_vertex_colors = ( m_flags & 0x02 ) ? new DWORD[num_vertices] : NULL;
-	if( p_vertex_colors )
-	{
-		File::Read( p_vertex_colors, sizeof( DWORD ), num_vertices, p_file );
-	}
-
-	// Grab a buffer for the vertex color wibble stream (if present), and read it.
-	char* p_vc_wibble_indices = ( m_flags & 0x800 ) ? new char[num_vertices] : NULL;
-	if( p_vc_wibble_indices )
-	{
-		File::Read( p_vc_wibble_indices, sizeof( char ), num_vertices, p_file );
-	}
-	
-	// Remove TopDownHeap context.
-	Mem::Manager::sHandle().PopContext();
-
-	for( uint m = 0; m < p_geom->m_num_mesh; ++m )
-	{
-		unsigned long	material_checksum;
-		unsigned int	flags, num_lod_index_levels;
-
-		NxXbox::sMesh*	p_mesh = new NxXbox::sMesh;
-
-		// Read bounding sphere and box data.
-		float		rad;
-		Mth::Vector cen;
-		File::Read( &cen[X], sizeof( float ), 3, p_file );
-		File::Read( &rad, sizeof( float ), 1, p_file );
-		File::Read( &inf[X], sizeof( float ), 3, p_file );
-		File::Read( &sup[X], sizeof( float ), 3, p_file );
-
-		// Read and deal with flags, including skater shadow flag.
-		File::Read( &flags, sizeof( uint32 ), 1, p_file );
-		if( flags & 0x400 )
-		{
-			p_mesh->m_flags |= NxXbox::sMesh::MESH_FLAG_NO_SKATER_SHADOW;
-		}
-		if( flags & NxXbox::sMesh::MESH_FLAG_UNLIT )
-		{
-			p_mesh->m_flags |= NxXbox::sMesh::MESH_FLAG_UNLIT;
-		}
-
-		// The material checksum for this mesh.
-		File::Read( &material_checksum,	sizeof( unsigned long ), 1, p_file );
-
-		// How many levels of LOD indices? Should be at least 1!
-		File::Read( &num_lod_index_levels, sizeof( unsigned int ), 1, p_file );
-
-		// Can have up to 8 levels of LOD indices.
-		uint16*	p_indices[8] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
-		int		num_indices[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-
-		for( unsigned int lod_level = 0; lod_level < num_lod_index_levels; ++lod_level )
-		{
-			File::Read( &num_indices[lod_level], sizeof( int ), 1, p_file );
-		
-			// Again, we want all the temporary buffer allocations to come off of the top down heap.
-			Mem::Manager::sHandle().PushContext( Mem::Manager::sHandle().TopDownHeap());
-			p_indices[lod_level] = new uint16[num_indices[lod_level]];
-			Mem::Manager::sHandle().PopContext();
-
-			File::Read( p_indices[lod_level], sizeof( uint16 ), num_indices[lod_level], p_file );
-		}
-
-		// Set the load order of this mesh.
-		p_mesh->m_load_order = m;
-
-		// Set up the mesh.
-		p_mesh->Initialize(	num_vertices,
-							p_vertex_positions,
-							( m_flags & 0x00800000UL ) ? NULL : p_vertex_normals,		// No normals allowed for billboards.
-							p_vertex_tex_coords,
-							num_tc_sets,
-							p_vertex_colors,
-							num_lod_index_levels,
-							num_indices,
-							p_indices,
-							material_checksum,
-							p_geom->mp_scene->GetEngineScene(),
-							p_vertex_bone_indices,
-							p_vertex_weights,
-							( flags & 0x800 ) ? p_vc_wibble_indices : NULL,
-							//is_billboard ? p_meat : NULL,
-							p_meat,
-							is_billboard,
-							debug_name
-		);
-		
-		// Set the bounding data (sphere and box) for the mesh.
-		p_mesh->SetBoundingData( cen, rad, inf, sup );
-
-		// Add the bounding data to the scene.
-		p_geom->mp_scene->GetEngineScene()->m_bbox.AddPoint( inf );
-		p_geom->mp_scene->GetEngineScene()->m_bbox.AddPoint( sup );
-
-		// Set up as a billboard if required.
-		if( m_flags & 0x00800000UL )
-		{
-			p_mesh->SetBillboardData( billboard_type, billboard_pivot_pos, billboard_pivot_axis );
-			NxXbox::BillboardManager.AddEntry( p_mesh );
-		}
-
-		// Flag the mesh as being a shadow volume if applicable.
-		if( m_flags & 0x200000 )
-		{
-			p_mesh->m_flags |= NxXbox::sMesh::MESH_FLAG_SHADOW_VOLUME;
-		}
-
-		// Add the mesh to the attached CXboxGeom.
-		p_geom->AddMesh( p_mesh );
-
-		// Set the mesh bone index (mostly not applicable).
-		p_mesh->SetBoneIndex( bone_idx );
-	
-		// Test code - if the mesh is mapped with a grass texture, add grass meshes.
-		AddGrass( p_geom, p_mesh );
-
-		// lwss add: Satanic Billboard mesh copying code KISAKTODO: finish
-		//if (p_mesh->mp_material-> 
-		// lwss end
-		
-		// Done with the raw index data.
-		for( int lod_level = 0; lod_level < 8; ++lod_level )
-		{
-			delete[] p_indices[lod_level];
-		}
-	}
-
-	// Recount the number of meshes in case any have been added.
-	p_geom->m_num_mesh = p_geom->mp_init_mesh_list->CountItems();
-	
-
-	// Test code for creating imposters.
-#	if 0
-	if( p_vertex_weights == NULL )
-	{
-		char *p_ok_sectors[] = {	"NJ_Houses_North_09",
-									"NJ_Houses_North_10" };
-/*
-char *p_ok_sectors[] = { "CP_telephonepole43",
-								"CP_telephonepole51",
-								"CP_telephonepole52",
-								"NJ_TelePole_Node03",
-								"NJ_TelePole_Node02",
-								"NJ_TelePole_Node04",
-								"NJ_Telepole_00",
-								"NJ_Telepole_01",
-								"NJ_Telepole_02",
-								"NJ_Telepole_03",
-								"NJ_Telepole_04",
-								"NJ_Telepole_05",
-								"NJ_Telepole_06",
-								"NJ_Telepole_07",
-								"NJ_Telepole_08",
-								"NJ_Telepole_09",
-								"NJ_Telepole_12",
-								"NJ_Telepole_13",
-								"NJ_Telepole_14",
-								"NJ_Telepole_15",
-								"NJ_Telepole_16",
-								"NJ_Telepole_17",
-								"NJ_Telepole_18",
-								"NJ_Telepole_19",
-								"NJ_Telepole_20",
-								"NJ_Telepole_21",
-								"NJ_Telepole_22",
-								"NJ_Telepole_23",
-								"NJ_Telepole_24",
-								"NJ_Telepole_25",
-								"NJ_Telepole_26",
-								"CP_telephonepole11",
-								"NJ_Telepole_27",
-								"NJ_Telepole_28",
-								"NJ_Telepole_29",
-								"NJ_Telepole_30",
-								"NJ_Telepole_31",
-								"NJ_Telepole_32" };
-*/
-
-		for( int s = 0; s < ( sizeof( p_ok_sectors ) / sizeof( char* )); ++s )
-		{
-			uint32 checksum = Crc::GenerateCRCFromString( p_ok_sectors[s] );
-			if( checksum == m_checksum )
-			{
-//				Nx::CEngine::sGetImposterManager()->AddGeomToImposter( checksum, p_geom );
-				Nx::CEngine::sGetImposterManager()->AddGeomToImposter( 0xb88905d6UL, p_geom );
-			}
-		}
-	}
-#	endif
-
-	// Done with the raw vertex data.
-	delete[] p_vc_wibble_indices;
-	delete[] p_vertex_colors;
-	delete[] p_vertex_tex_coords;
-	delete[] p_vertex_bone_indices;
-	delete[] p_vertex_weights;
-	delete[] p_vertex_normals;
-	delete[] p_vertex_positions;
-	
-	return true;
+	return Load_Internal(p_file, true, p_meat, debug_name);
+//	Dbg_Assert( mp_geom );
+//
+//	CXboxGeom *p_geom = static_cast<CXboxGeom*>( mp_geom );
+//	
+//	// Read sector checksum.
+//	uint32 sector_checksum;
+//	File::Read( &sector_checksum, sizeof( uint32 ), 1, p_file );
+//	SetChecksum( sector_checksum );
+//
+//	// Read bone index.
+//	int bone_idx;
+//	File::Read( &bone_idx, sizeof( int ), 1, p_file );
+//
+//	// Read sector flags.
+//	File::Read( &m_flags, sizeof( int ), 1, p_file );
+//
+//	// Read number of meshes.
+//	File::Read( &p_geom->m_num_mesh, sizeof( uint ), 1, p_file );
+//
+//	// Read bounding box.
+//	float bbox[6];
+//	File::Read( &bbox[0], sizeof( float ), 6, p_file );
+//	Mth::Vector	inf( bbox[0], bbox[1], bbox[2] );
+//	Mth::Vector	sup( bbox[3], bbox[4], bbox[5] );
+//	p_geom->m_bbox.Set( inf, sup );
+//		
+//	// Read bounding sphere.
+//	float bsphere[4];
+//	File::Read( &bsphere[0], sizeof( float ), 4, p_file );
+//		
+//	// Read billboard data if present.
+//	bool is_billboard = false; // lwss add
+//	uint32		billboard_type;
+//	Mth::Vector	billboard_origin;
+//	Mth::Vector billboard_pivot_pos;
+//	Mth::Vector billboard_pivot_axis;
+//	if( m_flags & 0x00800000UL )
+//	{
+//		File::Read( &billboard_type,			sizeof( uint32 ), 1, p_file );
+//		File::Read( &billboard_origin[X],		sizeof( float ) * 3, 1, p_file );
+//		File::Read( &billboard_pivot_pos[X],	sizeof( float ) * 3, 1, p_file );
+//		File::Read( &billboard_pivot_axis[X],	sizeof( float ) * 3, 1, p_file );
+//
+//		billboard_origin[Z]		= -billboard_origin[Z];
+//		billboard_origin[W]		= 0.0f;
+//
+//		billboard_pivot_pos[Z]	= -billboard_pivot_pos[Z];
+//		billboard_pivot_pos[W]	= 0.0f;
+//
+//		billboard_pivot_axis[W]	= 0.0f;
+//
+//		is_billboard = true;
+//	}
+//
+//	// Read num vertices.
+//	int num_vertices;
+//	File::Read( &num_vertices, sizeof( int ), 1, p_file );
+//	
+//	// Read vertex data stride.
+//	int vertex_data_stride;
+//	File::Read( &vertex_data_stride, sizeof( int ), 1, p_file );
+//
+//	// We want all the temporary buffer allocations to come off of the top down heap.
+//	Mem::Manager::sHandle().PushContext( Mem::Manager::sHandle().TopDownHeap());
+//	
+//	// Grab a buffer for the raw vertex data position stream, and read it.
+//	float* p_vertex_positions = new float[num_vertices * 3];
+//	File::Read( p_vertex_positions, sizeof( float ) * 3, num_vertices, p_file );
+//	
+//	// Grab a buffer for the raw vertex data normal stream (if present), and read it.
+//	float* p_vertex_normals = ( m_flags & 0x04 ) ? new float[num_vertices * 3] : NULL;
+//	if( p_vertex_normals )
+//	{
+//		File::Read( p_vertex_normals, sizeof( float ) * 3, num_vertices, p_file );
+//	}
+//
+//	// Grab a buffer for the raw vertex data weights stream (if present), and read it.
+//	uint32* p_vertex_weights = ( m_flags & 0x10 ) ? new uint32[num_vertices] : NULL;
+//	if( p_vertex_weights )
+//	{
+//		File::Read( p_vertex_weights, sizeof( uint32 ), num_vertices, p_file );
+//	}
+//	
+//	// Grab a buffer for the raw vertex data bone indices stream (if present), and read it.
+//	uint16* p_vertex_bone_indices = ( m_flags & 0x10 ) ? new uint16[num_vertices * 4] : NULL;
+//	if( p_vertex_bone_indices )
+//	{
+//		File::Read( p_vertex_bone_indices, sizeof( uint16 ) * 4, num_vertices, p_file );
+//	}
+//
+//	// Grab a buffer for the raw vertex texture coordinate stream (if present), and read it.
+//	int		num_tc_sets			= 0;
+//	float*	p_vertex_tex_coords	= NULL;
+//	if( m_flags & 0x01 )
+//	{
+//		File::Read( &num_tc_sets, sizeof( int ), 1, p_file );
+//		
+//		if( num_tc_sets > 0 )
+//		{
+//			p_vertex_tex_coords = new float[num_vertices * 2 * num_tc_sets];
+//			File::Read( p_vertex_tex_coords, sizeof( float ) * 2 * num_tc_sets, num_vertices, p_file );
+//		}
+//	}
+//	
+//	// Grab a buffer for the raw vertex colors stream (if present), and read it.
+//	DWORD* p_vertex_colors = ( m_flags & 0x02 ) ? new DWORD[num_vertices] : NULL;
+//	if( p_vertex_colors )
+//	{
+//		File::Read( p_vertex_colors, sizeof( DWORD ), num_vertices, p_file );
+//	}
+//
+//	// Grab a buffer for the vertex color wibble stream (if present), and read it.
+//	char* p_vc_wibble_indices = ( m_flags & 0x800 ) ? new char[num_vertices] : NULL;
+//	if( p_vc_wibble_indices )
+//	{
+//		File::Read( p_vc_wibble_indices, sizeof( char ), num_vertices, p_file );
+//	}
+//	
+//	// Remove TopDownHeap context.
+//	Mem::Manager::sHandle().PopContext();
+//
+//	for( uint m = 0; m < p_geom->m_num_mesh; ++m )
+//	{
+//		unsigned long	material_checksum;
+//		unsigned int	flags, num_lod_index_levels;
+//
+//		NxXbox::sMesh*	p_mesh = new NxXbox::sMesh;
+//
+//		// Read bounding sphere and box data.
+//		float		rad;
+//		Mth::Vector cen;
+//		File::Read( &cen[X], sizeof( float ), 3, p_file );
+//		File::Read( &rad, sizeof( float ), 1, p_file );
+//		File::Read( &inf[X], sizeof( float ), 3, p_file );
+//		File::Read( &sup[X], sizeof( float ), 3, p_file );
+//
+//		// Read and deal with flags, including skater shadow flag.
+//		File::Read( &flags, sizeof( uint32 ), 1, p_file );
+//		if( flags & 0x400 )
+//		{
+//			p_mesh->m_flags |= NxXbox::sMesh::MESH_FLAG_NO_SKATER_SHADOW;
+//		}
+//		if( flags & NxXbox::sMesh::MESH_FLAG_UNLIT )
+//		{
+//			p_mesh->m_flags |= NxXbox::sMesh::MESH_FLAG_UNLIT;
+//		}
+//
+//		// The material checksum for this mesh.
+//		File::Read( &material_checksum,	sizeof( unsigned long ), 1, p_file );
+//
+//		// How many levels of LOD indices? Should be at least 1!
+//		File::Read( &num_lod_index_levels, sizeof( unsigned int ), 1, p_file );
+//
+//		// Can have up to 8 levels of LOD indices.
+//		uint16*	p_indices[8] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+//		int		num_indices[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+//
+//		for( unsigned int lod_level = 0; lod_level < num_lod_index_levels; ++lod_level )
+//		{
+//			File::Read( &num_indices[lod_level], sizeof( int ), 1, p_file );
+//		
+//			// Again, we want all the temporary buffer allocations to come off of the top down heap.
+//			Mem::Manager::sHandle().PushContext( Mem::Manager::sHandle().TopDownHeap());
+//			p_indices[lod_level] = new uint16[num_indices[lod_level]];
+//			Mem::Manager::sHandle().PopContext();
+//
+//			File::Read( p_indices[lod_level], sizeof( uint16 ), num_indices[lod_level], p_file );
+//		}
+//
+//		// Set the load order of this mesh.
+//		p_mesh->m_load_order = m;
+//
+//		// Set up the mesh.
+//		p_mesh->Initialize(	num_vertices,
+//							p_vertex_positions,
+//							( m_flags & 0x00800000UL ) ? NULL : p_vertex_normals,		// No normals allowed for billboards.
+//							p_vertex_tex_coords,
+//							num_tc_sets,
+//							p_vertex_colors,
+//							num_lod_index_levels,
+//							num_indices,
+//							p_indices,
+//							material_checksum,
+//							p_geom->mp_scene->GetEngineScene(),
+//							p_vertex_bone_indices,
+//							p_vertex_weights,
+//							( flags & 0x800 ) ? p_vc_wibble_indices : NULL,
+//							//is_billboard ? p_meat : NULL,
+//							p_meat,
+//							is_billboard,
+//							debug_name
+//		);
+//		
+//		// Set the bounding data (sphere and box) for the mesh.
+//		p_mesh->SetBoundingData( cen, rad, inf, sup );
+//
+//		// Add the bounding data to the scene.
+//		p_geom->mp_scene->GetEngineScene()->m_bbox.AddPoint( inf );
+//		p_geom->mp_scene->GetEngineScene()->m_bbox.AddPoint( sup );
+//
+//		// Set up as a billboard if required.
+//		if( m_flags & 0x00800000UL )
+//		{
+//			p_mesh->SetBillboardData( billboard_type, billboard_pivot_pos, billboard_pivot_axis );
+//			NxXbox::BillboardManager.AddEntry( p_mesh );
+//		}
+//
+//		// Flag the mesh as being a shadow volume if applicable.
+//		if( m_flags & 0x200000 )
+//		{
+//			p_mesh->m_flags |= NxXbox::sMesh::MESH_FLAG_SHADOW_VOLUME;
+//		}
+//
+//		// Add the mesh to the attached CXboxGeom.
+//		p_geom->AddMesh( p_mesh );
+//
+//		// Set the mesh bone index (mostly not applicable).
+//		p_mesh->SetBoneIndex( bone_idx );
+//	
+//		// Test code - if the mesh is mapped with a grass texture, add grass meshes.
+//		AddGrass( p_geom, p_mesh );
+//
+//		// lwss add: Satanic Billboard mesh copying code KISAKTODO: finish
+//		//if (p_mesh->mp_material-> 
+//		// lwss end
+//		
+//		// Done with the raw index data.
+//		for( int lod_level = 0; lod_level < 8; ++lod_level )
+//		{
+//			delete[] p_indices[lod_level];
+//		}
+//	}
+//
+//	// Recount the number of meshes in case any have been added.
+//	p_geom->m_num_mesh = p_geom->mp_init_mesh_list->CountItems();
+//	
+//
+//	// Test code for creating imposters.
+//#	if 0
+//	if( p_vertex_weights == NULL )
+//	{
+//		char *p_ok_sectors[] = {	"NJ_Houses_North_09",
+//									"NJ_Houses_North_10" };
+///*
+//char *p_ok_sectors[] = { "CP_telephonepole43",
+//								"CP_telephonepole51",
+//								"CP_telephonepole52",
+//								"NJ_TelePole_Node03",
+//								"NJ_TelePole_Node02",
+//								"NJ_TelePole_Node04",
+//								"NJ_Telepole_00",
+//								"NJ_Telepole_01",
+//								"NJ_Telepole_02",
+//								"NJ_Telepole_03",
+//								"NJ_Telepole_04",
+//								"NJ_Telepole_05",
+//								"NJ_Telepole_06",
+//								"NJ_Telepole_07",
+//								"NJ_Telepole_08",
+//								"NJ_Telepole_09",
+//								"NJ_Telepole_12",
+//								"NJ_Telepole_13",
+//								"NJ_Telepole_14",
+//								"NJ_Telepole_15",
+//								"NJ_Telepole_16",
+//								"NJ_Telepole_17",
+//								"NJ_Telepole_18",
+//								"NJ_Telepole_19",
+//								"NJ_Telepole_20",
+//								"NJ_Telepole_21",
+//								"NJ_Telepole_22",
+//								"NJ_Telepole_23",
+//								"NJ_Telepole_24",
+//								"NJ_Telepole_25",
+//								"NJ_Telepole_26",
+//								"CP_telephonepole11",
+//								"NJ_Telepole_27",
+//								"NJ_Telepole_28",
+//								"NJ_Telepole_29",
+//								"NJ_Telepole_30",
+//								"NJ_Telepole_31",
+//								"NJ_Telepole_32" };
+//*/
+//
+//		for( int s = 0; s < ( sizeof( p_ok_sectors ) / sizeof( char* )); ++s )
+//		{
+//			uint32 checksum = Crc::GenerateCRCFromString( p_ok_sectors[s] );
+//			if( checksum == m_checksum )
+//			{
+////				Nx::CEngine::sGetImposterManager()->AddGeomToImposter( checksum, p_geom );
+//				Nx::CEngine::sGetImposterManager()->AddGeomToImposter( 0xb88905d6UL, p_geom );
+//			}
+//		}
+//	}
+//#	endif
+//
+//	// Done with the raw vertex data.
+//	delete[] p_vc_wibble_indices;
+//	delete[] p_vertex_colors;
+//	delete[] p_vertex_tex_coords;
+//	delete[] p_vertex_bone_indices;
+//	delete[] p_vertex_weights;
+//	delete[] p_vertex_normals;
+//	delete[] p_vertex_positions;
+//	
+//	return true;
 }
 
 

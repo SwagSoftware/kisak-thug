@@ -453,11 +453,214 @@ bool CXboxTexDict::plat_remove_texture( CTexture *p_texture )
 /*                                                                */
 /*                                                                */
 /******************************************************************/
+// LWSS add
+static void Read(void* outAddr, size_t size, size_t count, uint8_t*& pFP, bool is_file)
+{
+	if (is_file)
+	{
+		File::Read(outAddr, size, count, pFP);
+	}
+	else
+	{
+		MemoryRead(outAddr, size, count, pFP);
+	}
+}
+static Lst::HashTable<Nx::CTexture>* LoadTextureFile_Internal(void*& p_stream, Lst::HashTable<Nx::CTexture>* p_texture_table, bool okay_to_rebuild_texture_table, bool is_file)
+{
+	uint8_t* p_FH = (uint8_t*)p_stream;
+
+	// Read the texture file version and number of textures.
+	int version, num_textures;
+	Read(&version, sizeof(int), 1, p_FH, is_file);
+	Read(&num_textures, sizeof(int), 1, p_FH, is_file);
+
+	// If allowed, rebuild the texture table to the optimum size, using the same heap as the original table.
+	if (okay_to_rebuild_texture_table)
+	{
+		uint32 optimal_table_size = num_textures * 2;
+		uint32 test = 2;
+		uint32 size = 1;
+		for (;; test <<= 1, ++size)
+		{
+			// Check if this iteration of table size is sufficient, or if we have hit the maximum size.
+			if ((optimal_table_size <= test) || (size >= 12))
+			{
+				Mem::Allocator::BlockHeader* p_bheader = Mem::Allocator::BlockHeader::sRead(p_texture_table);
+				Mem::Allocator* p_allocater = p_bheader->mpAlloc;
+
+				delete p_texture_table;
+
+				Mem::Manager::sHandle().PushContext(p_allocater);
+				p_texture_table = new Lst::HashTable<Nx::CTexture>(size);
+				Mem::Manager::sHandle().PopContext();
+				break;
+			}
+		}
+	}
+
+	for (int t = 0; t < num_textures; ++t)
+	{
+		// Create the engine level texture.
+		NxXbox::sTexture* p_texture = new NxXbox::sTexture;
+
+		uint32 base_width, base_height, levels, texel_depth, palette_depth, dxt, palette_size;
+		Read(&p_texture->Checksum, sizeof(uint32), 1, p_FH, is_file);
+		Read(&base_width, sizeof(uint32), 1, p_FH, is_file);
+		Read(&base_height, sizeof(uint32), 1, p_FH, is_file);
+		Read(&levels, sizeof(uint32), 1, p_FH, is_file);
+		Read(&texel_depth, sizeof(uint32), 1, p_FH, is_file);
+		Read(&palette_depth, sizeof(uint32), 1, p_FH, is_file);
+		Read(&dxt, sizeof(uint32), 1, p_FH, is_file);
+		Read(&palette_size, sizeof(uint32), 1, p_FH, is_file);
+
+		p_texture->BaseWidth = (uint16)base_width;
+		p_texture->BaseHeight = (uint16)base_height;
+		p_texture->Levels = (uint8)levels;
+		p_texture->TexelDepth = (uint8)texel_depth;
+		p_texture->PaletteDepth = (uint8)palette_depth;
+		p_texture->DXT = (uint8)dxt;
+
+		D3DFORMAT	texture_format;
+		if (p_texture->DXT > 0)
+		{
+			if ((p_texture->DXT == 1) || (p_texture->DXT == 2))
+			{
+				texture_format = D3DFMT_DXT1;
+			}
+			else if (p_texture->DXT == 5)
+			{
+				texture_format = D3DFMT_DXT5;
+			}
+			else
+			{
+				Dbg_Assert(0);
+			}
+		}
+		else if (p_texture->TexelDepth == 8)
+		{
+			//texture_format = D3DFMT_P8;
+			texture_format = D3DFMT_A8R8G8B8; // lwss change for pc
+		}
+		else if (p_texture->TexelDepth == 16)
+		{
+			texture_format = D3DFMT_A1R5G5B5;	// Could also be X1R5G5B5;
+		}
+		else if (p_texture->TexelDepth == 32)
+		{
+			texture_format = D3DFMT_A8R8G8B8;
+		}
+		else
+		{
+			Dbg_Assert(0);
+		}
+
+		// LWSS: Change for DX9
+		//if( D3D_OK != D3DDevice_CreateTexture(	p_texture->BaseWidth, p_texture->BaseHeight, p_texture->Levels,	0, texture_format, 0, &p_texture->pD3DTexture ))
+		if (D3D_OK != D3DDevice_CreateTexture(p_texture->BaseWidth, p_texture->BaseHeight, p_texture->Levels, 0, texture_format, D3DPOOL_MANAGED, &p_texture->pD3DTexture, 0))
+		{
+			__debugbreak();
+			Dbg_Assert(0);
+		}
+
+		p_texture->texrawdata = NULL;
+
+		static char palette_data[1024];
+		bool read_palette_data = false;
+		memset(palette_data, 0x00, 1024);
+		// LWSS: DX9 does not have palettes
+		// LWSS2: We need to Read the palette data anyway to advance the File Read Pointer. (Multiple textures are read from 1 File in a loop)
+		// KISAKTODO: This needs more logic I think, but might work (with fked up textures)
+		if (palette_size)
+		{
+			read_palette_data = true;
+			Read(palette_data, palette_size, 1, p_FH, is_file);
+			Dbg_Assert(palette_size < 2048);
+		}
+		else
+		{
+			p_texture->texrawdata = NULL;
+		}
+
+		//for (uint32 mip_level = 0; mip_level < p_texture->Levels; ++mip_level)
+		//{
+		//	uint32 texture_level_data_size;
+		//	Read(&texture_level_data_size, sizeof(uint32), 1, p_FH, is_file);
+		//
+		//	D3DLOCKED_RECT locked_rect;
+		//	if (D3D_OK != p_texture->pD3DTexture->LockRect(mip_level, &locked_rect, NULL, 0))
+		//	{
+		//		Dbg_Assert(0);
+		//	}
+		//
+		//	if (p_texture->DXT)
+		//	{
+		//		Read(locked_rect.pBits, texture_level_data_size, 1, p_FH, is_file);
+		//	}
+		//	else
+		//	{
+		//		char* p_tex_level_data = (char*)malloc(texture_level_data_size);
+		//		Read(p_tex_level_data, texture_level_data_size, 1, p_FH, is_file);
+		//		if (read_palette_data)
+		//		{
+		//			void* workspace = malloc(texture_level_data_size);
+		//			NxXbox::sub_5C56F0((int)workspace, p_tex_level_data, base_width, base_height, 1);
+		//			NxXbox::DwordizeTexelData((int)locked_rect.pBits, (int)workspace, base_width * base_height, (int)palette_data);
+		//			free(workspace);
+		//		}
+		//		else
+		//		{
+		//			NxXbox::sub_5C56F0((int)locked_rect.pBits, p_tex_level_data, base_width, base_height, 4);
+		//		}
+		//
+		//		free(p_tex_level_data);
+		//	}
+		//	if (base_width > 1)
+		//	{
+		//		base_width >>= 1;
+		//	}
+		//	if (base_height > 1)
+		//	{
+		//		base_height >>= 1;
+		//	}
+		//
+		//	p_texture->pD3DTexture->UnlockRect(mip_level); // lwss add
+		//}
+
+		for (uint32 mip_level = 0; mip_level < p_texture->Levels; ++mip_level)
+		{
+			uint32 texture_level_data_size;
+			Read(&texture_level_data_size, sizeof(uint32), 1, p_FH, is_file);
+
+			D3DLOCKED_RECT locked_rect;
+			if (D3D_OK != p_texture->pD3DTexture->LockRect(mip_level, &locked_rect, NULL, 0))
+			{
+				Dbg_Assert(0);
+			}
+			else
+			{
+				Read(locked_rect.pBits, texture_level_data_size, 1, p_FH, is_file);
+			}
+		}
+
+		// lwss: add hack from PC
+		if (p_texture->Checksum != 0x749DB390 && p_texture->Checksum != 0xD1CE9FFC)
+		{
+			// Add this texture to the table.
+			Nx::CXboxTexture* p_xbox_texture = new Nx::CXboxTexture();
+			p_xbox_texture->SetEngineTexture(p_texture);
+			p_texture_table->PutItem(p_texture->Checksum, p_xbox_texture);
+		}
+	}
+
+	p_stream = (void*)p_FH;
+
+	return p_texture_table;
+}
+
 Lst::HashTable<Nx::CTexture>* LoadTextureFileFromMemory( void **pp_mem, Lst::HashTable<Nx::CTexture> *p_texture_table, bool okay_to_rebuild_texture_table )
 {
-	__debugbreak(); // lwss: this isn't actually called ever afaik. (maybe create-a-park?)
-	uint8 *p_data = (uint8*)( *pp_mem );
-
+	return LoadTextureFile_Internal(*pp_mem, p_texture_table, okay_to_rebuild_texture_table, false);
+#if 0
 	// Read the texture file version and number of textures.
 	int version, num_textures;
 	MemoryRead( &version, sizeof( int ), 1, p_data );
@@ -609,6 +812,7 @@ Lst::HashTable<Nx::CTexture>* LoadTextureFileFromMemory( void **pp_mem, Lst::Has
 		p_texture_table->PutItem( p_texture->Checksum, p_xbox_texture );
 	}
 	return p_texture_table;
+#endif
 }
 
 
@@ -627,6 +831,13 @@ Lst::HashTable<Nx::CTexture>* LoadTextureFile( const char *Filename, Lst::HashTa
 		return p_texture_table;
 	}
 
+	// LWSS: Combine logic to 1 function
+	Lst::HashTable<Nx::CTexture>* result = LoadTextureFile_Internal(p_FH, p_texture_table, okay_to_rebuild_texture_table, true);
+
+	File::Close(p_FH);
+
+	return result;
+#if 0
 	// Read the texture file version and number of textures.
 	int version, num_textures;
 	File::Read( &version, sizeof( int ), 1, p_FH );
@@ -823,6 +1034,7 @@ Lst::HashTable<Nx::CTexture>* LoadTextureFile( const char *Filename, Lst::HashTa
 	File::Close( p_FH );
 
 	return p_texture_table;
+#endif
 }
 
 

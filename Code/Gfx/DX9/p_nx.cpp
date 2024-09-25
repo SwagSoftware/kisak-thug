@@ -184,7 +184,7 @@ void CEngine::s_plat_pre_render( void )
 
 static void plat_post_render_DrawPrimitiveUP()
 {
-	char* v0; // eax
+	float* v0; // eax
 	int v1; // ecx
 	double v2; // st7
 	double v3; // st5
@@ -192,40 +192,17 @@ static void plat_post_render_DrawPrimitiveUP()
 	float v5; // [esp+0h] [ebp-F8h]
 	float v6; // [esp+4h] [ebp-F4h]
 	float v7; // [esp+4h] [ebp-F4h]
-	float v8[3]; // [esp+8h] [ebp-F0h] BYREF
-	char v9; // [esp+14h] [ebp-E4h] BYREF
-	float v10; // [esp+1Ch] [ebp-DCh]
-	float v11; // [esp+20h] [ebp-D8h]
-	float v12; // [esp+30h] [ebp-C8h]
-	float v13; // [esp+34h] [ebp-C4h]
-	float v14; // [esp+44h] [ebp-B4h]
-	float v15; // [esp+48h] [ebp-B0h]
-	float v16; // [esp+58h] [ebp-A0h]
-	float v17; // [esp+5Ch] [ebp-9Ch]
-	float v18; // [esp+6Ch] [ebp-8Ch]
-	float v19; // [esp+70h] [ebp-88h]
-	float v20; // [esp+80h] [ebp-78h]
-	float v21; // [esp+84h] [ebp-74h]
-	float v22; // [esp+94h] [ebp-64h]
-	float v23; // [esp+98h] [ebp-60h]
-	float v24; // [esp+A8h] [ebp-50h]
-	float v25; // [esp+ACh] [ebp-4Ch]
-	float v26; // [esp+BCh] [ebp-3Ch]
-	float v27; // [esp+C0h] [ebp-38h]
-	float v28; // [esp+D0h] [ebp-28h]
-	float v29; // [esp+D4h] [ebp-24h]
-	float v30; // [esp+E4h] [ebp-14h]
-	float v31; // [esp+E8h] [ebp-10h]
+	float v8[80]; // [esp+8h] [ebp-F0h] BYREF
 
 	NxXbox::set_texture(0, 0);
-	v0 = &v9;
+	v0 = &v8[3];
 	v1 = 12;
 	do
 	{
-		*((float*)v0 - 1) = 1.0;
-		*((DWORD*)v0 + 1) = 0xFF000000;
-		*(float*)v0 = 1.0;
-		v0 += 20;
+		*(v0 - 1) = 1.0;
+		v0[1] = -1.7014118e38;
+		*v0 = 1.0;
+		v0 += 5;
 		--v1;
 	} while (v1);
 	v4 = (float)NxXbox::EngineGlobals.backbuffer_width;
@@ -234,30 +211,30 @@ static void plat_post_render_DrawPrimitiveUP()
 	v7 = 0.25 * v6 * 0.5;
 	v8[0] = 0.0;
 	v8[1] = 0.0;
-	v10 = v4;
-	v11 = 0.0;
-	v12 = 0.0;
-	v13 = v7;
-	v17 = v7;
-	v19 = v7;
-	v14 = v4;
-	v16 = v4;
+	v8[5] = v4;
+	v8[6] = 0.0;
+	v8[10] = 0.0;
+	v8[11] = v7;
+	v8[21] = v7;
+	v8[26] = v7;
+	v8[15] = v4;
+	v8[20] = v4;
 	v3 = v4;
-	v15 = 0.0;
-	v18 = 0.0;
-	v20 = 0.0;
+	v8[16] = 0.0;
+	v8[25] = 0.0;
+	v8[30] = 0.0;
 	v5 = v2 - v7 - 1.0;
-	v21 = v5;
-	v23 = v5;
-	v27 = v5;
-	v22 = v3;
-	v26 = v3;
-	v28 = v3;
-	v24 = 0.0;
-	v30 = 0.0;
-	v25 = v2;
-	v29 = v2;
-	v31 = v2;
+	v8[31] = v5;
+	v8[36] = v5;
+	v8[46] = v5;
+	v8[35] = v3;
+	v8[45] = v3;
+	v8[50] = v3;
+	v8[40] = 0.0;
+	v8[55] = 0.0;
+	v8[41] = v2;
+	v8[51] = v2;
+	v8[56] = v2;
 	NxXbox::set_vertex_shader(D3DFVF_DIFFUSE | D3DFVF_XYZRHW);
 
 	D3DDevice_DrawPrimitiveUP(D3DPT_TRIANGLELIST, 4, v8, 20);
@@ -777,10 +754,8 @@ CScene *CEngine::s_plat_load_scene_from_memory( void *p_mem, CTexDict *p_tex_dic
 /*                                                                */
 /*                                                                */
 /******************************************************************/
-static int swag = 0;
 CScene *CEngine::s_plat_load_scene( const char *p_name, CTexDict *p_tex_dict, bool add_super_sectors, bool is_sky, bool is_dictionary, NxXbox::VertexMysteryMeat* p_meat)
 {
-	swag++;
 	CSector*		pSector;
 	CXboxSector*	pXboxSector;
 
@@ -1035,7 +1010,6 @@ CMesh* CEngine::s_plat_load_mesh( const char* pMeshFileName, Nx::CTexDict* pTexD
 /******************************************************************/
 CMesh* CEngine::s_plat_load_mesh( uint32 id, uint32 *p_model_data, int model_data_size, uint8 *p_cas_data, Nx::CTexDict* pTexDict, uint32 texDictOffset, bool isSkin, bool doShadowVolume )
 {
-	__debugbreak();
 	// Convert the id into a usable string.
 	Dbg_Assert( id > 0 );
 	char id_as_string[16];

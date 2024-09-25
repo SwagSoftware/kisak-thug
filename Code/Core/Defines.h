@@ -31,6 +31,7 @@
 // The original is better since it can actually go up/down the heap and resize things.
 // Calling plain realloc will reallocate things in a completely different location almost always.
 #define KISAK_ORIGINAL_ALLOCATOR 1
+#define KISAK_ZERO_ALLOCATIONS 1
 
 // Lwss: Used to unfk the cursor in early init code debugging.
 //#define KISAK_EARLY_CURSOR_FIX 1
@@ -714,12 +715,14 @@ static inline void operator delete[]   ( void* block ) ;
 inline void* 	operator new( size_t size )
 {
 #ifdef KISAK_ORIGINAL_ALLOCATOR
-	return Mem::Manager::sHandle().New(size, true);
+	void* mem = Mem::Manager::sHandle().New(size, true);
 #else
 	void* mem = malloc(size);
-	memset(mem, 0x00, size);
-	return mem;
 #endif
+#ifdef KISAK_ZERO_ALLOCATIONS
+	memset(mem, 0x00, size);
+#endif
+	return mem;
 }
 /******************************************************************/
 /*                                                                */
@@ -729,12 +732,14 @@ inline void* 	operator new( size_t size )
 inline void* 	operator new[] ( size_t size )
 {
 #ifdef KISAK_ORIGINAL_ALLOCATOR
-	return Mem::Manager::sHandle().New(size, true);
+	void* mem = Mem::Manager::sHandle().New(size, true);
 #else
 	void* mem = malloc(size);
-	memset(mem, 0x00, size);
-	return mem;
 #endif
+#ifdef KISAK_ZERO_ALLOCATIONS
+	memset(mem, 0x00, size);
+#endif
+	return mem;
 }
 #endif		// __PLAT_NGC__
 
@@ -746,12 +751,15 @@ inline void* 	operator new[] ( size_t size )
 inline void* 	operator new( size_t size, bool assert_on_fail )
 {
 #ifdef KISAK_ORIGINAL_ALLOCATOR
-	return Mem::Manager::sHandle().New(size, assert_on_fail);
+	void* mem = Mem::Manager::sHandle().New(size, assert_on_fail);
 #else
 	void* mem = malloc(size);
-	memset(mem, 0x00, size);
-	return mem;
 #endif
+
+#ifdef KISAK_ZERO_ALLOCATIONS
+	memset(mem, 0x00, size);
+#endif
+	return mem;
 }
 
 /******************************************************************/
@@ -762,12 +770,14 @@ inline void* 	operator new( size_t size, bool assert_on_fail )
 inline void* 	operator new[] ( size_t size, bool assert_on_fail )
 {
 #ifdef KISAK_ORIGINAL_ALLOCATOR
-	return Mem::Manager::sHandle().New(size, assert_on_fail);
+	void* mem = Mem::Manager::sHandle().New(size, assert_on_fail);
 #else
 	void* mem = malloc(size);
-	memset(mem, 0x00, size);
-	return mem;
 #endif
+#ifdef KISAK_ZERO_ALLOCATIONS
+	memset(mem, 0x00, size);
+#endif
+	return mem;
 }
 
 /******************************************************************/
@@ -778,12 +788,15 @@ inline void* 	operator new[] ( size_t size, bool assert_on_fail )
 inline void*	operator new( size_t size, Mem::Allocator* pAlloc, bool assert_on_fail = true )
 {
 #ifdef KISAK_ORIGINAL_ALLOCATOR
-	return Mem::Manager::sHandle().New(size, assert_on_fail, pAlloc);
+	void* mem = Mem::Manager::sHandle().New(size, assert_on_fail, pAlloc);
 #else
 	void* mem = malloc(size);
-	memset(mem, 0x00, size);
-	return mem;
 #endif
+
+#ifdef KISAK_ZERO_ALLOCATIONS
+	memset(mem, 0x00, size);
+#endif
+	return mem;
 }
 /******************************************************************/
 /*                                                                */
@@ -793,12 +806,15 @@ inline void*	operator new( size_t size, Mem::Allocator* pAlloc, bool assert_on_f
 inline void*	operator new[]( size_t size, Mem::Allocator* pAlloc, bool assert_on_fail = true )
 {
 #ifdef KISAK_ORIGINAL_ALLOCATOR
-	return Mem::Manager::sHandle().New(size, assert_on_fail, pAlloc);
+	void* mem= Mem::Manager::sHandle().New(size, assert_on_fail, pAlloc);
 #else
 	void* mem = malloc(size);
-	memset(mem, 0x00, size);
-	return mem;
 #endif
+
+#ifdef KISAK_ZERO_ALLOCATIONS
+	memset(mem, 0x00, size);
+#endif
+	return mem;
 }
 
 #ifndef __PLAT_WN32__
@@ -857,12 +873,15 @@ inline void 	operator delete[]( void* pAddr )
 inline void* __cdecl operator new(size_t nSize, LPCSTR lpszFileName, int nLine)
 {
 #ifdef KISAK_ORIGINAL_ALLOCATOR
-	return Mem::Manager::sHandle().New(nSize, true);
+	void* mem = Mem::Manager::sHandle().New(nSize, true);
 #else
 	void* mem = malloc(nSize);
-	memset(mem, 0x00, nSize);
-	return mem;
 #endif
+
+#ifdef KISAK_ZERO_ALLOCATIONS
+	memset(mem, 0x00, nSize);
+#endif
+	return mem;
 }
 inline void __cdecl operator delete(void* p, LPCSTR lpszFileName, int nLine)
 {
@@ -876,12 +895,14 @@ inline void __cdecl operator delete(void* p, LPCSTR lpszFileName, int nLine)
 inline void* __cdecl operator new[](size_t nSize, LPCSTR lpszFileName, int nLine)
 {
 #ifdef KISAK_ORIGINAL_ALLOCATOR
-	return Mem::Manager::sHandle().New(nSize, true);
+	void* mem = Mem::Manager::sHandle().New(nSize, true);
 #else
 	void* mem = malloc(nSize);
-	memset(mem, 0x00, nSize);
-	return mem;
 #endif
+#ifdef KISAK_ZERO_ALLOCATIONS
+	memset(mem, 0x00, nSize);
+#endif
+	return mem;
 }
 inline void __cdecl operator delete[](void* p, LPCSTR lpszFileName, int nLine)
 {

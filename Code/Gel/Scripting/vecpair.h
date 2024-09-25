@@ -14,7 +14,8 @@ namespace Script
 
 // Note: These are not derived from CClass to avoid the extra memory overhead due to the virtual destructor.
 
-#ifdef __PLAT_WN32__
+//#ifdef __PLAT_WN32__
+#if 0 // lwss undo this.
 class CVector
 #else
 class CVector : public Mem::CPoolable<CVector>
@@ -34,7 +35,8 @@ public:
 	float mZ;
 };
 
-#ifdef __PLAT_WN32__
+//#ifdef __PLAT_WN32__
+#if 0 // lwss undo this.
 class CPair
 #else
 class CPair : public Mem::CPoolable<CPair>

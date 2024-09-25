@@ -48,7 +48,8 @@ struct SStructScript
 	SStructScript() {mNameChecksum=NO_NAME; mpScriptTokens=NULL;}
 };
 
-#ifdef __PLAT_WN32__
+//#ifdef __PLAT_WN32__
+#if 0 // lwss undo this.
 class CStruct
 #else
 class CStruct : public Mem::CPoolable<CStruct>

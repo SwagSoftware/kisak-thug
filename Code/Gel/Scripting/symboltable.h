@@ -35,7 +35,8 @@ class CArray;
 class CStruct;
 class CScript;
 
-#ifdef __PLAT_WN32__
+//#ifdef __PLAT_WN32__
+#if 0 // lwss undo this.
 class CSymbolTableEntry
 #else
 class CSymbolTableEntry : public Mem::CPoolable<CSymbolTableEntry>
