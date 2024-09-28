@@ -27,6 +27,8 @@
 #include "memman.h"
 #include "alloc.h"
 
+#ifdef KISAK_ORIGINAL_ALLOCATOR
+
 #ifdef __PLAT_NGC__
 #ifdef __EFFICIENT__
 #include <dolphin.h>
@@ -438,3 +440,5 @@ uint Allocator::GetAlign( void )
 /******************************************************************/
 
 } // namespace Mem
+
+#endif // KISAK_ORIGINAL_ALLOCATOR

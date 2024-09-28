@@ -180,21 +180,21 @@ bool CFileLibrary::PostLoad( bool assertOnFail, int file_size )
 
 	m_numFiles = pHeader->numFiles;
 
-#ifndef __PLAT_NGC__
+//#ifndef __PLAT_NGC__
 	Dbg_MsgAssert( m_numFiles > 0, ( "No files found in lib mp_fileBuffer = %p", mp_fileBuffer ) );
     Dbg_MsgAssert( m_numFiles < vMAX_LIB_FILES, ( "Too many subfiles found in lib (%d files, max=%d)", m_numFiles, vMAX_LIB_FILES ) );
-#endif		// __PLAT_NGC__
+//#endif		// __PLAT_NGC__
 
 	// read in table of contents information
 	memcpy( &m_fileInfo, pFileData, (sizeof(SFileInfo) * m_numFiles) );
 	pFileData += (sizeof(SFileInfo) * m_numFiles);
-#ifndef __PLAT_NGC__
+//#ifndef __PLAT_NGC__
 	if ( pFileData > ( mp_fileBuffer + file_size ) )
 	{
 		// out of bounds
 		goto load_fail;
 	}
-#endif		// __PLAT_NGC__
+//#endif		// __PLAT_NGC__
 	
 	for ( int i = 0; i < m_numFiles; i++ )
 	{
@@ -208,6 +208,7 @@ bool CFileLibrary::PostLoad( bool assertOnFail, int file_size )
 	}
 	
 #ifndef __PLAT_NGC__
+#ifdef KISAK_ORIGINAL_ALLOCATOR
 	// to reduce the amount of temp memory needed, we first load the LIB file
 	// on the bottom up heap, and then copy sub-file individually onto the top
 	// down heap (as we reallocate shrink the original LIB file on the bottom up heap)
@@ -237,6 +238,7 @@ bool CFileLibrary::PostLoad( bool assertOnFail, int file_size )
 		Mem::Manager::sHandle().PushContext(Mem::Manager::sHandle().CutsceneBottomUpHeap());
 		mp_baseBuffer = (uint8*)Mem::ReallocateShrink( Mem::GetAllocSize(mp_baseBuffer) - file_size, mp_baseBuffer );
 		Dbg_MsgAssert( mp_baseBuffer == pOldBuffer, ( "Pointer was not supposed to change except for shrinking" ) );
+
 		Mem::Manager::sHandle().PopContext();
 	}
 
@@ -245,6 +247,7 @@ bool CFileLibrary::PostLoad( bool assertOnFail, int file_size )
 	Mem::Free( mp_baseBuffer );
 	mp_baseBuffer = NULL;
 	mp_fileBuffer = NULL;
+#endif
 #endif		// __PLAT_NGC__
 
 	// if the data is ready to be accessed
@@ -252,11 +255,11 @@ bool CFileLibrary::PostLoad( bool assertOnFail, int file_size )
 
 	return true;
 
-#ifndef __PLAT_NGC__
+//#ifndef __PLAT_NGC__
 load_fail:
 	Dbg_MsgAssert( 0, ( "Parsing of library failed" ) );
 	return false;
-#endif		// __PLAT_NGC__
+//#endif		// __PLAT_NGC__
 }
 
 /******************************************************************/
@@ -575,9 +578,11 @@ bool CFileLibrary::ClearFile( uint32 name, uint32 extension )
 	{
 		if ( m_fileInfo[index].fileNameChecksum == name && m_fileInfo[index].fileExtensionChecksum == extension )
 		{
+#ifdef KISAK_ORIGINAL_ALLOCATOR
 			Mem::Free( mp_filePointers[index] );
 			mp_filePointers[index] = NULL;
 			success = true;
+#endif
 		}
 	}
 

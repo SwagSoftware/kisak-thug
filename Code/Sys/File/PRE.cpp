@@ -352,6 +352,12 @@ PreFile::PreFile(uint8 *p_file_buffer, bool useBottomUpHeap)
 		{
 			// file is not in table, safe to add
 			mp_table->PutItem(pName, pFile);
+
+			// lwss add - this is just to ensure that the files in the pakfile aren't OOB'ing. Have some issues in this area....
+			uint8* compressEnd = (pCompressedData + actual_data_size);
+			uint8* fileEnd = (p_file_buffer + *((int*)(mp_buffer)));
+			Dbg_Assert((int)compressEnd <= (int)fileEnd);
+			// lwss end
 			
 			pFile->compressedDataSize = compressed_data_size;
 			pFile->pCompressedData = pCompressedData; 
@@ -1011,7 +1017,6 @@ void PreMgr::loadPre(const char *pFilename, bool async, bool dont_assert, bool u
 	}
 	else
 	{
-		Mem::Heap* fuckurself = Mem::Manager::sHandle().TopDownHeap();
 		if (!mp_table->PutItem(pFilename, new (Mem::Manager::sHandle().TopDownHeap()) PreFile(pFile)))
 			Dbg_MsgAssert(0,( "PRE %s loaded twice", pFilename));
 	}		

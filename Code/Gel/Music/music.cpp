@@ -1224,7 +1224,14 @@ void PlayTrack( const char *filename, bool loop )
 	
 	Dbg_MsgAssert( gPcmInitialized,( "Calling Pcm::PlayTrack '%s', when PCM Audio not initialized.", filename ));
 	Dbg_MsgAssert( strlen( filename ) < MAX_TRACKNAME_STRING_LENGTH,( "CD Audio Filename too long." ));
+	// LWSS: ASAN strcpy-param-overlap (This is probably fine on consoles?)
+#ifdef __PLAT_WN32__
+	char buff[MAX_TRACKNAME_STRING_LENGTH];
+	strncpy(buff, filename, MAX_TRACKNAME_STRING_LENGTH - 1);
+	strcpy(gTrackName, buff);
+#else
 	strcpy( gTrackName, filename );
+#endif
 	
 	int trackList = gCurrentTrackList;
 	float volume;
