@@ -492,7 +492,11 @@ void HashTable<_V>::PrintContents()
 
 
 template<class _V> //inline
+#ifdef __PLAT_WN32__ // LWSS: Fix warning `warning C4812: obsolete declaration style: please use 'Lst::HashItem<_V>::HashItem' instead`
+Lst::HashItem<_V>::HashItem()
+#else
 HashItem<_V>::HashItem<_V>()
+#endif
 {
 	Init();
 }

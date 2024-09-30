@@ -789,9 +789,7 @@ void sMesh::HandleColorOverride( void )
 void sMesh::TransformVertexBuffer_CASE1(BYTE* a2)
 {
 	BYTE* p_rawdata; // ebp
-	unsigned int v5; // eax
 	int v6; // ecx
-	float* v7; // edx
 	Mth::Matrix* v8; // [esp+14h] [ebp-10h]
 	D3DXVECTOR3 tmp;
 

@@ -70,7 +70,6 @@ void LoadQBFromFilesystem(const char* p_fileName, EBoolAssertIfDuplicateSymbols 
 // Loads a QB file.
 // It will open the file, load it into memory and parse it, creating all the
 // symbols (scripts, arrays, integers etc) defined within in.
-
 void LoadQB(const char *p_fileName, EBoolAssertIfDuplicateSymbols assertIfDuplicateSymbols)
 {
 	Dbg_MsgAssert(p_fileName,("NULL p_fileName"));
@@ -115,7 +114,6 @@ void LoadQBFromMemory(const char* p_fileName, uint8* p_qb, EBoolAssertIfDuplicat
 
 	restart_dirty_scripts();
 }
-
 
 // TODO: Need another UnloadQB in the game-specific script namespace, which will call this UnloadQB
 // and then do any game-specific stuff that needs to be done when a qb is unloaded, such as 

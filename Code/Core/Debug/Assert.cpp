@@ -269,14 +269,12 @@ void		Assert( char* file, uint line, char* reason )
 		_output ("MEM CONTEXT: %s\n",Mem::Manager::sHandle().GetContextName());
 
 		Dbg_Printf( "%s\n", tmp1 );
-		__debugbreak();
 		assert_trap_handler( tmp1 );
 	}
 	else
 	{						   
 		Dbg_Printf( "%s\n", tmp1 );
 		Dbg_Printf( "!!NO TRAP HANDLER SET!!\n" );
-		__debugbreak();
 	}
 }
 

@@ -1516,9 +1516,10 @@ bool CScript::run_cfunction(bool (*p_cfunc)(CStruct *pParams, CScript *pCScript)
 	p_entry->mAverageExecutionTime = (p_entry->mAverageExecutionTime*p_entry->mNumCalls+TimeTaken)/(p_entry->mNumCalls+1);
 	++p_entry->mNumCalls;
 	p_entry->mNumCallsInThisFrame=600;
-
-
-
+	#endif
+	
+	
+	#ifdef STOPWATCH_STUFF
 	pCFunctionStopWatch->Stop();
 	pUpdateStopWatch->Start();
 	#endif

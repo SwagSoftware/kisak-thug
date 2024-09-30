@@ -923,7 +923,7 @@ uint32 WriteToBuffer(CArray *p_array, uint8 *p_buffer, uint32 bufferSize, EAsser
 	// Easy to change WriteToBuffer to support 4 byte sizes, but keeping as 2 for the moment for
 	// backwards compatibility.
 	Dbg_MsgAssert(size<0x10000,("Size of array too big, currently only 2 bytes used to store size in WriteToBuffer ..."));
-	p_buffer=Write2Bytes(p_buffer,size);
+	p_buffer=Write2Bytes(p_buffer,(uint16)size);
 	bytes_left-=3;
 	
 	switch (type)

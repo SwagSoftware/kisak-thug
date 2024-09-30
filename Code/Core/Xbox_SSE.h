@@ -1,3 +1,4 @@
+// LWSS: found in XBox SDK\Samples\Xbox\Misc\FastCPU
 //-----------------------------------------------------------------------------
 // File: SSE.h
 //

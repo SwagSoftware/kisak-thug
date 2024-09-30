@@ -214,7 +214,11 @@ SingletonPtr< _T >& SingletonPtr< _T >::operator= ( const SingletonPtr< _T >& rh
 /******************************************************************/
 	
 template < class _T > template < class _NewT > inline
+#ifdef __PLAT_WN32__ // LWSS: Fix warning `warning C4812: obsolete declaration style: please use 'Spt::SingletonPtr<_T>::SingletonPtr' instead`
+Spt::SingletonPtr<_T>::SingletonPtr(const SingletonPtr< _NewT >& rhs)
+#else
 SingletonPtr< _T >::SingletonPtr< _T >( const SingletonPtr< _NewT >& rhs )
+#endif
 : mp_instance ( _NewT::sSgltnInstance() )
 {
 	

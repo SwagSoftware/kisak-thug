@@ -473,7 +473,7 @@ inline Vector&		Vector::Normalize( )
 // currenntly inline (xsce) version seems to have problems with instrcutionre-ordering,
 // so don't use it unless you figure it out.
 	sceVu0Normalize(col,col);		// NOTE::: using the non-inline version  (not xsce....)
-#else
+#	else
 	float l = Length();
 	if ( l > 0.0f ) 
 	{
@@ -487,7 +487,7 @@ inline Vector&		Vector::Normalize( )
 	{
 //		Dbg_MsgAssert(0,("Normalizing vector of zero length"));
 	}
-#endif
+#	endif
 	return *this;
 }
 

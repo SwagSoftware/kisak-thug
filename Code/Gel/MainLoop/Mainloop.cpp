@@ -426,9 +426,12 @@ void		Manager::MainLoop( void )
 		Sys::Profiler::sStartFrame();		  		
 #	endif		
 #endif		
-		
+#ifdef __PLAT_WN32__
 		if (!NxXbox::g_disableRendering)
+#endif
+		{
 			Nx::CEngine::sPreRender();			 			// start rendering previous frame's DMA list
+		}
 
 #ifdef	__PLAT_NGPS__		
 		Sfx::CSpuManager::sUpdateStatus();				// Garrett: This should go into some system task, but I'll put it here for now
@@ -442,7 +445,7 @@ void		Manager::MainLoop( void )
 		Sys::Profiler::sStartFrame();		  		
 #	endif		
 #	endif		
-		
+					 
 		service_system();
 
 #if	defined(__PLAT_NGPS__) && defined(BATCH_TRI_COLLISION)
@@ -494,8 +497,12 @@ void		Manager::MainLoop( void )
 #	ifdef __USE_PROFILER__
 			Sys::CPUProfiler->PushContext( 0, 0, 0 );	 	// Black (Under Yellow) = sPostRender
 #	endif // __USE_PROFILER__
+#ifdef __PLAT_WN32__
 		if (!NxXbox::g_disableRendering)
+#endif		
+		{
 			Nx::CEngine::sPostRender();		  // Previous frames profiler is rendered here
+		}
 #	ifdef __USE_PROFILER__
 		Sys::CPUProfiler->PopContext(  );
 #	endif		

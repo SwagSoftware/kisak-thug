@@ -26,8 +26,12 @@ target_include_directories(KisakThug PUBLIC "C:\\Program Files (x86)\\Microsoft 
 target_link_directories(KisakThug PUBLIC "C:\\Program Files (x86)\\Microsoft DirectX SDK (June 2010)\\Lib\\x86")
 target_link_directories(KisakThug PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/SDL2")
 
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT /O2 /MP /W3 /permissive")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd /Od /MP /W3 /permissive")
+set(MSVC_WARNING_DISABLES
+ "/wd\"4065\""
+ ) #Switch statement with no cases (Used Legitimately)
+
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT /O2 /MP /W3 ${MSVC_WARNING_DISABLES} /permissive")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd /Od /MP /W3 ${MSVC_WARNING_DISABLES} /permissive")
 
 set_property(TARGET KisakThug PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 

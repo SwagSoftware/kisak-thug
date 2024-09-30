@@ -19,7 +19,6 @@
 **																			**
 *****************************************************************************/
 
-#pragma once
 #ifndef __CORE_DEFINES_H
 #define __CORE_DEFINES_H
 
@@ -30,16 +29,17 @@
 // lwss: Enable Original Allocator (Vs. Raw Malloc/Realloc/Free)
 // The original is better since it can actually go up/down the heap and resize things.
 // Calling plain realloc will reallocate things in a completely different location almost always.
-#define KISAK_ORIGINAL_ALLOCATOR 1
-#define KISAK_ZERO_ALLOCATIONS 1
+#ifndef __PLAT_WN32__
+#undef KISAK_ORIGINAL_ALLOCATOR
+#endif
 
+#ifdef __PLAT_WN32__
+//#define KISAK_ORIGINAL_ALLOCATOR 1 //LWSS: Moved to CMake
+#define KISAK_ZERO_ALLOCATIONS 1
 // Lwss: Used to unfk the cursor in early init code debugging.
 //#define KISAK_EARLY_CURSOR_FIX 1
 
-#ifdef __PLAT_WN32__
-
 // LWSS Add special epic Xbox XDK functions
-// found in XBox SDK\Samples\Xbox\Misc\FastCPU
 #include "Xbox_SSE.h"
 //#include <strstream>
 //#include <fstream.h>
@@ -55,8 +55,8 @@
 #pragma warning( disable : 4800 ) 
 #pragma warning( disable : 4355 ) // 'this' : used in base member initializer list
 #pragma warning( disable : 4291 ) // no matching operator delete found
+#pragma warning( disable : 4595) // LWSS add: Switch() with no cases.
 
-#define D3D_DEBUG_INFO 1
 
 // lwss: added Dx8
 //#include <d3d8.h>

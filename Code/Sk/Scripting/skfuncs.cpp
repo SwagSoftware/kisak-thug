@@ -5459,9 +5459,9 @@ bool ScriptGetSkaterVelocity( Script::CStruct* pParams, Script::CScript* pScript
 		
 		pParams->GetFloat( CRCD(0x5582fe27,"skew_angle"), &skew_angle );
 
-        pScript->GetParams()->AddInteger(CRCD(0x6187906d,"vel_x"), x);
-        pScript->GetParams()->AddInteger(CRCD(0x1680a0fb,"vel_y"), y);
-        pScript->GetParams()->AddInteger(CRCD(0x8f89f141,"vel_z"), z);
+        pScript->GetParams()->AddInteger(CRCD(0x6187906d,"vel_x"), (int)x);
+        pScript->GetParams()->AddInteger(CRCD(0x1680a0fb,"vel_y"), (int)y);
+        pScript->GetParams()->AddInteger(CRCD(0x8f89f141,"vel_z"), (int)z);
 
 		pParams->GetFloat( CRCD(0x13b9da7b,"scale"), &scale );
 
@@ -5481,9 +5481,9 @@ bool ScriptGetSkaterVelocity( Script::CStruct* pParams, Script::CScript* pScript
 				vel = rot_mat.Transform( vel );
 			}
 
-			pScript->GetParams()->AddInteger("scaled_x", vel[X] * scale );
-			pScript->GetParams()->AddInteger("scaled_y", vel[Y] * scale );
-			pScript->GetParams()->AddInteger("scaled_z", vel[Z] * scale );
+			pScript->GetParams()->AddInteger("scaled_x", (int)(vel[X] * scale) );
+			pScript->GetParams()->AddInteger("scaled_y", (int)(vel[Y] * scale) );
+			pScript->GetParams()->AddInteger("scaled_z", (int)(vel[Z] * scale) );
 		}
 		else
 		{
@@ -5501,9 +5501,9 @@ bool ScriptGetSkaterVelocity( Script::CStruct* pParams, Script::CScript* pScript
 				facing = rot_mat[Mth::AT];
 			}
 
-			pScript->GetParams()->AddInteger(CRCD(0xbded7a76,"scaled_x"), facing[X] * scale );
-			pScript->GetParams()->AddInteger(CRCD(0xcaea4ae0,"scaled_y"), facing[Y] * scale );
-			pScript->GetParams()->AddInteger(CRCD(0x53e31b5a,"scaled_z"), facing[Z] * scale );
+			pScript->GetParams()->AddInteger(CRCD(0xbded7a76,"scaled_x"), (int)(facing[X] * scale) );
+			pScript->GetParams()->AddInteger(CRCD(0xcaea4ae0,"scaled_y"), (int)(facing[Y] * scale) );
+			pScript->GetParams()->AddInteger(CRCD(0x53e31b5a,"scaled_z"), (int)(facing[Z] * scale) );
 		}
     
         return true;

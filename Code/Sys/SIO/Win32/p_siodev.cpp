@@ -164,7 +164,7 @@ void Device::wait( void )
 void Device::read_data ( void )
 {
 	//XINPUT_STATE	xis;
-	HRESULT			hr;
+	//HRESULT			hr;
 
 	m_plugged_in = false;
 

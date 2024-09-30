@@ -47,6 +47,7 @@ public:
 		BC_NO_UPDATE
 	};
 
+
 public:
 	virtual	void 					Update() = 0;
     virtual void 					InitFromStructure( Script::CStruct* pParams ) = 0;

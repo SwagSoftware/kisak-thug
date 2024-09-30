@@ -1516,7 +1516,7 @@ bool CStruct::GetFloat(uint32 nameChecksum, float *p_floatValue, EAssertType ass
 	// down the other Get... functions. Need to do some tests to see what is best.
 	if (search_for(nameChecksum,ESYMBOLTYPE_INTEGER,&value))
 	{
-		*p_floatValue=value.mIntegerValue;
+		*p_floatValue=(float)value.mIntegerValue;
 		return true;
 	}
 	if (assert)

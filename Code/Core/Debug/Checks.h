@@ -154,7 +154,6 @@ if( !( _c ))													\
 	printf("File %s, line %d\n",__FILE__,__LINE__);				\
 	printf _params;												\
 	printf("\nPress CTRL-C to quit ... ");						\
-	__debugbreak();												\
 	while(1);													\
 }
 #else

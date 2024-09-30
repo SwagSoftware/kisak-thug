@@ -528,10 +528,12 @@ static bool Win32_CreateDirectInput8(HINSTANCE inst, HWND hwnd, LPCSTR lpSubKey)
 
         Win32_QueryRegistryForSettings(lpSubKey);
         
-        DirectInput8Create(inst, 0x800, IID_IDirectInput8, (void**)&g_directInput8, NULL);
-        g_directInput8->EnumDevices(0, DirectInput_EnumDevicesCallbackA, 0, 1);
+        //DirectInput8Create(inst, 0x800, IID_IDirectInput8, (void**)&g_directInput8, NULL);
+        //g_directInput8->EnumDevices(0, DirectInput_EnumDevicesCallbackA, 0, 1);
         // InputWeirdFuckery();
     }
+
+    return true;
 }
 
 // Defined in Sk/Main.cpp

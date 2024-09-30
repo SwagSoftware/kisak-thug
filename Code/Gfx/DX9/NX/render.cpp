@@ -388,7 +388,7 @@ static IDirect3DPixelShader9* get_pixel_shader( sMaterial *p_material )
 	// LWSS: Change entire shader building code
 	//sprintf( shader_buffer, "xps.1.1\n" );
 	int itr = 0;
-	int passItr = 0;
+	uint32 passItr = 0;
 	for (itr = sprintf(shader_buffer, "ps.1.1\n"); passItr < p_material->m_passes;)
 	{
 		itr += sprintf(&shader_buffer[itr], "tex t%d\n", passItr++);
@@ -417,7 +417,7 @@ static IDirect3DPixelShader9* get_pixel_shader( sMaterial *p_material )
 	}
 
 
-	int curr_blend_mode = 1;
+	uint32 curr_blend_mode = 1;
 	int alpha_flag;
 	bool uses_prev = false;
 
@@ -1298,7 +1298,6 @@ void create_pixel_shaders( void )
 		// lwss: Changes for PC 
 		if (NxXbox::EngineGlobals.hasHLSLv101)
 		{
-			IDirect3DPixelShader9* dummy;
 			ID3DXBuffer* buffer = NULL;
 			LPD3DXBUFFER errMsg = NULL;
 			D3DXAssembleShader(aPs11TexT0MulR0, strlen(aPs11TexT0MulR0), 0, 0, 0, &buffer, &errMsg);
@@ -2606,7 +2605,7 @@ void render_shadow_targets( void )
 	XGMATRIX	stored_view_matrix			= EngineGlobals.view_matrix;
 	XGMATRIX	stored_projection_matrix	= EngineGlobals.projection_matrix;
 	uint32		stored_fog_state			= EngineGlobals.fog_enabled;
-	DWORD		multisample_mode;
+	//DWORD		multisample_mode;
 
 	IDirect3DSurface9* render_target = NULL;
 	IDirect3DSurface9* zstencil_surface = NULL;
@@ -2645,7 +2644,7 @@ void render_shadow_targets( void )
 			fake_target.Parent	= 0x00000000UL;
 			*/
 			// Set the new render target.
-			LPDIRECT3DSURFACE9 pSurface;
+			//LPDIRECT3DSURFACE9 pSurface;
 
 			// This call will increase the reference count of the IDirect3DTexture8 object.
 			//p_details->p_texture->pD3DTexture->GetSurfaceLevel( 0, &pSurface );

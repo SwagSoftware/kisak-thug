@@ -926,7 +926,7 @@ namespace File
 
 void* LoadAllocNoPre(const char* p_fileName)
 {
-	void* p_dest;
+	//void* p_dest;
 	int file_size = 0;
 	uint8* p_file_data;
 

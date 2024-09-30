@@ -136,6 +136,7 @@ _loopMulMatrix:
 /*                                                                */
 /******************************************************************/
 
+#ifndef __PLAT_WN32__ // LWSS: this function is cool, but I doubt it's faster than just doing atan2f() nowadays. It also throws warnings for 'register' storage class
 // Ken: Faster version of atan2f, using the same algorithm used by VU1
 // (Coeefficients got from the VU manual, from documentation of EATANxy function, p130
 // SPEEDOPT: This could probably be made even faster using a less accurate approx with few coeffs.
@@ -205,6 +206,12 @@ float katan(float y, float x)
 		}
 	}
 }
+#else
+float katan(float y, float x)
+{
+	return atan2f(y, x);
+}
+#endif
 
 void Matrix::GetEulers( Vector& euler ) const
 {

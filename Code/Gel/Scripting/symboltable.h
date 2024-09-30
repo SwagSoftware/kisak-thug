@@ -24,7 +24,7 @@ namespace Script
 // by scanning through all the scripts.
 // Uses a bit of memory so only define on debug builds.
 #ifdef __NOPT_ASSERT__
-#define COUNT_USAGE
+//#define COUNT_USAGE
 #endif
 
 #define NUM_HASH_BITS 12

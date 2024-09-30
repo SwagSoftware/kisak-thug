@@ -33,7 +33,7 @@ struct sTexture
 	int texunk2;
 };
 
-extern class LinkedList* g_sTexturesList;
+extern struct LinkedList* g_sTexturesList;
 
 sTexture	*LoadTexture( const char *p_filename );
 
