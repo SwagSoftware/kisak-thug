@@ -11,7 +11,7 @@
 // Temporarily in here
 #include <dsound.h>
 LPDIRECTSOUND8 ppDS8;
-LPDIRECTINPUT8 g_directInput8 = nullptr;
+//LPDIRECTINPUT8 g_directInput8 = nullptr;
 // ^^
 
 bool g_isWindowInFocus = false;
@@ -479,11 +479,11 @@ static void __stdcall Win32_CreateDirectSound8(HWND a1)
         ppDS8->SetCooperativeLevel(a1, 2);
 }
 
-BOOL __stdcall DirectInput_EnumDevicesCallbackA(LPCDIDEVICEINSTANCEA a1, LPVOID a2)
-{
-    // KISAKTODO
-    return true;
-}
+//BOOL __stdcall DirectInput_EnumDevicesCallbackA(/LPCDIDEVICEINSTANCEA a1, LPVOID a2)
+//{
+//    // KISAKTODO
+//    return true;
+//}
 
 int Win32_QueryRegistryForSettings(LPCSTR lpSubKey)
 {
@@ -504,7 +504,7 @@ static bool Win32_CreateDirectInput8(HINSTANCE inst, HWND hwnd, LPCSTR lpSubKey)
         return false;
     }
 
-    if (!g_directInput8)
+   // if (!g_directInput8)
     {
         //dword_7D0CF8[0] = 0;
         //dword_7D0CFC = 0;

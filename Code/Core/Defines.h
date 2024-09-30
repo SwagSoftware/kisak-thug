@@ -58,15 +58,12 @@
 #pragma warning( disable : 4595) // LWSS add: Switch() with no cases.
 
 
-// lwss: added Dx8
-//#include <d3d8.h>
-//#include <d3dx8math.h>
-// lwss: actually Dx9
+// lwss: added Dx9
 #include <d3d9.h>
 #include <d3dx9shader.h>
 //#include <d3dxmath.h>
-#define DIRECTINPUT_VERSION 0x0800
-#include <dinput.h>
+//#define DIRECTINPUT_VERSION 0x0800
+//#include <dinput.h>
 
 extern bool g_isWindowInFocus;
 extern bool g_windowJustWentOutOfFocus;
@@ -80,125 +77,7 @@ extern bool g_hasJustEnteredNetworkGame;
 // MSVC Error-fix
 #define stricmp _stricmp
 
-//#define Direct3D_CreateDevice(a,b,c,d,e,f) IDirect3D8_CreateDevice(NxXbox::EngineGlobals.p_d3d, a, b, c, d, e, f)
 #define Direct3D_CreateDevice(a,b,c,d,e,f) IDirect3D9_CreateDevice(NxXbox::EngineGlobals.p_d3d, a, b, c, d, e, f)
-
-//#define D3DDevice_CreateVertexShader(a,b,c,d) IDirect3DDevice8_CreateVertexShader(NxXbox::EngineGlobals.p_Device, a,b,c,d)
-//#define D3DDevice_SetRenderState(a,b,c) IDirect3DDevice8_SetRenderState(NxXbox::EngineGlobals.p_Device, a, b, c)
-//#define D3DDevice_GetTextureStageState(a,b,c) IDirect3DDevice8_GetTextureStageState(NxXbox::EngineGlobals.p_Device, a, b, c)
-//#define D3DDevice_SetTextureStageState(a,b,c) IDirect3DDevice8_SetTextureStageState(NxXbox::EngineGlobals.p_Device, a, b, c)
-//#define D3DDevice_SetMaterial(a) IDirect3DDevice8_SetMaterial(NxXbox::EngineGlobals.p_Device, a)
-//#define D3DDevice_SetVertexShaderConstantFast(a,b,c) IDirect3DDevice8_SetVertexShaderConstantF(NxXbox::EngineGlobals.p_Device, a, b, c) // lwss todo: double check that F is the right prefix here. Dx8 got rid of the generic version.
-////#define D3DDevice_CreateRenderTarget(a,b,c,d,e,f) IDirect3DDevice8_SetTextureStageState(NxXbox::EngineGlobals.p_Device, a, b, c, d, e, f)
-//#define D3DDevice_SetLight(a,b) IDirect3DDevice8_SetLight(NxXbox::EngineGlobals.p_Device, a, b)
-//#define D3DDevice_SetTransform(a,b) IDirect3DDevice8_SetTransform(NxXbox::EngineGlobals.p_Device, a, b)
-//#define D3DDevice_SetRenderTarget(a,b) IDirect3DDevice8_SetRenderTarget(NxXbox::EngineGlobals.p_Device, a, b)
-//#define D3DDevice_SetStencilSurface(a) IDirect3DDevice8_SetRenderTarget(NxXbox::EngineGlobals.p_Device, a)
-
-
-//#define IDirect3DDevice8_QueryInterface(p,a,b) (NxXbox::EngineGlobals.p_Device)->QueryInterface(a,b)
-//#define IDirect3DDevice8_AddRef(p) (NxXbox::EngineGlobals.p_Device)->AddRef()
-//#define IDirect3DDevice8_Release(p) (NxXbox::EngineGlobals.p_Device)->Release()
-//#define IDirect3DDevice8_TestCooperativeLevel(p) (NxXbox::EngineGlobals.p_Device)->TestCooperativeLevel()
-//#define IDirect3DDevice8_GetAvailableTextureMem(p) (NxXbox::EngineGlobals.p_Device)->GetAvailableTextureMem()
-//#define IDirect3DDevice8_ResourceManagerDiscardBytes(p,a) (NxXbox::EngineGlobals.p_Device)->ResourceManagerDiscardBytes(a)
-//#define D3DDevice_GetDirect3D(a) (NxXbox::EngineGlobals.p_Device)->GetDirect3D(a)
-//#define D3DDevice_GetDeviceCaps(a) (NxXbox::EngineGlobals.p_Device)->GetDeviceCaps(a)
-//#define D3DDevice_GetDisplayMode(a) (NxXbox::EngineGlobals.p_Device)->GetDisplayMode(a)
-//#define D3DDevice_GetCreationParameters(a) (NxXbox::EngineGlobals.p_Device)->GetCreationParameters(a)
-//#define D3DDevice_SetCursorProperties(a,b,c) (NxXbox::EngineGlobals.p_Device)->SetCursorProperties(a,b,c)
-//#define D3DDevice_SetCursorPosition(a,b,c) (NxXbox::EngineGlobals.p_Device)->SetCursorPosition(a,b,c)
-//#define D3DDevice_ShowCursor(a) (NxXbox::EngineGlobals.p_Device)->ShowCursor(a)
-//#define D3DDevice_CreateAdditionalSwapChain(a,b) (NxXbox::EngineGlobals.p_Device)->CreateAdditionalSwapChain(a,b)
-//#define D3DDevice_Reset(a) (NxXbox::EngineGlobals.p_Device)->Reset(a)
-//#define D3DDevice_Present(a,b,c,d) (NxXbox::EngineGlobals.p_Device)->Present(a,b,c,d)
-//#define D3DDevice_GetBackBuffer(a,b,c) (NxXbox::EngineGlobals.p_Device)->GetBackBuffer(a,b,c)
-//#define D3DDevice_GetRasterStatus(a) (NxXbox::EngineGlobals.p_Device)->GetRasterStatus(a)
-//#define D3DDevice_SetGammaRamp(a,b) (NxXbox::EngineGlobals.p_Device)->SetGammaRamp(a,b)
-//#define D3DDevice_GetGammaRamp(a) (NxXbox::EngineGlobals.p_Device)->GetGammaRamp(a)
-//#define D3DDevice_CreateTexture(a,b,c,d,e,f,g) (NxXbox::EngineGlobals.p_Device)->CreateTexture(a,b,c,d,e,f,g)
-//#define D3DDevice_CreateVolumeTexture(a,b,c,d,e,f,g,h) (NxXbox::EngineGlobals.p_Device)->CreateVolumeTexture(a,b,c,d,e,f,g,h)
-//#define D3DDevice_CreateCubeTexture(a,b,c,d,e,f) (NxXbox::EngineGlobals.p_Device)->CreateCubeTexture(a,b,c,d,e,f)
-//#define D3DDevice_CreateVertexBuffer(a,b,c,d,e) (NxXbox::EngineGlobals.p_Device)->CreateVertexBuffer(a,b,c,d,e)
-//#define D3DDevice_CreateIndexBuffer(a,b,c,d,e) (NxXbox::EngineGlobals.p_Device)->CreateIndexBuffer(a,b,c,d,e)
-//#define D3DDevice_CreateRenderTarget(a,b,c,d,e,f) (NxXbox::EngineGlobals.p_Device)->CreateRenderTarget(a,b,c,d,e,f)
-//#define D3DDevice_CreateDepthStencilSurface(a,b,c,d,e) (NxXbox::EngineGlobals.p_Device)->CreateDepthStencilSurface(a,b,c,d,e)
-//#define D3DDevice_CreateImageSurface(a,b,c,d) (NxXbox::EngineGlobals.p_Device)->CreateImageSurface(a,b,c,d)
-//#define D3DDevice_CopyRects(a,b,c,d,e) (NxXbox::EngineGlobals.p_Device)->CopyRects(a,b,c,d,e)
-//#define D3DDevice_UpdateTexture(a,b) (NxXbox::EngineGlobals.p_Device)->UpdateTexture(a,b)
-//#define D3DDevice_GetFrontBuffer(a) (NxXbox::EngineGlobals.p_Device)->GetFrontBuffer(a)
-//#define D3DDevice_SetRenderTarget(a,b) (NxXbox::EngineGlobals.p_Device)->SetRenderTarget(a,b)
-//#define D3DDevice_GetRenderTarget(a) (NxXbox::EngineGlobals.p_Device)->GetRenderTarget(a)
-//#define D3DDevice_GetDepthStencilSurface(a) (NxXbox::EngineGlobals.p_Device)->GetDepthStencilSurface(a)
-//#define D3DDevice_BeginScene() (NxXbox::EngineGlobals.p_Device)->BeginScene()
-//#define D3DDevice_EndScene() (NxXbox::EngineGlobals.p_Device)->EndScene()
-//#define D3DDevice_Clear(a,b,c,d,e,f) (NxXbox::EngineGlobals.p_Device)->Clear(a,b,c,d,e,f)
-//#define D3DDevice_SetTransform(a,b) (NxXbox::EngineGlobals.p_Device)->SetTransform(a,b)
-//#define D3DDevice_GetTransform(a,b) (NxXbox::EngineGlobals.p_Device)->GetTransform(a,b)
-//#define D3DDevice_MultiplyTransform(a,b) (NxXbox::EngineGlobals.p_Device)->MultiplyTransform(a,b)
-//#define D3DDevice_SetViewport(a) (NxXbox::EngineGlobals.p_Device)->SetViewport(a)
-//#define D3DDevice_GetViewport(a) (NxXbox::EngineGlobals.p_Device)->GetViewport(a)
-//#define D3DDevice_SetMaterial(a) (NxXbox::EngineGlobals.p_Device)->SetMaterial(a)
-//#define D3DDevice_GetMaterial(a) (NxXbox::EngineGlobals.p_Device)->GetMaterial(a)
-//#define D3DDevice_SetLight(a,b) (NxXbox::EngineGlobals.p_Device)->SetLight(a,b)
-//#define D3DDevice_GetLight(a,b) (NxXbox::EngineGlobals.p_Device)->GetLight(a,b)
-//#define D3DDevice_LightEnable(a,b) (NxXbox::EngineGlobals.p_Device)->LightEnable(a,b)
-//#define D3DDevice_GetLightEnable(a,b) (NxXbox::EngineGlobals.p_Device)->GetLightEnable(a,b)
-//#define D3DDevice_SetClipPlane(a,b) (NxXbox::EngineGlobals.p_Device)->SetClipPlane(a,b)
-//#define D3DDevice_GetClipPlane(a,b) (NxXbox::EngineGlobals.p_Device)->GetClipPlane(a,b)
-//#define D3DDevice_SetRenderState(a,b) (NxXbox::EngineGlobals.p_Device)->SetRenderState(a,b)
-//#define D3DDevice_GetRenderState(a,b) (NxXbox::EngineGlobals.p_Device)->GetRenderState(a,b)
-//#define D3DDevice_BeginStateBlock() (NxXbox::EngineGlobals.p_Device)->BeginStateBlock()
-//#define D3DDevice_EndStateBlock(a) (NxXbox::EngineGlobals.p_Device)->EndStateBlock(a)
-//#define D3DDevice_ApplyStateBlock(a) (NxXbox::EngineGlobals.p_Device)->ApplyStateBlock(a)
-//#define D3DDevice_CaptureStateBlock(a) (NxXbox::EngineGlobals.p_Device)->CaptureStateBlock(a)
-//#define D3DDevice_DeleteStateBlock(a) (NxXbox::EngineGlobals.p_Device)->DeleteStateBlock(a)
-//#define D3DDevice_CreateStateBlock(a,b) (NxXbox::EngineGlobals.p_Device)->CreateStateBlock(a,b)
-//#define D3DDevice_SetClipStatus(a) (NxXbox::EngineGlobals.p_Device)->SetClipStatus(a)
-//#define D3DDevice_GetClipStatus(a) (NxXbox::EngineGlobals.p_Device)->GetClipStatus(a)
-//#define D3DDevice_GetTexture(a,b) (NxXbox::EngineGlobals.p_Device)->GetTexture(a,b)
-//#define D3DDevice_SetTexture(a,b) (NxXbox::EngineGlobals.p_Device)->SetTexture(a,b)
-//#define D3DDevice_GetTextureStageState(a,b,c) (NxXbox::EngineGlobals.p_Device)->GetTextureStageState(a,b,c)
-//#define D3DDevice_SetTextureStageState(a,b,c) (NxXbox::EngineGlobals.p_Device)->SetTextureStageState(a,b,c)
-//#define D3DDevice_ValidateDevice(a) (NxXbox::EngineGlobals.p_Device)->ValidateDevice(a)
-//#define D3DDevice_GetInfo(a,b,c) (NxXbox::EngineGlobals.p_Device)->GetInfo(a,b,c)
-//#define D3DDevice_SetPaletteEntries(a,b) (NxXbox::EngineGlobals.p_Device)->SetPaletteEntries(a,b)
-//#define D3DDevice_GetPaletteEntries(a,b) (NxXbox::EngineGlobals.p_Device)->GetPaletteEntries(a,b)
-//#define D3DDevice_SetCurrentTexturePalette(a) (NxXbox::EngineGlobals.p_Device)->SetCurrentTexturePalette(a)
-//#define D3DDevice_GetCurrentTexturePalette(a) (NxXbox::EngineGlobals.p_Device)->GetCurrentTexturePalette(a)
-//#define D3DDevice_DrawPrimitive(a,b,c) (NxXbox::EngineGlobals.p_Device)->DrawPrimitive(a,b,c)
-//#define D3DDevice_DrawIndexedPrimitive(a,b,c,d,e) (NxXbox::EngineGlobals.p_Device)->DrawIndexedPrimitive(a,b,c,d,e)
-//#define D3DDevice_DrawPrimitiveUP(a,b,c,d) (NxXbox::EngineGlobals.p_Device)->DrawPrimitiveUP(a,b,c,d)
-//#define D3DDevice_DrawIndexedPrimitiveUP(a,b,c,d,e,f,g,h) (NxXbox::EngineGlobals.p_Device)->DrawIndexedPrimitiveUP(a,b,c,d,e,f,g,h)
-//#define D3DDevice_ProcessVertices(a,b,c,d,e) (NxXbox::EngineGlobals.p_Device)->ProcessVertices(a,b,c,d,e)
-//#define D3DDevice_CreateVertexShader(a,b,c,d) (NxXbox::EngineGlobals.p_Device)->CreateVertexShader(a,b,c,d)
-//#define D3DDevice_SetVertexShader(a) (NxXbox::EngineGlobals.p_Device)->SetVertexShader(a)
-//#define D3DDevice_GetVertexShader(a) (NxXbox::EngineGlobals.p_Device)->GetVertexShader(a)
-//#define D3DDevice_DeleteVertexShader(a) (NxXbox::EngineGlobals.p_Device)->DeleteVertexShader(a)
-//#define D3DDevice_SetVertexShaderConstant(a,b,c) (NxXbox::EngineGlobals.p_Device)->SetVertexShaderConstant(a,b,c)
-//#define D3DDevice_GetVertexShaderConstant(a,b,c) (NxXbox::EngineGlobals.p_Device)->GetVertexShaderConstant(a,b,c)
-//#define D3DDevice_GetVertexShaderDeclaration(a,b,c) (NxXbox::EngineGlobals.p_Device)->GetVertexShaderDeclaration(a,b,c)
-//#define D3DDevice_GetVertexShaderFunction(a,b,c) (NxXbox::EngineGlobals.p_Device)->GetVertexShaderFunction(a,b,c)
-//#define D3DDevice_SetStreamSource(a,b,c) (NxXbox::EngineGlobals.p_Device)->SetStreamSource(a,b,c)
-//#define D3DDevice_GetStreamSource(a,b,c) (NxXbox::EngineGlobals.p_Device)->GetStreamSource(a,b,c)
-//#define D3DDevice_SetIndices(a,b) (NxXbox::EngineGlobals.p_Device)->SetIndices(a,b)
-//#define D3DDevice_GetIndices(a,b) (NxXbox::EngineGlobals.p_Device)->GetIndices(a,b)
-//#define D3DDevice_CreatePixelShader(a,b) (NxXbox::EngineGlobals.p_Device)->CreatePixelShader(a,b)
-//#define D3DDevice_SetPixelShader(a) (NxXbox::EngineGlobals.p_Device)->SetPixelShader(a)
-//#define D3DDevice_GetPixelShader(a) (NxXbox::EngineGlobals.p_Device)->GetPixelShader(a)
-//#define D3DDevice_DeletePixelShader(a) (NxXbox::EngineGlobals.p_Device)->DeletePixelShader(a)
-//#define D3DDevice_SetPixelShaderConstant(a,b,c) (NxXbox::EngineGlobals.p_Device)->SetPixelShaderConstant(a,b,c)
-//#define D3DDevice_GetPixelShaderConstant(a,b,c) (NxXbox::EngineGlobals.p_Device)->GetPixelShaderConstant(a,b,c)
-//#define D3DDevice_GetPixelShaderFunction(a,b,c) (NxXbox::EngineGlobals.p_Device)->GetPixelShaderFunction(a,b,c)
-//#define D3DDevice_DrawRectPatch(a,b,c) (NxXbox::EngineGlobals.p_Device)->DrawRectPatch(a,b,c)
-//#define D3DDevice_DrawTriPatch(a,b,c) (NxXbox::EngineGlobals.p_Device)->DrawTriPatch(a,b,c)
-//#define D3DDevice_DeletePatch(a) (NxXbox::EngineGlobals.p_Device)->DeletePatch(a)
-//DrawIndexedVertices(D3DPRIMITIVETYPE PrimitiveType, UINT VertexCount,CONST WORD* pIndexData);
-//DrawIndexedPrimitive)(THIS_ D3DPRIMITIVETYPE, UINT minIndex, UINT NumVertices, UINT startIndex, UINT primCount) PURE;
-//#define D3DDevice_DrawIndexedVertices(a,b,c,d,e) (NxXbox::EngineGlobals.p_Device)->DrawIndexedPrimitive(a, b, c, d, e)
-
-
-
 
 // lwss: These are DX9 MACROs, the game uses DX9, but I think I will go back to DX8...
 #define D3DDevice_QueryInterface(p,a,b) (NxXbox::EngineGlobals.p_Device)->QueryInterface(a,b) 
@@ -320,7 +199,6 @@ extern bool g_hasJustEnteredNetworkGame;
 #define D3DDevice_DrawTriPatch(a,b,c) (NxXbox::EngineGlobals.p_Device)->DrawTriPatch(a,b,c)
 #define D3DDevice_DeletePatch(a) (NxXbox::EngineGlobals.p_Device)->DeletePatch(a)
 #define D3DDevice_CreateQuery(a,b) (NxXbox::EngineGlobals.p_Device)->CreateQuery(a,b)
-
 
 #define D3DDevice_SetVertexShaderConstantFast D3DDevice_SetVertexShaderConstant
 
