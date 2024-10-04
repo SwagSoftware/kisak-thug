@@ -214,10 +214,10 @@ struct VertexBufferWrapper
 			D3DDevice_CreateVertexBuffer(this->len, this->d3dusageFlags | D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT, &this->vertexBuffer, NULL);
 		}
 
-		if ((this->vertexWrapperCreationFlags & 1) != 0)
+		if ((this->vertexWrapperCreationFlags & FLAG_NO_ALLOC_RAWDATABUFFER) == 0)
 		{
 			int offset = 0;
-			if ((this->vertexWrapperCreationFlags & 4) != 0)
+			if ((this->vertexWrapperCreationFlags & FLAG_NO_CREATE_VERTEX_BUFFER) != 0)
 			{
 				offset = this->streamOffset;
 			}
@@ -300,9 +300,25 @@ struct VertexBufferWrapper
 			this->lockedSize = this->len;
 		}
 		this->d3dlockFlags = lockFlags;
+
+		if ((this->d3dlockFlags & D3DLOCK_NOOVERWRITE))
+		{
+			__debugbreak();
+		}
+
 		if ((lockFlags & D3DLOCK_DISCARD) != 0)
 		{
-			return this->vertexBuffer->Lock(lockOffset, sizeToLock, ppbData, lockFlags);
+			if ((this->d3dusageFlags & D3DUSAGE_DYNAMIC) == 0)
+			{
+				__debugbreak(); // dumbass, you can't use without dynamic
+			}
+
+			HRESULT err = this->vertexBuffer->Lock(lockOffset, sizeToLock, ppbData, lockFlags);
+			if (err != D3D_OK)
+			{
+				__debugbreak();
+			}
+			return err;
 		}
 		else
 		{
@@ -315,12 +331,12 @@ struct VertexBufferWrapper
 	{
 		void* v2; // [esp+4h] [ebp-4h] BYREF
 
-		if ((this->vertexWrapperCreationFlags & 4) != 0 && !this->vertexBuffer)
+		if ((this->vertexWrapperCreationFlags & FLAG_NO_CREATE_VERTEX_BUFFER) != 0 && !this->vertexBuffer)
 		{
 			this->d3dlockFlags = -1;
 			return;
 		}
-		if ((this->d3dlockFlags & 0x10) == 0)
+		if ((this->d3dlockFlags & D3DLOCK_READONLY) == 0)
 		{
 			if ((this->d3dlockFlags & D3DLOCK_DISCARD) != 0)
 			{
@@ -328,7 +344,7 @@ struct VertexBufferWrapper
 				this->vertexBuffer->Unlock();
 				return;
 			}
-			if ((this->vertexWrapperCreationFlags & 4) != 0)
+			if ((this->vertexWrapperCreationFlags & FLAG_NO_CREATE_VERTEX_BUFFER) != 0)
 				this->lockOffset += this->streamOffset;
 			if (this->vertexBuffer->Lock(
 				this->lockOffset,
@@ -337,7 +353,11 @@ struct VertexBufferWrapper
 				this->d3dlockFlags) >= 0)
 			{
 				memcpy(v2, this->rawdata, this->lockedSize);
-				this->vertexBuffer->Unlock();
+				HRESULT err = this->vertexBuffer->Unlock();
+				if (err != D3D_OK)
+				{
+					__debugbreak();
+				}
 			}
 		}
 		this->d3dlockFlags = -1;
@@ -396,10 +416,6 @@ public:
 	// Grabs memory chunk and builds vertex buffer from heap memory, rather than getting DX to do it.
 	static VertexBufferWrapper *AllocateVertexBuffer(uint32 size, int d3dusage, int a3, const char* debug_name = NULL); // lwss: add debug_name
 
-	VertexBufferWrapper* GetVertexBufferWrapper(int idx)
-	{
-		return mp_vertex_buffer[idx];
-	}
 	void SetVertexBufferWrapper(int idx, VertexBufferWrapper* wrapper)
 	{
 		mp_vertex_buffer[idx] = wrapper;

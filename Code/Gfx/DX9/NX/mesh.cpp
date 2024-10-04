@@ -461,12 +461,9 @@ void sMesh::wibble_vc( void )
 	if( mp_vc_wibble_data )
 	{
 		VertexBufferWrapper* p_curr_buf = this->mp_vertex_buffer[this->m_current_write_vertex_buffer];
-		p_curr_buf->lockedSize = p_curr_buf->len;
-		p_curr_buf->lockOffset = 0;
-		p_curr_buf->d3dlockFlags = 0x2000;
 
 		char* p_locked_rawdata = NULL;
-		p_curr_buf->vertexBuffer->Lock(0, 0, (void**)&p_locked_rawdata, 0x2000);
+		p_curr_buf->vertexBuffer->Lock(0, 0, (void**)&p_locked_rawdata, D3DLOCK_DISCARD);
 
 		D3DCOLOR* p_color_array = mp_material->mp_wibble_vc_colors;
 
@@ -665,7 +662,12 @@ void sMesh::SetYRotation( Mth::ERot90 rot )
 		for( uint32 vb = 0; vb < m_num_vertex_buffers; ++vb )
 		{
 			BYTE *p_byte;
-			mp_vertex_buffer[vb]->Lock( 0, 0, (void**)&p_byte, 0 );
+			// LWSS: Change for PC
+			//mp_vertex_buffer[vb]->Lock( 0, 0, (void**)&p_byte, 0 );
+			p_byte = this->mp_vertex_buffer[vb]->rawdata;
+			this->mp_vertex_buffer[vb]->lockOffset = 0;
+			this->mp_vertex_buffer[vb]->lockedSize = this->mp_vertex_buffer[vb]->len;
+			this->mp_vertex_buffer[vb]->d3dlockFlags = 0;
 
 			switch( rot )
 			{
@@ -1087,13 +1089,9 @@ DISABLE_FOG:
 		m_lastRenderFrameCount = g_globalFrameCounter;
 		m_lastRenderFlags = renderFlags;
 
-		mp_vertex_buffer[m_current_write_vertex_buffer]->lockedSize = mp_vertex_buffer[m_current_write_vertex_buffer]->len;
-		mp_vertex_buffer[m_current_write_vertex_buffer]->lockOffset = 0;
-		mp_vertex_buffer[m_current_write_vertex_buffer]->d3dlockFlags = 0x2000;
-
 		void* pMem = NULL;
-		// KISAKTODO: flag might be 0 here...
-		mp_vertex_buffer[m_current_write_vertex_buffer]->Lock(0, mp_vertex_buffer[m_current_write_vertex_buffer]->lockedSize, &pMem, 0); 
+		//mp_vertex_buffer[m_current_write_vertex_buffer]->Lock(0, mp_vertex_buffer[m_current_write_vertex_buffer]->lockedSize, &pMem, D3DLOCK_DISCARD); 
+		mp_vertex_buffer[m_current_write_vertex_buffer]->Lock(0, mp_vertex_buffer[m_current_write_vertex_buffer]->lockedSize, &pMem, 0);  // lwss: this is supposed to be D3DLOCK_DISCARD...
 
 		switch (this->m_lastBiggestIndexUsed)
 		{
@@ -2075,7 +2073,7 @@ void sMesh::Initialize(int				num_vertices,
 	this->m_d3dusage = 0;
 	if (p_weights && this->m_biggest_index_used == -1)
 	{
-		this->m_d3dusage = 512;
+		this->m_d3dusage = D3DUSAGE_DYNAMIC;
 		vertex_wrapper_flags = 1;
 	}
 
@@ -2084,7 +2082,7 @@ void sMesh::Initialize(int				num_vertices,
 	if (p_vc_wibble_anims)
 	{
 		wibble_ptr_thing = NULL;
-		this->m_d3dusage = 512;
+		this->m_d3dusage = D3DUSAGE_DYNAMIC;
 		vertex_wrapper_flags |= 2;
 	}
 	else
@@ -2094,7 +2092,7 @@ void sMesh::Initialize(int				num_vertices,
 
 	if (is_billboard)
 	{
-		this->m_d3dusage = 512;
+		this->m_d3dusage = D3DUSAGE_DYNAMIC;
 	}
 
 	if (wibble_ptr_thing)
@@ -2104,7 +2102,7 @@ void sMesh::Initialize(int				num_vertices,
 
 	// lwss end
 
-	// One allocation for the header and the data buffer.	
+	// One allocation for the header and the data buffer.	(KISAKTODO: lol no it's not)
 	mp_vertex_buffer[0] = AllocateVertexBuffer(vertex_size * vertices_for_this_mesh, m_d3dusage, vertex_wrapper_flags, debug_name); // KISAKTODO: this probably needs changing...
 	// lwss add
 

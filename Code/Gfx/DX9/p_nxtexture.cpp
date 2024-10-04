@@ -143,54 +143,54 @@ bool CXboxTexture::plat_replace_texture( CTexture *p_texture )
 	
 	for( uint32 l = 0; l < num_levels; ++l )
 	{
-		p_src->pD3DTexture->GetLevelDesc( l, &desc );
+		LPDIRECT3DSURFACE9 srcsurf;
+		LPDIRECT3DSURFACE9 dstsurf;
 
-		size_t size = 0;
-		int height = desc.Height;
-		if (desc.Type == 21)
-		{
-			size = (4 * desc.Width);
-		}
-		else
-		{
-			if (desc.Type == 0x31545844)
-			{
-				size = 8 * desc.Width;
-			}
-			else
-			{
-				size = 16 * desc.Width;
-			}
-			height = ((height + 3) >> 2);
-		}
+		p_src->pD3DTexture->GetSurfaceLevel(l, &srcsurf);
+		p_dst->pD3DTexture->GetSurfaceLevel(l, &dstsurf);
 
-		D3DLOCKED_RECT src_rect, dst_rect;
-		if (D3D_OK != p_src->pD3DTexture->LockRect(l, &src_rect, NULL, 0))// D3DLOCK_READONLY );
-		{
-			__debugbreak();
-			continue;
-		}
-		if (D3D_OK != p_dst->pD3DTexture->LockRect(l, &dst_rect, NULL, 0))
-		{
-			__debugbreak();
-			continue;
-		}
+		D3DXLoadSurfaceFromSurface(dstsurf, NULL, NULL, srcsurf, NULL, NULL, D3DX_FILTER_NONE, 0);
 
-		char* dstItr = (char*)dst_rect.pBits;
-		char* srcItr = (char*)src_rect.pBits;
-		for (; height; --height)
-		{
-			memcpy(dstItr, srcItr, size);
-			dstItr += dst_rect.Pitch;
-			srcItr += src_rect.Pitch;
-		}
-		// LWSS: Dx9 no longer has the Size member on the Surface. 
-		// Instead use the larger size of the two rect's
-		//CopyMemory( dst_rect.pBits, src_rect.pBits, desc.Size );
-		//CopyMemory( dst_rect.pBits, src_rect.pBits, max((uintptr_t)src_rect.pBits / 8, (uintptr_t)dst_rect.pBits / 8) );
-
-		p_src->pD3DTexture->UnlockRect(l);
-		p_dst->pD3DTexture->UnlockRect(l);
+		srcsurf->Release();
+		dstsurf->Release();
+		//p_src->pD3DTexture->GetLevelDesc( l, &desc );
+		//
+		//size_t size = 0;
+		//int height = desc.Height;
+		//if (desc.Type == 21)
+		//{
+		//	size = (4 * desc.Height);
+		//}
+		//else
+		//{
+		//	size = (desc.Type == 0x31545844 ? 8 * desc.Height : 16 * desc.Height);
+		//	height = ((height + 3) >> 2);
+		//}
+		//
+		//D3DLOCKED_RECT src_rect, dst_rect;
+		//if (D3D_OK != p_src->pD3DTexture->LockRect(l, &src_rect, NULL, 0))// D3DLOCK_READONLY );
+		//{
+		//	__debugbreak();
+		//	continue;
+		//}
+		//if (D3D_OK != p_dst->pD3DTexture->LockRect(l, &dst_rect, NULL, 0))
+		//{
+		//	__debugbreak();
+		//	continue;
+		//}
+		//
+		//char* dstItr = (char*)dst_rect.pBits;
+		//char* srcItr = (char*)src_rect.pBits;
+		//for (; height; --height)
+		//{
+		//	memcpy(dstItr, srcItr, size);
+		//	dstItr += dst_rect.Pitch;
+		//	srcItr += src_rect.Pitch;
+		//}
+		////CopyMemory( dst_rect.pBits, src_rect.pBits, desc.Size );
+		//
+		//p_src->pD3DTexture->UnlockRect(l);
+		//p_dst->pD3DTexture->UnlockRect(l);
 	}
 	
 	return true;
@@ -639,6 +639,7 @@ static Lst::HashTable<Nx::CTexture>* LoadTextureFile_Internal(void*& p_stream, L
 			else
 			{
 				Read(locked_rect.pBits, texture_level_data_size, 1, p_FH, is_file);
+				p_texture->pD3DTexture->UnlockRect(mip_level); // lwss add
 			}
 		}
 

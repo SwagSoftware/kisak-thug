@@ -242,6 +242,7 @@ void CreateWaterMaterial( NxXbox::sMaterial *p_material )
 /******************************************************************/
 bool AddWater( Nx::CXboxGeom *p_geom, NxXbox::sMesh *p_mesh )
 {
+	return false; // KISAKTODO re-enable.
 	// LWSS: Vertex changes
 	// Ensure there is at least two sets of uv's available.
 	Dbg_Assert( p_mesh->m_uv0_offset > 0 );
@@ -265,7 +266,7 @@ bool AddWater( Nx::CXboxGeom *p_geom, NxXbox::sMesh *p_mesh )
 		// LWSS: small changes here
 		//IDirect3DVertexBuffer8* p_new_buffer = p_mesh->AllocateVertexBuffer(( p_mesh->m_vertex_stride + 8 ) * p_mesh->m_num_vertices );
 		NxXbox::VertexBufferWrapper* p_new_buffer = p_mesh->AllocateVertexBuffer(( p_mesh->m_vertex_stride + 8 ) * p_mesh->m_num_vertices, 0, 0 );
-		NxXbox::VertexBufferWrapper* p_buffer0 = p_mesh->GetVertexBufferWrapper(0);
+		NxXbox::VertexBufferWrapper* p_buffer0 = p_mesh->mp_vertex_buffer[0];
 
 		BYTE* p_read_byte;
 		BYTE* p_write_byte;
@@ -282,9 +283,9 @@ bool AddWater( Nx::CXboxGeom *p_geom, NxXbox::sMesh *p_mesh )
 		}
 
 
-		//NxXbox::VertexBufferWrapper* p_buffer0_2 = p_mesh->GetVertexBufferWrapper(0);
+		//NxXbox::VertexBufferWrapper* p_buffer0_2 = p_mesh->mp_vertex_buffer[0];
 		//p_buffer0_2->Unlock();
-		//NxXbox::VertexBufferWrapper* p_buffer0_3 = p_mesh->GetVertexBufferWrapper(0);
+		//NxXbox::VertexBufferWrapper* p_buffer0_3 = p_mesh->mp_vertex_buffer[0];
 
 		//delete p_mesh->mp_vertex_buffer[0];
 		//delete p_buffer0_3;
@@ -292,7 +293,7 @@ bool AddWater( Nx::CXboxGeom *p_geom, NxXbox::sMesh *p_mesh )
 		delete p_buffer0;
 		//p_mesh->mp_vertex_buffer[0] = p_new_buffer;
 		p_mesh->m_d3dusage = 0;
-		p_mesh->SetVertexBufferWrapper(0, p_new_buffer);
+		p_mesh->mp_vertex_buffer[0] = p_new_buffer;
 		p_new_buffer->Unlock();
 
 		p_mesh->m_vertex_stride += 8;
@@ -318,7 +319,7 @@ bool AddWater( Nx::CXboxGeom *p_geom, NxXbox::sMesh *p_mesh )
 	// Go through and calculate new texture coordinates based on the x-z space of the vertex positions.
 	BYTE *p_byte_dest;
 
-	NxXbox::VertexBufferWrapper* p_buffer0_again = p_mesh->GetVertexBufferWrapper(0);
+	NxXbox::VertexBufferWrapper* p_buffer0_again = p_mesh->mp_vertex_buffer[0];
 	//p_mesh->mp_vertex_buffer[0]->Lock( 0, 0, (void**)&p_byte_dest, 0);
 	p_buffer0_again->Lock( 0, 0, (void**)&p_byte_dest, 0);
 
@@ -340,7 +341,7 @@ bool AddWater( Nx::CXboxGeom *p_geom, NxXbox::sMesh *p_mesh )
 		p_tex[3]			= v1;
 	}
 
-	//NxXbox::VertexBufferWrapper* p_buffer0_last = p_mesh->GetVertexBufferWrapper(0);
+	//NxXbox::VertexBufferWrapper* p_buffer0_last = p_mesh->mp_vertex_buffer[0];
 	//p_buffer0_last->Unlock();
 	p_buffer0_again->Unlock();
 
@@ -355,6 +356,7 @@ bool AddWater( Nx::CXboxGeom *p_geom, NxXbox::sMesh *p_mesh )
 /******************************************************************/
 bool AddGrass( Nx::CXboxGeom *p_geom, NxXbox::sMesh *p_mesh )
 {
+	return false; // KISAKTODO: Re-enable
 	// Need a material to proceed.
 	if( p_mesh->mp_material == NULL )
 		return false;
