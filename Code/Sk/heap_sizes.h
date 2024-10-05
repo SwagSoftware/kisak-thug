@@ -104,13 +104,14 @@
 
 #undef	SKATER_GEOM_HEAP_SIZE
 //#define	SKATER_GEOM_HEAP_SIZE			( 480000 )
-#define	SKATER_GEOM_HEAP_SIZE			( 680000 ) // lwss: increase
+#define	SKATER_GEOM_HEAP_SIZE			( 900000 ) // lwss: increase
 
 #undef	THEME_HEAP_SIZE
 #define	THEME_HEAP_SIZE					( 307200 )
 
 #undef	FRONTEND_HEAP_SIZE
-#define	FRONTEND_HEAP_SIZE				( 1050000 )
+//#define	FRONTEND_HEAP_SIZE				( 1050000 )
+#define	FRONTEND_HEAP_SIZE				( 1550000 )
 
 
 #endif // __PLAT_XBOX__

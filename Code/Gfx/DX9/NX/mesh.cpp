@@ -1334,7 +1334,7 @@ sMesh *sMesh::Clone( bool instance )
 	}
 	if (this->m_num_vertices_raw)
 	{
-		void* v19 = malloc(6 * this->m_num_vertices_raw);
+		void* v19 = malloc(6 * (this->m_num_vertices_raw + 1)); // LWSS: add +1, I've had it OOB write (1x).
 		p_clone->m_vertice_edits_raw = v19;
 		memcpy(v19, this->m_vertice_edits_raw, 6 * this->m_num_vertice_edits);
 		void* v20 = malloc(12 * this->m_num_vertices_raw);

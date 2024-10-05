@@ -9,7 +9,7 @@
 
 namespace NxXbox
 {
-	int sub_5C56F0(int a1, char* a2, int a3, int a4, size_t Size);
+	void Unswizzle(char* outData, char* inData, int width, int height, size_t byteDepth);
 	int DwordizeTexelData(int texel_data_dword_array, int texel_data_char_array, int numBytesChar, int data);
 }
 

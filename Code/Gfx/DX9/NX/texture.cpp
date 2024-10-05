@@ -204,64 +204,48 @@ static bool is_power_of_two( uint32 a )
 }
 
 
-int sub_5C56F0(int a1, char* a2, int a3, int a4, size_t Size)
+void Unswizzle(char* outData, char* inData, int width, int height, size_t byteDepth)
 {
-	unsigned int v5; // esi
-	int v6; // eax
-	unsigned int v7; // edx
-	int v8; // edi
-	int v9; // ebx
-	int v10; // eax
-	int v11; // ecx
-	int v14; // [esp+Ch] [ebp-8h]
-	unsigned int v15; // [esp+10h] [ebp-4h]
-	int v16; // [esp+1Ch] [ebp+8h]
-	unsigned int v17; // [esp+24h] [ebp+10h]
+	int pixelItr = 0;
+	int inDataItr = 0;
+	int totalResolution = width * height;
 
-	v5 = 0;
-	v15 = a4 * a3;
-	if (!(a4 * a3))
-		return a1;
-	v6 = a3 >> 1;
-	v7 = a4 >> 1;
-	v14 = a4 >> 1;
-	while (2)
+	while (pixelItr < totalResolution)
 	{
-		v8 = 1;
-		v17 = v6;
-		v9 = 0;
-		v10 = 0;
-		v16 = 1;
-		v11 = 1;
-		while (v17)
+		int halfWidth = width / 2;
+		int halfHeight = height / 2;
+
+		int v15 = 0;
+		int v16 = 0;
+		int v17 = 1;
+		int v18 = 1;
+		int v19 = 1;
+		while (halfWidth || halfHeight)
 		{
-			v17 >>= 1;
-			if ((v11 & v5) != 0)
-				v9 |= v8;
-			v8 *= 2;
-			v11 *= 2;
-			if (v7)
+			if (halfWidth)
 			{
-			LABEL_12:
-				v7 >>= 1;
-				if ((v11 & v5) != 0)
-					v10 |= v16;
-				v16 *= 2;
-				v11 *= 2;
+				halfWidth /= 2;
+				if ((pixelItr & v19) != 0)
+				{
+					v15 |= v17;
+				}
+				v17 *= 2;
+				v19 *= 2;
+			}
+			if (halfHeight)
+			{
+				halfHeight /= 2;
+				if ((pixelItr & v19) != 0)
+				{
+					v16 |= v18;
+				}
+				v18 *= 2;
+				v19 *= 2;
 			}
 		}
-		if (v7)
-			goto LABEL_12;
-		memcpy((void*)(a1 + Size * (v9 + a3 * v10)), a2, Size);
-		++v5;
-		a2 += Size;
-		if (v5 < v15)
-		{
-			v6 = a3 >> 1;
-			v7 = v14;
-			continue;
-		}
-		return a1;
+		memcpy(&outData[byteDepth * (v15 + v16 * width)], &inData[inDataItr], byteDepth);
+		inDataItr += byteDepth;
+		pixelItr++;
 	}
 }
 
@@ -370,7 +354,7 @@ sTexture *LoadTexture( const char *p_filename )
 
 		p_clut = (D3DCOLOR *)malloc(header.palette_data_size);
 		int len	= File::Read( p_clut, header.palette_data_size, 1, p_FH );
-		//Dbg_MsgAssert( len == header.palette_data_size, ( "Couldn't read clut from texture file %s", p_filename ));
+		Dbg_MsgAssert( len == header.palette_data_size, ( "Couldn't read clut from texture file %s", p_filename ));
 	}
 
 	// Textures of width 512 and above will not have been resized. This means they cannot be in a swizzled format.
@@ -473,7 +457,7 @@ sTexture *LoadTexture( const char *p_filename )
 			{
 				pBits = locked_rect.pBits;
 			}
-			sub_5C56F0((int)pBits, (char*)data, header.width, header.height, (unsigned int)header.bit_depth >> 3);
+			Unswizzle((char*)pBits, (char*)data, header.width, header.height, (unsigned int)header.bit_depth >> 3);
 		}
 		if (had_clut_depth)
 		{
