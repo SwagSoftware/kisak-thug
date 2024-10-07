@@ -1122,6 +1122,13 @@ Lst::HashTable< sMaterial >	*LoadMaterials( void *p_FH, Lst::HashTable< Nx::CTex
 				{
 					// Set texture pointer.
 					pMat->mp_tex[pass] = mp_tex;
+
+					// LWSS Add: exporting of Textures 
+					//char buffer[MAX_PATH]{ 0 };
+					//snprintf(buffer, MAX_PATH - 1, "C:\\temp\\%08X-kisak.bmp", pMat->m_checksum);
+					//auto result = D3DXSaveTextureToFileA(buffer, D3DXIFF_BMP, pMat->mp_tex[pass]->pD3DTexture, NULL);
+					//printf("%x", result);
+					// LWSS End
 				}
 
 				// Get mipmap info.

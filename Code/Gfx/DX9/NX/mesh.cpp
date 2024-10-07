@@ -817,11 +817,14 @@ void sMesh::TransformVertexBuffer_CASE1(BYTE* a2)
 
 		float* v7 = (float*)(a2 + 0x1C);
 		float* v8 = (float*)(p_rawdata + 0x1C);
-		do
+		if (2 * this->m_tex_coord_pass)
 		{
-			++v6;
-			*v7++ = *v8++;
-		} while (v6 < (2 * this->m_tex_coord_pass));
+			do
+			{
+				++v6;
+				*v7++ = *v8++;
+			} while (v6 < (2 * this->m_tex_coord_pass));
+		}
 
 		p_rawdata += 76;
 		a2 += this->m_vertex_stride;
@@ -884,11 +887,14 @@ void sMesh::TransformVertexBuffer_CASE2(BYTE* a2)
 		int v8 = 0;
 		float* v9 = (float*)(a2 + 0x1C);
 		float* v10 = (float*)(p_rawdata + 0x1C);
-		do
+		if (2 * this->m_tex_coord_pass)
 		{
-			++v8;
-			*v9++ = *v10++;
-		} while (v8 < (2 * this->m_tex_coord_pass));
+			do
+			{
+				++v8;
+				*v9++ = *v10++;
+			} while (v8 < (2 * this->m_tex_coord_pass));
+		}
 
 		p_rawdata += 76;
 		a2 += this->m_vertex_stride;
@@ -960,11 +966,14 @@ void sMesh::TransformVertexBuffer_CASE3(BYTE* a2)
 		int itr = 0;
 		float* v10 = (float*)(a2 + 0x1C);
 		float* v11 = (float*)(p_rawdata + 0x1C);
-		do
+		if (2 * this->m_tex_coord_pass)
 		{
-			++itr;
-			*v10++ = *v11++;
-		} while (itr < 2 * this->m_tex_coord_pass);
+			do
+			{
+				++itr;
+				*v10++ = *v11++;
+			} while (itr < 2 * this->m_tex_coord_pass);
+		}
 
 		p_rawdata += 76;
 		a2 += this->m_vertex_stride;
