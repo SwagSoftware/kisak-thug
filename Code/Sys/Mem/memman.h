@@ -694,17 +694,17 @@ extern "C"
 	}
 	inline void* ReallocateDown(size_t newSize, void* pOld)
 	{
-		__debugbreak();
+		Dbg_Assert(0); // Can't be used safely with realloc() (which is the current impl)
 		return ::realloc(pOld, newSize);
 	}
 	inline void* ReallocateUp(size_t newSize, void* pOld)
 	{
-		__debugbreak();
+		Dbg_Assert(0); // Can't be used safely with realloc() (which is the current impl)
 		return ::realloc(pOld, newSize);
 	}
 	inline void* ReallocateShrink(size_t newSize, void* pOld)
 	{
-		__debugbreak();
+		Dbg_Assert(0); // Can't be used safely with realloc() (which is the current impl)
 		return ::realloc(pOld, newSize);
 	}
 	inline void* Realloc(void* mem, size_t newSize)

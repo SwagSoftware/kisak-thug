@@ -522,7 +522,6 @@ void sMesh::wibble_vc( void )
 /******************************************************************/
 void sMesh::CreateDuplicateVertexBuffers( int n )
 {
-	__debugbreak();
 	// Ensure this hasn't already been called.
 	Dbg_Assert( mp_vertex_buffer[0] != NULL );
 	Dbg_Assert( mp_vertex_buffer[1] == NULL );
@@ -1119,10 +1118,8 @@ DISABLE_FOG:
 	// Set the stream source.
 	auto sss_res = D3DDevice_SetStreamSource( 0, mp_vertex_buffer[m_current_write_vertex_buffer]->vertexBuffer,
 		mp_vertex_buffer[m_current_write_vertex_buffer]->streamOffset, m_vertex_stride );
-	if (sss_res != D3D_OK)
-	{
-		__debugbreak();
-	}
+
+	Dbg_Assert(sss_res == D3D_OK);
 
 	int idx = 0;
 	// See if we have index LOD data, in which case we need to figure distance and select the correct LOD.
@@ -1165,19 +1162,14 @@ DISABLE_FOG:
 	}
 
 DRAW_SHIT:
-	if (D3D_OK != D3DDevice_SetIndices(mp_index_buffer[idx]->indexBuffer))
-	{
-		__debugbreak();
-	}
+	Dbg_Assert(D3D_OK == D3DDevice_SetIndices(mp_index_buffer[idx]->indexBuffer));
 
+#ifdef _DEBUG
 	// lwss TEST -- Ensure none of the indexes in the indexbuffer are out of range
 	for (int i = 0; i < mp_index_buffer[idx]->len / 2; i++)
 	{
 		uint16_t index = mp_index_buffer[idx]->rawdata[i];
-		if (index < 0 || index > m_num_vertices)
-		{
-			__debugbreak();
-		}
+		Dbg_Assert(index >= 0 && index <= m_num_vertices);
 	}
 	// Also check the length of the vertex buffer
 	//for (int i = 0; i < mp_vertex_buffer[m_current_write_vertex_buffer]->len; i++)
@@ -1186,15 +1178,12 @@ DRAW_SHIT:
 	//	volatile BYTE byte = mp_vertex_buffer[m_current_write_vertex_buffer]->rawdata[i];
 	//}
 	// lwss end
+#endif
 
 	if (EngineGlobals.hasHLSLv101)
 	{
 		int prim_count = m_num_indices[idx] - 2;
-		//    STDMETHOD(DrawIndexedPrimitive)(THIS_ D3DPRIMITIVETYPE,INT BaseVertexIndex,UINT MinVertexIndex,UINT NumVertices,UINT startIndex,UINT primCount) PURE;
-		if (D3D_OK != D3DDevice_DrawIndexedPrimitive(m_primitive_type, 0, 0, m_num_vertices, 0, prim_count))
-		{
-			__debugbreak();
-		}
+		Dbg_Assert(D3D_OK == D3DDevice_DrawIndexedPrimitive(m_primitive_type, 0, 0, m_num_vertices, 0, prim_count));
 	}
 	else
 	{
@@ -1737,13 +1726,8 @@ void sMesh::RawVertexFuckery()
 	}
 	this->mp_vertex_buffer[0]->Unlock();
 
-
 	// lwss extra
-	if ((this->m_num_indices[0] - 2) <= 0)
-	{
-		__debugbreak();
-		return;
-	}
+	Dbg_Assert((this->m_num_indices[0] - 2) > 0);
 
 	uint16* p_index_raw = this->mp_index_buffer[0]->rawdata;
 	int num_edits = 0;

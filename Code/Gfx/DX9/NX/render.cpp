@@ -534,7 +534,7 @@ BLEND_MODES_SWITCH:
 				break;
 			}
 			default:
-				__debugbreak();
+				Dbg_Assert(0);
 				break;
 			} // switch()
 
@@ -570,10 +570,8 @@ ASSEMBLE:
 	Swog("%s\n\n\n", shader_buffer);
 
 	IDirect3DPixelShader9* shader_handle;
-	if (D3D_OK != D3DDevice_CreatePixelShader((DWORD*)p_shader_buffer->GetBufferPointer(), &shader_handle))
-	{
-		__debugbreak();
-	}
+	Dbg_Assert(D3D_OK == D3DDevice_CreatePixelShader((DWORD*)p_shader_buffer->GetBufferPointer(), &shader_handle));
+
 	sPixelShaderTable.PutItem(code, shader_handle);
 
 	return shader_handle;
@@ -1628,7 +1626,6 @@ void set_blend_mode( uint32 mode )
 				}
 				default:
 				{
-					__debugbreak();
 					Dbg_Assert( 0 );
 					break;
 				}
@@ -1707,10 +1704,7 @@ void set_vertex_shader( DWORD shader_id )
 		{
 			// Set vertex shader.
 			//D3DDevice_SetVertexShader( shader_id );
-			if (D3D_OK != D3DDevice_SetFVF(shader_id)) // lwss add for PC
-			{
-				__debugbreak();
-			}
+			Dbg_Assert(D3D_OK == D3DDevice_SetFVF(shader_id)); // lwss add for PC
 			EngineGlobals.vertex_shader_id = shader_id;
 		}
 	}
@@ -1768,10 +1762,7 @@ void set_pixel_shader(IDirect3DPixelShader9* shader_id, uint32 num_passes )
 		if( EngineGlobals.pixel_shader_id != shader_id )
 		{
 			// Set pixel shader.
-			if (D3DDevice_SetPixelShader(shader_id) != D3D_OK)
-			{
-				__debugbreak();
-			}
+			Dbg_Assert(D3DDevice_SetPixelShader(shader_id) == D3D_OK);
 			EngineGlobals.pixel_shader_id = shader_id;
 
 			// Changing pixel shader invalidates the constants, so we need to upload.

@@ -46,10 +46,9 @@ namespace Audio
 		// printf("%s", SDL_GetError());
 
 		// Start audio
-		if (s_audio_device > 0)
-			SDL_PauseAudioDevice(s_audio_device, 0);
-		else
-			__debugbreak();
+		Dbg_Assert(s_audio_device > 0);
+
+		SDL_PauseAudioDevice(s_audio_device, 0);
 	}
 
 	void Lock()

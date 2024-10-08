@@ -56,10 +56,7 @@ void CXboxScene::plat_post_load(NxXbox::VertexMysteryMeat* p_meat)
 	// LWSS add
 	if (p_meat)
 	{
-		if (D3D_OK != D3DDevice_CreateVertexBuffer(p_meat->length, 8, 0, D3DPOOL_DEFAULT, &p_meat->vertexBuffer, 0))
-		{
-			__debugbreak();
-		}
+		Dbg_Assert(D3D_OK == D3DDevice_CreateVertexBuffer(p_meat->length, 8, 0, D3DPOOL_DEFAULT, &p_meat->vertexBuffer, 0));
 		p_meat->vertexBuffer->Lock(0, 0, &p_meat->lockedPtr, 0);
 		p_meat->streamOffset = 0;
 		this->p_vertex_buffer = p_meat->vertexBuffer;

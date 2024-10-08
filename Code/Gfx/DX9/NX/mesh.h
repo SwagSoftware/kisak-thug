@@ -73,7 +73,7 @@ struct IndexBufferWrapper
 		}
 		else
 		{
-			__debugbreak();
+			Dbg_Assert(0);
 		}
 	}
 
@@ -291,10 +291,7 @@ struct VertexBufferWrapper
 	// LWSS add so I can add conditional breakpoints.
 	BYTE* GetRawData()
 	{
-		if (vertexWrapperCreationFlags & FLAG_NO_ALLOC_RAWDATABUFFER)
-		{
-			__debugbreak();
-		}
+		Dbg_Assert((vertexWrapperCreationFlags & FLAG_NO_ALLOC_RAWDATABUFFER) == 0); // LWSS: you can't manipulate the RawData if there's no buffer copy. Instead call Lock()/Unlock() and get the pointer from Dx9.
 		return rawdata;
 	}
 
@@ -316,10 +313,7 @@ struct VertexBufferWrapper
 			Dbg_Assert((d3dusageFlags & D3DUSAGE_DYNAMIC) != 0); // lwss: dumbass, you can't use without dynamic
 
 			HRESULT err = this->vertexBuffer->Lock(lockOffset, sizeToLock, ppbData, lockFlags);
-			if (err != D3D_OK)
-			{
-				__debugbreak();
-			}
+			Dbg_Assert(err == D3D_OK);
 			return err;
 		}
 		else
@@ -357,14 +351,11 @@ struct VertexBufferWrapper
 				this->d3dlockFlags) >= 0)
 			{
 				memcpy(v2, this->rawdata, this->lockedSize);
-				if (this->vertexBuffer->Unlock() != D3D_OK)
-				{
-					__debugbreak();
-				}
+				Dbg_Assert(this->vertexBuffer->Unlock() == D3D_OK);
 			}
 			else
 			{
-				__debugbreak();
+				Dbg_Assert(0);
 			}
 		}
 		this->d3dlockFlags = -1;

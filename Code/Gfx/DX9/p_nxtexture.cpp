@@ -121,7 +121,7 @@ bool CXboxTexture::plat_replace_texture( CTexture *p_texture )
 											&p_dst->pD3DTexture,
 											0 ))
 	{
-		__debugbreak();
+		Dbg_Assert(0);
 		exit( 0 );
 	}
 
@@ -556,11 +556,7 @@ static Lst::HashTable<Nx::CTexture>* LoadTextureFile_Internal(void*& p_stream, L
 
 		// LWSS: Change for DX9
 		//if( D3D_OK != D3DDevice_CreateTexture(	p_texture->BaseWidth, p_texture->BaseHeight, p_texture->Levels,	0, texture_format, 0, &p_texture->pD3DTexture ))
-		if (D3D_OK != D3DDevice_CreateTexture(p_texture->BaseWidth, p_texture->BaseHeight, p_texture->Levels, 0, texture_format, D3DPOOL_MANAGED, &p_texture->pD3DTexture, 0))
-		{
-			__debugbreak();
-			Dbg_Assert(0);
-		}
+		Dbg_Assert(D3D_OK == D3DDevice_CreateTexture(p_texture->BaseWidth, p_texture->BaseHeight, p_texture->Levels, 0, texture_format, D3DPOOL_MANAGED, &p_texture->pD3DTexture, 0))
 
 		p_texture->texrawdata = NULL;
 
@@ -750,7 +746,6 @@ Lst::HashTable<Nx::CTexture>* LoadTextureFileFromMemory( void **pp_mem, Lst::Has
 		//if( D3D_OK != D3DDevice_CreateTexture(	p_texture->BaseWidth, p_texture->BaseHeight, p_texture->Levels,	0, texture_format, 0, &p_texture->pD3DTexture ))
 		if( D3D_OK != D3DDevice_CreateTexture( p_texture->BaseWidth, p_texture->BaseHeight, p_texture->Levels, 0, texture_format, D3DPOOL_MANAGED, &p_texture->pD3DTexture, 0))
 		{
-			__debugbreak();
 			Dbg_Assert( 0 );
 		}
 
@@ -928,7 +923,6 @@ Lst::HashTable<Nx::CTexture>* LoadTextureFile( const char *Filename, Lst::HashTa
 		//if( D3D_OK != D3DDevice_CreateTexture(	p_texture->BaseWidth, p_texture->BaseHeight, p_texture->Levels,	0, texture_format, 0, &p_texture->pD3DTexture ))
 		if (D3D_OK != D3DDevice_CreateTexture(p_texture->BaseWidth, p_texture->BaseHeight, p_texture->Levels, 0, texture_format, D3DPOOL_MANAGED, &p_texture->pD3DTexture, 0))
 		{
-			__debugbreak();
 			Dbg_Assert( 0 );
 		}
 

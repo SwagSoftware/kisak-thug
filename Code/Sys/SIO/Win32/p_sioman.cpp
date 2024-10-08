@@ -135,10 +135,7 @@ Manager::Manager ( void )
 	// Create the keyboard queue.
 //	XInputDebugInitKeyboardQueue( &xdkp );
 
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER | SDL_INIT_AUDIO) < 0) // the INIT_VIDEO is needed....
-    {
-        __debugbreak();
-    }
+    Dbg_Assert(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER | SDL_INIT_AUDIO) >= 0); // the INIT_VIDEO is needed....
 
     for (int i = 0; i < SDL_NumJoysticks(); i++)
     {

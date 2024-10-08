@@ -335,18 +335,10 @@ void InitialiseEngine( void )
 	//EngineGlobals.p_d3d = Direct3DCreate9(D3D_SDK_VERSION);
 	EngineGlobals.p_d3d = Direct3DCreate9(32);
 
-	if (!EngineGlobals.p_d3d)
-	{
-		__debugbreak();
-		return;
-	}
+	Dbg_Assert(EngineGlobals.p_d3d != NULL);
 
 	D3DDISPLAYMODE displayMode;
-	if (EngineGlobals.p_d3d->GetAdapterDisplayMode(0, &displayMode) != D3D_OK)
-	{
-		__debugbreak();
-		return;
-	}
+	Dbg_Assert(EngineGlobals.p_d3d->GetAdapterDisplayMode(0, &displayMode) == D3D_OK);
 
 #define params NxXbox::EngineGlobals.params
 
@@ -420,22 +412,22 @@ TRY_THE_FUCK_AGAIN:
 		else
 		{
 			// YOUR FUCKED
-			__debugbreak();
+			Dbg_Assert(0);
 		}
 		// Failed to start up engine. Bad!
 		switch (createDeviceErr)
 		{
 		case D3DERR_DEVICELOST:
-			__debugbreak();
+			Dbg_Assert(0);
 			break;
 		case D3DERR_INVALIDCALL:
-			__debugbreak();
+			Dbg_Assert(0);
 			break;
 		case D3DERR_NOTAVAILABLE:
-			__debugbreak();
+			Dbg_Assert(0);
 			break;
 		case D3DERR_OUTOFVIDEOMEMORY:
-			__debugbreak();
+			Dbg_Assert(0);
 			break;
 		}
 		exit( 0 );
@@ -530,9 +522,6 @@ void FatalFileError( uint32 error )
 													"Il est peut-être sale ou endommagé." };
 	static char*	p_error_message_german[2]	= {	"Bei der benutzten CD ist ein Problem aufgetreten.",
 													"Möglicherweise ist sie verschmutzt oder beschädigt." };
-#ifdef __PLAT_WN32__
-	__debugbreak(); 
-#endif
 	// Turn off the loading bar if it is active.
 	if( EngineGlobals.loadingbar_timer_event != 0 )
 	{
