@@ -28,8 +28,6 @@
 #endif
 #include <core/singleton.h>
 #include <core/list.h>
-
-
 #include <sys\mem\region.h>
 #include "heap.h"
 #include "alloc.h"
@@ -167,6 +165,7 @@ namespace Mem
 /*****************************************************************************
 **							     Type Defines								**
 *****************************************************************************/
+
 class CNamedHeapInfo
 {
 public:
@@ -192,8 +191,6 @@ public:
 };
 
 #ifdef KISAK_ORIGINAL_ALLOCATOR
-extern Manager* sp_instance;
-
 class Manager : public Spt::Class			
 {
 	
@@ -302,6 +299,7 @@ private :
 	static char 				s_top_heap_buffer[];
 	static char 				s_bot_heap_buffer[];
 	static bool					s_initialized;
+	static Manager*				sp_instance;
 		
 	class MemManContext
 	{

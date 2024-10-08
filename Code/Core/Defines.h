@@ -30,7 +30,7 @@
 // The original is better since it can actually go up/down the heap and resize things.
 // Calling plain realloc will reallocate things in a completely different location almost always.
 #ifndef __PLAT_WN32__
-#undef KISAK_ORIGINAL_ALLOCATOR
+#define KISAK_ORIGINAL_ALLOCATOR
 #endif
 
 #ifdef __PLAT_WN32__

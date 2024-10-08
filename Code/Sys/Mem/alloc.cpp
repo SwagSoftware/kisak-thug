@@ -191,9 +191,8 @@ Allocator::BlockHeader* Allocator::BlockHeader::sRead( void* pAddr )
 	p_ret = (BlockHeader*)(((uint)p_ret) - p_ret->mPadBytes);
 #endif		// __EFFICIENT__
 	
-	// lwss remove
-	//Dbg_AssertType( p_ret, BlockHeader );
-	//Dbg_AssertType( p_ret->mpAlloc, Allocator );
+	Dbg_AssertType( p_ret, BlockHeader );
+	Dbg_AssertType( p_ret->mpAlloc, Allocator );
 	
 	return p_ret;
 }
