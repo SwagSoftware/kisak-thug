@@ -111,7 +111,7 @@
 
 #undef	FRONTEND_HEAP_SIZE
 //#define	FRONTEND_HEAP_SIZE				( 1050000 )
-#define	FRONTEND_HEAP_SIZE				( 1550000 )
+#define	FRONTEND_HEAP_SIZE				( 2550000 )
 
 
 #endif // __PLAT_XBOX__

@@ -310,11 +310,7 @@ void sMaterial::Submit( void )
 	
 	// Figure uv, vc and texture wibble updates if required.
 	figure_wibble_uv();
-	// lwss add from pc Port (if statement)
-	if ( m_flags[0] & MATFLAG_VC_WIBBLE )
-	{
-		figure_wibble_vc();
-	}
+	figure_wibble_vc();
 	figure_wibble_texture();
 	
 	// Set specular properties of this material.

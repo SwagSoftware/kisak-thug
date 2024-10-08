@@ -969,14 +969,14 @@ void SText::EndDraw( void )
 		D3DDevice_SetTextureStageState(0, D3DTSS_ALPHAARG2, 1);
 		D3DDevice_SetTextureStageState(1, D3DTSS_COLOROP, 1);
 
-		set_vertex_shader( D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE2( 0 ));
+		set_vertex_shader( D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE2( 0 )); // 0x144
 
 		//set_texture( 0, p_font->pD3DTexture, p_font->pD3DPalette );
 		set_texture( 0, p_font->pD3DTexture );
 
 		//EngineGlobals.p_Device->DrawVerticesUP( D3DPT_QUADLIST, font_vertex_offset, &( font_vertex_buffer[0] ), sizeof( sFontVert ));
 
-		D3DDevice_SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+		NxXbox::set_render_state(RS_CULLMODE, D3DCULL_NONE);
 
 		if (!g_disableRendering)
 		{

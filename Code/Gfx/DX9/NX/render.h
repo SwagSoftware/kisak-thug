@@ -7,28 +7,29 @@
 #include <gfx/DX9/p_nxmodel.h>
 #include "mesh.h"
 
-#define		RS_ZWRITEENABLE			1
-#define		RS_ZTESTENABLE			2
-#define		RS_ALPHACUTOFF			3
-#define		RS_UVADDRESSMODE0		4
-#define		RS_UVADDRESSMODE1		5
-#define		RS_UVADDRESSMODE2		6
-#define		RS_UVADDRESSMODE3		7
-#define		RS_MIPLODBIASPASS0		8
-#define		RS_MIPLODBIASPASS1		9
-#define		RS_MIPLODBIASPASS2		10
-#define		RS_MIPLODBIASPASS3		11
-#define		RS_CULLMODE				16
-#define		RS_ALPHABLENDENABLE		17
-#define		RS_ALPHATESTENABLE		18
-#define		RS_SPECULARENABLE		19
-#define		RS_FOGENABLE			20
-#define		RS_ZBIAS				21
-#define		RS_MINMAGFILTER0		32
-#define		RS_MINMAGFILTER1		33
-#define		RS_MINMAGFILTER2		34
-#define		RS_MINMAGFILTER3		35
-#define		RS_LOCALVIEWER			36 // lwss: added w/ PC
+// LWSS: Increased to +1000. So I can error check in case D3D codes get passed in by mistake.
+#define		RS_ZWRITEENABLE			1001
+#define		RS_ZTESTENABLE			1002
+#define		RS_ALPHACUTOFF			1003
+#define		RS_UVADDRESSMODE0		1004
+#define		RS_UVADDRESSMODE1		1005
+#define		RS_UVADDRESSMODE2		1006
+#define		RS_UVADDRESSMODE3		1007
+#define		RS_MIPLODBIASPASS0		1008
+#define		RS_MIPLODBIASPASS1		1009
+#define		RS_MIPLODBIASPASS2		1010
+#define		RS_MIPLODBIASPASS3		1011
+#define		RS_CULLMODE				1016
+#define		RS_ALPHABLENDENABLE		1017
+#define		RS_ALPHATESTENABLE		1018
+#define		RS_SPECULARENABLE		1019
+#define		RS_FOGENABLE			1020
+#define		RS_ZBIAS				1021
+#define		RS_MINMAGFILTER0		1032
+#define		RS_MINMAGFILTER1		1033
+#define		RS_MINMAGFILTER2		1034
+#define		RS_MINMAGFILTER3		1035
+#define		RS_LOCALVIEWER			1036 // lwss: added w/ PC
 
 //LWSS: stolen from retail windows thug.exe
 extern IDirect3DPixelShader9* pixel_shader_buffer_aPs11TexT0MulR0;

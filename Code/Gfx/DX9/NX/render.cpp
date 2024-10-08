@@ -570,7 +570,7 @@ ASSEMBLE:
 	Swog("%s\n\n\n", shader_buffer);
 
 	IDirect3DPixelShader9* shader_handle;
-	if (D3D_OK != NxXbox::EngineGlobals.p_Device->CreatePixelShader((DWORD*)p_shader_buffer->GetBufferPointer(), &shader_handle))
+	if (D3D_OK != D3DDevice_CreatePixelShader((DWORD*)p_shader_buffer->GetBufferPointer(), &shader_handle))
 	{
 		__debugbreak();
 	}
@@ -1805,13 +1805,17 @@ void set_pixel_shader(IDirect3DPixelShader9* shader_id, uint32 num_passes )
 /*                                                                */
 /******************************************************************/
 // LWSS: function double checked for accuracy. Should be pristine.
+#define KISAK_DX9_STATE_ANTI_DOUBLESET 1
 void set_render_state( uint32 type, uint32 state )
 {
+	Dbg_Assert(type > 999);
 	switch( type )
 	{
 		case RS_ZBIAS:
 		{
+#ifdef KISAK_DX9_STATE_ANTI_DOUBLESET
 			if( state != EngineGlobals.z_bias )
+#endif
 			{
 				EngineGlobals.z_bias = state;
 				// *(float *)&v13 = (double)state * -0.0000009999999974752427;
@@ -1826,7 +1830,9 @@ void set_render_state( uint32 type, uint32 state )
 
 		case RS_CULLMODE:
 		{
+#ifdef KISAK_DX9_STATE_ANTI_DOUBLESET
 			if( state != EngineGlobals.cull_mode )
+#endif
 			{
 				EngineGlobals.cull_mode = state;
 				D3DDevice_SetRenderState( D3DRS_CULLMODE, state );
@@ -1836,7 +1842,9 @@ void set_render_state( uint32 type, uint32 state )
 
 		case RS_ALPHABLENDENABLE:
 		{
+#ifdef KISAK_DX9_STATE_ANTI_DOUBLESET
 			if( state != EngineGlobals.alpha_blend_enable )
+#endif
 			{
 				EngineGlobals.alpha_blend_enable = state;
 				D3DDevice_SetRenderState( D3DRS_ALPHABLENDENABLE, ( state > 0 ) ? TRUE : FALSE );
@@ -1846,7 +1854,9 @@ void set_render_state( uint32 type, uint32 state )
 
 		case RS_ALPHATESTENABLE:
 		{
+#ifdef KISAK_DX9_STATE_ANTI_DOUBLESET
 			if( state != EngineGlobals.alpha_test_enable )
+#endif
 			{
 				EngineGlobals.alpha_test_enable = state;
 				D3DDevice_SetRenderState( D3DRS_ALPHATESTENABLE, ( state > 0 ) ? TRUE : FALSE );
@@ -1858,7 +1868,9 @@ void set_render_state( uint32 type, uint32 state )
 		{
 			if( state )
 			{
+#ifdef KISAK_DX9_STATE_ANTI_DOUBLESET
 				if( EngineGlobals.z_write_enabled == FALSE )
+#endif
 				{
 					D3DDevice_SetRenderState( D3DRS_ZWRITEENABLE, TRUE );
 					EngineGlobals.z_write_enabled = TRUE;
@@ -1866,7 +1878,9 @@ void set_render_state( uint32 type, uint32 state )
 			}
 			else
 			{
+#ifdef KISAK_DX9_STATE_ANTI_DOUBLESET
 				if( EngineGlobals.z_write_enabled == TRUE )
+#endif
 				{
 					D3DDevice_SetRenderState( D3DRS_ZWRITEENABLE, FALSE );
 					EngineGlobals.z_write_enabled = FALSE;
@@ -1879,7 +1893,9 @@ void set_render_state( uint32 type, uint32 state )
 		{
 			if( state > 0 )
 			{
+#ifdef KISAK_DX9_STATE_ANTI_DOUBLESET
 				if( EngineGlobals.z_test_enabled == FALSE )
+#endif
 				{
 					D3DDevice_SetRenderState( D3DRS_ZFUNC, D3DCMP_LESSEQUAL );
 					EngineGlobals.z_test_enabled = TRUE;
@@ -1887,7 +1903,9 @@ void set_render_state( uint32 type, uint32 state )
 			}
 			else
 			{
+#ifdef KISAK_DX9_STATE_ANTI_DOUBLESET
 				if( EngineGlobals.z_test_enabled == TRUE )
+#endif
 				{
 					D3DDevice_SetRenderState( D3DRS_ZFUNC, D3DCMP_ALWAYS );
 					EngineGlobals.z_test_enabled = FALSE;
@@ -1901,7 +1919,9 @@ void set_render_state( uint32 type, uint32 state )
 			// Convert from state (where 1 means "render all pixels with alpha 1 or higher") to the D3D.
 			// Also, if alpha cutoff is 1 or greater, enable alphakill, which can in some cases provide an earlier
 			// rejection of the pixel.
+#ifdef KISAK_DX9_STATE_ANTI_DOUBLESET
 			if( state != EngineGlobals.alpha_ref )
+#endif
 			{
 				EngineGlobals.alpha_ref = state;
 				if( state )
@@ -1909,7 +1929,9 @@ void set_render_state( uint32 type, uint32 state )
 					D3DDevice_SetRenderState( D3DRS_ALPHAREF,				state );
 
 					// Enable alpha testing.
+#ifdef KISAK_DX9_STATE_ANTI_DOUBLESET
 					if( EngineGlobals.alpha_test_enable == 0 )
+#endif
 					{
 						D3DDevice_SetRenderState( D3DRS_ALPHATESTENABLE,	TRUE );
 						EngineGlobals.alpha_test_enable = 1;
@@ -1921,7 +1943,9 @@ void set_render_state( uint32 type, uint32 state )
 				else
 				{
 					// Disable alpha testing.
+#ifdef KISAK_DX9_STATE_ANTI_DOUBLESET
 					if( EngineGlobals.alpha_test_enable > 0 )
+#endif
 					{
 						D3DDevice_SetRenderState( D3DRS_ALPHATESTENABLE,	FALSE );
 						EngineGlobals.alpha_test_enable = 0;
@@ -1936,7 +1960,9 @@ void set_render_state( uint32 type, uint32 state )
 		
 		case RS_SPECULARENABLE:
 		{
+#ifdef KISAK_DX9_STATE_ANTI_DOUBLESET
 			if( state != EngineGlobals.specular_enabled )
+#endif
 			{
 				EngineGlobals.specular_enabled = state;
 
@@ -1956,7 +1982,9 @@ void set_render_state( uint32 type, uint32 state )
 
 		case RS_FOGENABLE:
 		{
+#ifdef KISAK_DX9_STATE_ANTI_DOUBLESET
 			if( state != EngineGlobals.fog_enabled )
+#endif
 			{
 				EngineGlobals.fog_enabled = state;
 				D3DDevice_SetRenderState( D3DRS_FOGENABLE, ( state > 0 ) ? TRUE : FALSE );
@@ -1970,7 +1998,9 @@ void set_render_state( uint32 type, uint32 state )
 		case RS_UVADDRESSMODE3:
 		{
 			int pass = type - RS_UVADDRESSMODE0;
+#ifdef KISAK_DX9_STATE_ANTI_DOUBLESET
 			if(( state & 0xFFFFUL ) != ( EngineGlobals.uv_addressing[pass] & 0xFFFFUL ))
+#endif
 			{
 				switch( state & 0xFFFFUL )
 				{
@@ -2009,8 +2039,9 @@ void set_render_state( uint32 type, uint32 state )
 				}
 				EngineGlobals.uv_addressing[pass] = ( EngineGlobals.uv_addressing[pass] & 0xFFFF0000UL ) | ( state & 0xFFFFUL );
 			}
-
+#ifdef KISAK_DX9_STATE_ANTI_DOUBLESET
 			if(( state & 0xFFFF0000UL ) != ( EngineGlobals.uv_addressing[pass] & 0xFFFF0000UL ))
+#endif
 			{
 				switch( state & 0xFFFF0000UL )
 				{
@@ -2058,7 +2089,9 @@ void set_render_state( uint32 type, uint32 state )
 		case RS_MIPLODBIASPASS3:
 		{
 			int pass = type - RS_MIPLODBIASPASS0;
+#ifdef KISAK_DX9_STATE_ANTI_DOUBLESET
 			if( state != EngineGlobals.mip_map_lod_bias[pass] )
+#endif
 			{
 				// LWSS: Same thing here, need sampler commands instead of fixed-function dx8 
 				//D3DDevice_SetTextureStageState( pass, D3DTSS_MIPMAPLODBIAS, state );
@@ -2077,7 +2110,9 @@ void set_render_state( uint32 type, uint32 state )
 
 			// Magnification filter.
 			state = state & 0xFFFF0000UL;
+#ifdef KISAK_DX9_STATE_ANTI_DOUBLESET
 			if( state != EngineGlobals.min_mag_filter[pass] )
+#endif
 			{
 				if( state == 0x00000000UL )
 				{
@@ -2099,7 +2134,9 @@ void set_render_state( uint32 type, uint32 state )
 		// lwss add
 		case RS_LOCALVIEWER:
 		{
+#ifdef KISAK_DX9_STATE_ANTI_DOUBLESET
 			if (state != EngineGlobals.is_d3drs_localviewer_on)
+#endif
 			{
 				EngineGlobals.is_d3drs_localviewer_on = (state != 0);
 				D3DDevice_SetRenderState(D3DRS_LOCALVIEWER, state);

@@ -467,10 +467,8 @@ void sMesh::wibble_vc( void )
 
 		D3DCOLOR* p_color_array = mp_material->mp_wibble_vc_colors;
 
-		BYTE* v1 = p_curr_buf->rawdata;
+		BYTE* v1 = p_curr_buf->GetRawData();
 		size_t size = m_vertex_stride - m_diffuse_offset - 4;
-
-		BYTE* p_rawdata = p_curr_buf->rawdata;
 
 		// Scan through each vertex, setting the new color.
 		for (uint32 i = 0; i < m_num_vertices; ++i)
@@ -549,7 +547,7 @@ void sMesh::CreateDuplicateVertexBuffers( int n )
 		mp_vertex_buffer[i + 1]->lockedSize = mp_vertex_buffer[i + 1]->len;
 		mp_vertex_buffer[i + 1]->d3dlockFlags = 0;
 
-		memcpy(mp_vertex_buffer[i + 1]->rawdata, buf0->rawdata, this->m_vertex_stride * this->m_num_vertices);
+		memcpy(mp_vertex_buffer[i + 1]->GetRawData(), buf0->GetRawData(), this->m_vertex_stride * this->m_num_vertices);
 
 		mp_vertex_buffer[i + 1]->Unlock();
 
@@ -664,7 +662,7 @@ void sMesh::SetYRotation( Mth::ERot90 rot )
 			BYTE *p_byte;
 			// LWSS: Change for PC
 			//mp_vertex_buffer[vb]->Lock( 0, 0, (void**)&p_byte, 0 );
-			p_byte = this->mp_vertex_buffer[vb]->rawdata;
+			p_byte = this->mp_vertex_buffer[vb]->GetRawData();
 			this->mp_vertex_buffer[vb]->lockOffset = 0;
 			this->mp_vertex_buffer[vb]->lockedSize = this->mp_vertex_buffer[vb]->len;
 			this->mp_vertex_buffer[vb]->d3dlockFlags = 0;
@@ -790,65 +788,63 @@ void sMesh::HandleColorOverride( void )
 
 void sMesh::TransformVertexBuffer_CASE1(BYTE* a2)
 {
-	BYTE* p_rawdata; // ebp
 	int v6; // ecx
 	Mth::Matrix* v8; // [esp+14h] [ebp-10h]
 	D3DXVECTOR3 tmp;
 
-	p_rawdata = this->p_rawdata;
+	BYTE* p_data = this->p_rawdata;
 	v8 = NxXbox::pBoneTransforms;
 	for (int a2a = 0; a2a < this->m_num_vertices; ++a2a)
 	{
-		const D3DXMATRIX* v5 = (D3DXMATRIX*)&NxXbox::pBoneTransforms[p_rawdata[60]];
-		XGVec3TransformCoord(&tmp, (D3DXVECTOR3*)p_rawdata, v5);
+		const D3DXMATRIX* v5 = (D3DXMATRIX*)&NxXbox::pBoneTransforms[p_data[60]];
+		XGVec3TransformCoord(&tmp, (D3DXVECTOR3*)p_data, v5);
 		float* fPtr = (float*)a2;
 		DWORD* dPtr = (DWORD*)a2;
 		*fPtr = tmp.x;
 		*(fPtr + 1) = tmp.y;
 		*(fPtr + 2) = tmp.z;
 
-		D3DXVec3TransformNormal(&tmp, (D3DXVECTOR3*)(p_rawdata + 0xC), v5);
+		D3DXVec3TransformNormal(&tmp, (D3DXVECTOR3*)(p_data + 0xC), v5);
 		v6 = 0;
 		*(fPtr + 3) = tmp.x; // 0xC
 		*(fPtr + 4) = tmp.y; // 0x10
 		*(fPtr + 5) = tmp.z; // 0x14
 
-		*(dPtr + 6) = *(DWORD*)(p_rawdata + 0x18); // 0x18
+		*(dPtr + 6) = *(DWORD*)(p_data + 0x18); // 0x18
 
-		float* v7 = (float*)(a2 + 0x1C);
-		float* v8 = (float*)(p_rawdata + 0x1C);
+		float* fArg = (float*)(a2 + 0x1C);
+		float* fData = (float*)(p_data + 0x1C);
 		if (2 * this->m_tex_coord_pass)
 		{
 			do
 			{
 				++v6;
-				*v7++ = *v8++;
+				*fArg++ = *fData++;
 			} while (v6 < (2 * this->m_tex_coord_pass));
 		}
 
-		p_rawdata += 76;
+		p_data += 76;
 		a2 += this->m_vertex_stride;
 	}
 }
 
 void sMesh::TransformVertexBuffer_CASE2(BYTE* a2)
 {
-	BYTE* p_rawdata; // ebp
 	Mth::Matrix* v11;
 
 	D3DXVECTOR3 v13;
 	D3DXVECTOR3 pOut;
 
-	p_rawdata = this->p_rawdata;
+	BYTE* p_data = this->p_rawdata;
 	v11 = NxXbox::pBoneTransforms;
 
 	for (int i = 0; i < this->m_num_vertices; ++i)
 	{
-		const D3DXMATRIX* v5 = (D3DXMATRIX*)&v11[p_rawdata[60]];
-		XGVec3TransformCoord(&v13, (D3DXVECTOR3*)p_rawdata, v5);
-		D3DXVec3TransformNormal(&pOut, (D3DXVECTOR3*)(p_rawdata + 0xC), v5);
+		const D3DXMATRIX* v5 = (D3DXMATRIX*)&v11[p_data[60]];
+		XGVec3TransformCoord(&v13, (D3DXVECTOR3*)p_data, v5);
+		D3DXVec3TransformNormal(&pOut, (D3DXVECTOR3*)(p_data + 0xC), v5);
 
-		float v6 = *(float*)(p_rawdata + 0x40);
+		float v6 = *(float*)(p_data + 0x40);
 
 		if (v6 != 1.0f) // KISAKTODO: Use an epsilon damnnit!
 		{
@@ -858,14 +854,14 @@ void sMesh::TransformVertexBuffer_CASE2(BYTE* a2)
 			*&pOut.x = *&pOut.x * v6;
 			*&pOut.y = *&pOut.y * v6;
 			*&pOut.z = v6 * *&pOut.z;
-			const D3DXMATRIX* v7 = (D3DXMATRIX*)&v11[p_rawdata[61]];
-			float a2a = *(float*)(p_rawdata + 0x44);
+			const D3DXMATRIX* v7 = (D3DXMATRIX*)&v11[p_data[61]];
+			float a2a = *(float*)(p_data + 0x44);
 			D3DXVECTOR3 v15;
-			XGVec3TransformCoord(&v15, (D3DXVECTOR3*)p_rawdata, v7);
+			XGVec3TransformCoord(&v15, (D3DXVECTOR3*)p_data, v7);
 			*&v13.x = *&v15.x * a2a + *&v13.x;
 			*&v13.y = *&v15.y * a2a + *&v13.y;
 			*&v13.z = a2a * *&v15.z + *&v13.z;
-			D3DXVec3TransformNormal(&v15, (D3DXVECTOR3*)(p_rawdata + 0xC), v7);
+			D3DXVec3TransformNormal(&v15, (D3DXVECTOR3*)(p_data + 0xC), v7);
 			*&pOut.x = *&v15.x * a2a + *&pOut.x;
 			*&pOut.y = *&v15.y * a2a + *&pOut.y;
 			*&pOut.z = a2a * *&v15.z + *&pOut.z;
@@ -882,11 +878,11 @@ void sMesh::TransformVertexBuffer_CASE2(BYTE* a2)
 		*(fPtr + 4) = pOut.y; // 0x10
 		*(fPtr + 5) = pOut.z; // 0x14
 
-		*(dPtr + 6) = *(DWORD*)(p_rawdata + 0x18); // 0x18
+		*(dPtr + 6) = *(DWORD*)(p_data + 0x18); // 0x18
 
 		int v8 = 0;
 		float* v9 = (float*)(a2 + 0x1C);
-		float* v10 = (float*)(p_rawdata + 0x1C);
+		float* v10 = (float*)(p_data + 0x1C);
 		if (2 * this->m_tex_coord_pass)
 		{
 			do
@@ -896,25 +892,25 @@ void sMesh::TransformVertexBuffer_CASE2(BYTE* a2)
 			} while (v8 < (2 * this->m_tex_coord_pass));
 		}
 
-		p_rawdata += 76;
+		p_data += 76;
 		a2 += this->m_vertex_stride;
 	}
 }
 
 void sMesh::TransformVertexBuffer_CASE3(BYTE* a2)
 {
-	BYTE* p_rawdata = this->p_rawdata; // ebp
+	BYTE* p_data = this->p_rawdata; // ebp
 	Mth::Matrix* pBoners = NxXbox::pBoneTransforms;
 
 	for (int i = 0; i < this->m_num_vertices; ++i)
 	{
-		const D3DXMATRIX* v5 = (D3DXMATRIX*)&pBoners[p_rawdata[60]];
+		const D3DXMATRIX* v5 = (D3DXMATRIX*)&pBoners[p_data[60]];
 		D3DXVECTOR3 v14;
 		D3DXVECTOR3 pOut;
-		XGVec3TransformCoord(&v14, (D3DXVECTOR3*)p_rawdata, v5);
-		D3DXVec3TransformNormal(&pOut, (D3DXVECTOR3*)(p_rawdata + 0xC), v5);
+		XGVec3TransformCoord(&v14, (D3DXVECTOR3*)p_data, v5);
+		D3DXVec3TransformNormal(&pOut, (D3DXVECTOR3*)(p_data + 0xC), v5);
 
-		float v6 = *(float*)(p_rawdata + 0x40);
+		float v6 = *(float*)(p_data + 0x40);
 
 		if (v6 != 1.0f) // KISAKTODO: Use an epsilon damnnit!
 		{
@@ -924,26 +920,26 @@ void sMesh::TransformVertexBuffer_CASE3(BYTE* a2)
 			*&pOut.x = *&pOut.x * v6;
 			*&pOut.y = *&pOut.y * v6;
 			*&pOut.z = v6 * *&pOut.z;
-			D3DXMATRIX* v7 = (D3DXMATRIX*)&pBoners[p_rawdata[61]];
-			float a2b = *(float*)(p_rawdata + 0x44);
+			D3DXMATRIX* v7 = (D3DXMATRIX*)&pBoners[p_data[61]];
+			float a2b = *(float*)(p_data + 0x44);
 			D3DXVECTOR3 v16;
-			XGVec3TransformCoord(&v16, (D3DXVECTOR3*)p_rawdata, v7);
+			XGVec3TransformCoord(&v16, (D3DXVECTOR3*)p_data, v7);
 			*&v14.x = *&v16.x * a2b + *&v14.x;
 			*&v14.y = *&v16.y * a2b + *&v14.y;
 			*&v14.z = a2b * *&v16.z + *&v14.z;
-			D3DXVec3TransformNormal(&v16, (D3DXVECTOR3*)(p_rawdata + 0xC), v7);
+			D3DXVec3TransformNormal(&v16, (D3DXVECTOR3*)(p_data + 0xC), v7);
 			*&pOut.x = *&v16.x * a2b + *&pOut.x;
 			*&pOut.y = *&v16.y * a2b + *&pOut.y;
 			*&pOut.z = a2b * *&v16.z + *&pOut.z;
-			float a2a = *(float*)(p_rawdata + 0x48);
+			float a2a = *(float*)(p_data + 0x48);
 			if (0.0f != a2a)
 			{
-				D3DXMATRIX* v8 = (D3DXMATRIX*)&pBoners[p_rawdata[62]];
-				XGVec3TransformCoord(&v16, (D3DXVECTOR3*)p_rawdata, v8);
+				D3DXMATRIX* v8 = (D3DXMATRIX*)&pBoners[p_data[62]];
+				XGVec3TransformCoord(&v16, (D3DXVECTOR3*)p_data, v8);
 				*&v14.x = *&v16.x * a2a + *&v14.x;
 				*&v14.y = *&v16.y * a2a + *&v14.y;
 				*&v14.z = a2a * *&v16.z + *&v14.z;
-				D3DXVec3TransformNormal(&v16, (D3DXVECTOR3*)(p_rawdata + 0xC), v8);
+				D3DXVec3TransformNormal(&v16, (D3DXVECTOR3*)(p_data + 0xC), v8);
 				*&pOut.x = *&v16.x * a2a + *&pOut.x;
 				*&pOut.y = *&v16.y * a2a + *&pOut.y;
 				*&pOut.z = a2a * *&v16.z + *&pOut.z;
@@ -961,11 +957,11 @@ void sMesh::TransformVertexBuffer_CASE3(BYTE* a2)
 		*(fPtr + 4) = pOut.y;// 0x10
 		*(fPtr + 5) = pOut.z;// 0x14
 
-		*(dPtr + 6) = *(DWORD*)(p_rawdata + 0x18); // 0x18
+		*(dPtr + 6) = *(DWORD*)(p_data + 0x18); // 0x18
 
 		int itr = 0;
 		float* v10 = (float*)(a2 + 0x1C);
-		float* v11 = (float*)(p_rawdata + 0x1C);
+		float* v11 = (float*)(p_data + 0x1C);
 		if (2 * this->m_tex_coord_pass)
 		{
 			do
@@ -975,7 +971,7 @@ void sMesh::TransformVertexBuffer_CASE3(BYTE* a2)
 			} while (itr < 2 * this->m_tex_coord_pass);
 		}
 
-		p_rawdata += 76;
+		p_data += 76;
 		a2 += this->m_vertex_stride;
 	}
 }
@@ -987,8 +983,8 @@ void sMesh::TransformVertexBuffer_CASE3(BYTE* a2)
 // LWSS major changes for PC -- Considering done for now...
 void sMesh::Submit( void )
 {
-	DWORD	stage_zero_minfilter;
-	DWORD	zwrite;
+	DWORD	stage_zero_minfilter = 0;
+	DWORD	zwrite = 0;
 	
 	D3DXMATRIX v50;
 	D3DXMATRIX v51;
@@ -1039,7 +1035,7 @@ DISABLE_FOG:
 
 	if (LOBYTE(this->field_8C)) // KISAKTODO: find other ref's of field_8C and fix them.
 	{
-		D3DDevice_SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
+		NxXbox::set_render_state(RS_CULLMODE, D3DCULL_CCW);
 	}
 
 	// Deal with vertex color wibbling.
@@ -1099,19 +1095,18 @@ DISABLE_FOG:
 		m_lastRenderFlags = renderFlags;
 
 		void* pMem = NULL;
-		//mp_vertex_buffer[m_current_write_vertex_buffer]->Lock(0, mp_vertex_buffer[m_current_write_vertex_buffer]->lockedSize, &pMem, D3DLOCK_DISCARD); 
-		mp_vertex_buffer[m_current_write_vertex_buffer]->Lock(0, mp_vertex_buffer[m_current_write_vertex_buffer]->lockedSize, &pMem, 0);  // lwss: this is supposed to be D3DLOCK_DISCARD...
+		mp_vertex_buffer[m_current_write_vertex_buffer]->Lock(0, mp_vertex_buffer[m_current_write_vertex_buffer]->lockedSize, &pMem, D3DLOCK_DISCARD);
 
 		switch (this->m_lastBiggestIndexUsed)
 		{
 		case 1:
-			this->TransformVertexBuffer_CASE1(mp_vertex_buffer[m_current_write_vertex_buffer]->rawdata);
+			this->TransformVertexBuffer_CASE1((BYTE*)pMem);
 			break;
 		case 2:
-			this->TransformVertexBuffer_CASE2(mp_vertex_buffer[m_current_write_vertex_buffer]->rawdata);
+			this->TransformVertexBuffer_CASE2((BYTE*)pMem);
 			break;
 		case 3:
-			this->TransformVertexBuffer_CASE3(mp_vertex_buffer[m_current_write_vertex_buffer]->rawdata);
+			this->TransformVertexBuffer_CASE3((BYTE*)pMem);
 			break;
 		}
 
@@ -1185,11 +1180,11 @@ DRAW_SHIT:
 		}
 	}
 	// Also check the length of the vertex buffer
-	for (int i = 0; i < mp_vertex_buffer[m_current_write_vertex_buffer]->len; i++)
-	{
-		// Try reading... Otherwise segfault
-		volatile BYTE byte = mp_vertex_buffer[m_current_write_vertex_buffer]->rawdata[i];
-	}
+	//for (int i = 0; i < mp_vertex_buffer[m_current_write_vertex_buffer]->len; i++)
+	//{
+	//	// Try reading... Otherwise segfault
+	//	volatile BYTE byte = mp_vertex_buffer[m_current_write_vertex_buffer]->rawdata[i];
+	//}
 	// lwss end
 
 	if (EngineGlobals.hasHLSLv101)
@@ -1227,14 +1222,14 @@ DRAW_SHIT:
 	if (this->m_biggest_index_used != -1)
 	{
 		// LWSS: This is a guess here... stack a bit hard to read.
-		D3DDevice_SetTransform((D3DTRANSFORMSTATETYPE)256, &v50);
+		D3DDevice_SetTransform(D3DTS_WORLD, &v50);
 	}
 
 	Nx::CFog::sEnableFog(false);
 
 	if (LOBYTE(this->field_8C)) // KISAKTODO: find other ref's of field_8C and fix them.
 	{
-		D3DDevice_SetRenderState(D3DRS_CULLMODE, D3DCULL_CW);
+		NxXbox::set_render_state(RS_CULLMODE, D3DCULL_CW);
 	}
 
 	//Sleep(1000);
@@ -1269,7 +1264,7 @@ sMesh *sMesh::Clone( bool instance )
 		p_clone->mp_vertex_buffer[0]->lockedSize = p_clone->mp_vertex_buffer[0]->len;
 		p_clone->mp_vertex_buffer[0]->d3dlockFlags = 0;
 
-		memcpy(p_clone->mp_vertex_buffer[0]->rawdata, this->mp_vertex_buffer[0]->rawdata, p_clone->m_vertex_stride * p_clone->m_num_vertices);
+		memcpy(p_clone->mp_vertex_buffer[0]->GetRawData(), this->mp_vertex_buffer[0]->GetRawData(), p_clone->m_vertex_stride * p_clone->m_num_vertices);
 
 		this->mp_vertex_buffer[0]->Unlock();
 		p_clone->mp_vertex_buffer[0]->Unlock();
@@ -1369,16 +1364,16 @@ static VertexBufferWrapper* InitializeVertexBufferWrapper(VertexBufferWrapper* w
 	}
 	wrapper->len = len;
 	wrapper->d3dusageFlags = d3dusage;
-	// lwss: sad hack KISAKTODO
-	//if ((flags & FLAG_NO_ALLOC_RAWDATABUFFER) == 0)
-	//{
+
+	if ((flags & FLAG_NO_ALLOC_RAWDATABUFFER) == 0)
+	{
 		wrapper->rawdata = (BYTE*)malloc(len);
-		memset(wrapper->rawdata, 0x00, len); // lwss extra
-	//}
-	//else
-	//{
-	//	wrapper->rawdata = NULL;
-	//}
+	}
+	else
+	{
+		wrapper->rawdata = NULL;
+	}
+
 	wrapper->vertexWrapperCreationFlags = flags;
 	wrapper->streamOffset = 0;
 	wrapper->d3dlockFlags = -1;
@@ -1544,7 +1539,7 @@ void sMesh::SetBillboardData( uint32 type, Mth::Vector & pivot_pos, Mth::Vector 
 	//IDirect3DVertexBuffer9*	p_old_buffer = mp_vertex_buffer[0];
 	//IDirect3DVertexBuffer9*	p_new_buffer = AllocateVertexBuffer( new_vertex_stride * 4 );
 	VertexBufferWrapper*	p_old_buffer = mp_vertex_buffer[0];
-	void* p_old_buffer_rawdata = p_old_buffer->rawdata; 
+	void* p_old_buffer_rawdata = p_old_buffer->GetRawData(); 
 
 	IndexBufferWrapper* index_buffer0 = this->mp_index_buffer[0];
 
@@ -1553,7 +1548,7 @@ void sMesh::SetBillboardData( uint32 type, Mth::Vector & pivot_pos, Mth::Vector 
 	p_old_buffer->d3dlockFlags = 16;
 
 	// Lock old buffer (read) and new buffer (write).
-	BYTE *p_old_vb_data = (BYTE*)p_old_buffer->rawdata;
+	BYTE *p_old_vb_data = (BYTE*)p_old_buffer->GetRawData();
 	//BYTE *p_new_vb_data;
 	//p_old_buffer->Lock( 0, 0, (void**)&p_old_vb_data, D3DLOCK_READONLY);
 	//p_new_buffer->Lock( 0, 0, (void**)&p_new_vb_data, 0 );
@@ -1729,15 +1724,13 @@ void sMesh::RawVertexFuckery()
 	this->m_num_vertices_raw = this->m_num_vertices;
 	this->m_vertices_raw = (char*)malloc(sizeof(D3DXVECTOR3) * m_num_vertices);
 	
-	int offset = 0;
 	DWORD* v10 = (DWORD*)(this->m_vertices_raw);
-	BYTE* p_vert_rawdata = p_vert0->rawdata;
+	BYTE* p_vert_rawdata = p_vert0->GetRawData();
 	for (int i = 0; i < this->m_num_vertices; i++)
 	{
-		DWORD* vert0_raw = (DWORD*)p_vert_rawdata;
-		v10[0] = p_vert0->rawdata[0];
-		v10[1] = p_vert0->rawdata[1];
-		v10[2] = p_vert0->rawdata[2];
+		v10[0] = p_vert_rawdata[0];
+		v10[1] = p_vert_rawdata[1];
+		v10[2] = p_vert_rawdata[2];
 
 		v10 += 3;
 		p_vert_rawdata += this->m_vertex_stride;
@@ -1817,7 +1810,7 @@ void sMesh::sub_4B3A90(VertexMysteryMeat* p_meat)
 	{
 		size_t len = buff0->len;
 		buff0->vertexBuffer = p_meat->vertexBuffer;
-		void* rawdata = buff0->rawdata;
+		void* rawdata = buff0->GetRawData();
 		buff0->streamOffset = p_meat->streamOffset;
 		memcpy((char*)p_meat->lockedPtr + p_meat->streamOffset, rawdata, len);
 		p_meat->vertexBuffer->AddRef();
@@ -2047,7 +2040,7 @@ void sMesh::Initialize(int				num_vertices,
 	
 	// Assume no normals for now, unless weight information indicates an animating mesh.
 	bool use_normals = false;
-	bool use_packed_normals = false;
+	//bool use_packed_normals = false;
 
 	if (p_normals || p_weights || env_mapped)
 	{
@@ -2136,7 +2129,7 @@ void sMesh::Initialize(int				num_vertices,
 	}
 	else
 	{
-		rawdata = mp_vertex_buffer[0]->rawdata;
+		rawdata = mp_vertex_buffer[0]->GetRawData();
 		mp_vertex_buffer[0]->lockOffset = 0;
 		mp_vertex_buffer[0]->lockedSize = mp_vertex_buffer[0]->len;
 		mp_vertex_buffer[0]->d3dlockFlags = 0;

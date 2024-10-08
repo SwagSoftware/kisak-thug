@@ -144,11 +144,11 @@ struct IndexBufferWrapper
 		//free(this);
 	}
 
-	IndexBufferWrapper* Init(size_t Size, int a3, D3DFORMAT a4, const char* debug_name = NULL)
+	IndexBufferWrapper* Init(size_t Size, int a3, D3DFORMAT a4, const char* p_debug_name = NULL)
 	{
-		if (debug_name)
+		if (p_debug_name)
 		{
-			strncpy(this->debug_name, debug_name, 63);
+			strncpy(this->debug_name, p_debug_name, 63);
 		}
 		LinkedList* v5; // eax
 		LinkedList* v6; // ecx
@@ -288,12 +288,22 @@ struct VertexBufferWrapper
 		free(this);
 	}
 
-
-
-	HRESULT Lock(UINT lockOffset, UINT sizeToLock, void** ppbData, DWORD lockFlags)
+	// LWSS add so I can add conditional breakpoints.
+	BYTE* GetRawData()
 	{
-		*ppbData = (lockOffset + (char*)this->rawdata);
-		this->lockOffset = lockOffset;
+		if (vertexWrapperCreationFlags & FLAG_NO_ALLOC_RAWDATABUFFER)
+		{
+			__debugbreak();
+		}
+		return rawdata;
+	}
+
+
+	HRESULT Lock(UINT arglockOffset, UINT sizeToLock, void** ppbData, DWORD lockFlags)
+	{
+		Dbg_Assert(sizeToLock <= this->len);
+		*ppbData = (arglockOffset + (char*)this->rawdata);
+		this->lockOffset = arglockOffset;
 		this->lockedSize = sizeToLock;
 		if (!sizeToLock)
 		{
@@ -301,17 +311,9 @@ struct VertexBufferWrapper
 		}
 		this->d3dlockFlags = lockFlags;
 
-		if ((this->d3dlockFlags & D3DLOCK_NOOVERWRITE))
+		if ( (lockFlags & D3DLOCK_DISCARD) || (vertexWrapperCreationFlags & FLAG_NO_ALLOC_RAWDATABUFFER) )
 		{
-			__debugbreak();
-		}
-
-		if ((lockFlags & D3DLOCK_DISCARD) != 0)
-		{
-			if ((this->d3dusageFlags & D3DUSAGE_DYNAMIC) == 0)
-			{
-				__debugbreak(); // dumbass, you can't use without dynamic
-			}
+			Dbg_Assert((d3dusageFlags & D3DUSAGE_DYNAMIC) != 0); // lwss: dumbass, you can't use without dynamic
 
 			HRESULT err = this->vertexBuffer->Lock(lockOffset, sizeToLock, ppbData, lockFlags);
 			if (err != D3D_OK)
@@ -338,14 +340,16 @@ struct VertexBufferWrapper
 		}
 		if ((this->d3dlockFlags & D3DLOCK_READONLY) == 0)
 		{
-			if ((this->d3dlockFlags & D3DLOCK_DISCARD) != 0)
+			if ( (this->d3dlockFlags & D3DLOCK_DISCARD) || (vertexWrapperCreationFlags & FLAG_NO_ALLOC_RAWDATABUFFER) )
 			{
 				this->d3dlockFlags = -1;
 				this->vertexBuffer->Unlock();
 				return;
 			}
+
 			if ((this->vertexWrapperCreationFlags & FLAG_NO_CREATE_VERTEX_BUFFER) != 0)
 				this->lockOffset += this->streamOffset;
+
 			if (this->vertexBuffer->Lock(
 				this->lockOffset,
 				this->lockedSize,
@@ -353,11 +357,14 @@ struct VertexBufferWrapper
 				this->d3dlockFlags) >= 0)
 			{
 				memcpy(v2, this->rawdata, this->lockedSize);
-				HRESULT err = this->vertexBuffer->Unlock();
-				if (err != D3D_OK)
+				if (this->vertexBuffer->Unlock() != D3D_OK)
 				{
 					__debugbreak();
 				}
+			}
+			else
+			{
+				__debugbreak();
 			}
 		}
 		this->d3dlockFlags = -1;

@@ -125,7 +125,7 @@ void SDraw2D::DrawAll( void )
 	static uint32 z_test_required = 0;
 	
 	set_blend_mode( vBLEND_MODE_BLEND );
-	set_render_state( RS_UVADDRESSMODE0, 0x00010001UL );
+	set_render_state( RS_UVADDRESSMODE0, 0x10001UL );
 	set_render_state( RS_ZBIAS, 0 );
 
 	// Set the alpha cutoff value.
@@ -338,16 +338,14 @@ void sSprite::Draw(void)
 
 	if( abs_scale_x < 0.0f )
 	{
-		float temp = u0;
 		u0 = u1;
-		u1 = temp;
+		u1 = 0.0f;
 		abs_scale_x = -abs_scale_x;
 	}
 	if( abs_scale_y < 0.0f )
 	{
-		float temp = v0;
 		v0 = v1;
-		v1 = temp;
+		v1 = 1.0f;
 		abs_scale_y = -abs_scale_y;
 	}
 

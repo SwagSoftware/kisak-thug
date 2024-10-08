@@ -140,7 +140,7 @@ static int LockVertexBuffer(int size, int n, IDirect3DVertexBuffer9** outVertexB
 	v7 = n * v5;
 	if (n * v5 + n * size > NxXbox::EngineGlobals.vertex_buffer_length)
 	{
-		NxXbox::EngineGlobals.p_vertex_buffer->Lock(0, 0, (void**)&NxXbox::EngineGlobals.dword_7CEC78, 0x2000);
+		NxXbox::EngineGlobals.p_vertex_buffer->Lock(0, 0, (void**)&NxXbox::EngineGlobals.dword_7CEC78, D3DLOCK_DISCARD);
 		NxXbox::EngineGlobals.dword_7CEC7C = 0;
 		if (outResult2)
 			*outResult2 = NxXbox::EngineGlobals.vertex_buffer_length / n;
@@ -153,7 +153,7 @@ static int LockVertexBuffer(int size, int n, IDirect3DVertexBuffer9** outVertexB
 		NxXbox::EngineGlobals.dword_7CEC7C = n * v5;
 		if (outResult2)
 			*outResult2 = (v6 - v7) / n;
-		NxXbox::EngineGlobals.p_vertex_buffer->Lock(0, 0, (void**)&NxXbox::EngineGlobals.dword_7CEC78, 0x1000);
+		NxXbox::EngineGlobals.p_vertex_buffer->Lock(0, 0, (void**)&NxXbox::EngineGlobals.dword_7CEC78, D3DLOCK_NOOVERWRITE);
 		return NxXbox::EngineGlobals.dword_7CEC78 + v7;
 	}
 }

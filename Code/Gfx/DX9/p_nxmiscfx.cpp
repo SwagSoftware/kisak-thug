@@ -903,7 +903,7 @@ void plat_texture_splat_render( void )
 		if( p_xbox_details->m_highest_active_splat >= 0 )
 		{
 			p_xbox_details->mp_material->Submit();
-			NxXbox::EngineGlobals.p_Device->DrawPrimitiveUP( D3DPT_TRIANGLELIST, p_xbox_details->m_highest_active_splat + 1, p_xbox_details->m_verts, sizeof( sXboxSplatVert ));
+			D3DDevice_DrawPrimitiveUP(D3DPT_TRIANGLELIST, p_xbox_details->m_highest_active_splat + 1, p_xbox_details->m_verts, sizeof(sXboxSplatVert));
 		}
 		
 		p_details = p_splat_details_table->IterateNext();
@@ -1182,7 +1182,7 @@ void plat_shatter_render( sShatterInstanceDetails *p_details )
 	}
 	NxXbox::set_vertex_shader( p_xbox_details->mp_mesh->m_vertex_shader[0] );
 
-	NxXbox::EngineGlobals.p_Device->DrawPrimitiveUP( D3DPT_TRIANGLELIST, p_xbox_details->m_num_triangles, p_xbox_details->mp_vertex_buffer, p_xbox_details->mp_mesh->m_vertex_stride );
+	D3DDevice_DrawPrimitiveUP(D3DPT_TRIANGLELIST, p_xbox_details->m_num_triangles, p_xbox_details->mp_vertex_buffer, p_xbox_details->mp_mesh->m_vertex_stride);
 }
 
 	
@@ -1198,11 +1198,12 @@ void plat_shatter_render( sShatterInstanceDetails *p_details )
 /******************************************************************/
 void CFog::s_plat_enable_fog( bool enable )
 {
-	if( enable != (bool)NxXbox::EngineGlobals.fog_enabled )
-	{
-		NxXbox::EngineGlobals.fog_enabled = enable;
-		D3DDevice_SetRenderState( D3DRS_FOGENABLE, NxXbox::EngineGlobals.fog_enabled );
-	}
+	NxXbox::set_render_state(RS_FOGENABLE, enable);
+	//if( enable != (bool)NxXbox::EngineGlobals.fog_enabled )
+	//{
+	//	NxXbox::EngineGlobals.fog_enabled = enable;
+	//	D3DDevice_SetRenderState( D3DRS_FOGENABLE, NxXbox::EngineGlobals.fog_enabled );
+	//}
 }
 
 
