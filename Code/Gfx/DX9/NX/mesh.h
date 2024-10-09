@@ -352,7 +352,7 @@ struct VertexBufferWrapper
 	HRESULT Lock(UINT arglockOffset, UINT sizeToLock, void** ppbData, DWORD lockFlags)
 	{
 		Dbg_Assert(sizeToLock <= this->len);
-		Dbg_Assert(d3dlockFlags == -1);
+		Dbg_Assert(d3dlockFlags == -1 || lockFlags == D3DLOCK_READONLY);
 		*ppbData = (arglockOffset + (char*)this->rawdata);
 		this->lockOffset = arglockOffset;
 		this->lockedSize = sizeToLock;
