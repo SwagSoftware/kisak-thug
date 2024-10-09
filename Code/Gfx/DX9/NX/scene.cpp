@@ -439,8 +439,7 @@ void sScene::HidePolys( uint32 mask, sCASData *p_cas_data, uint32 num_entries )
 			delete p_mesh->mp_index_buffer[0];
 			p_mesh->m_num_indices[0]	= (uint16)new_indices_index;
 
-			IndexBufferWrapper* new_index_buffer = new IndexBufferWrapper;
-			new_index_buffer->Init(2 * new_indices_index, 0, D3DFMT_INDEX16);
+			IndexBufferWrapper* new_index_buffer = new IndexBufferWrapper(2 * new_indices_index, 0, D3DFMT_INDEX16);
 
 			p_mesh->mp_index_buffer[0] = new_index_buffer;
 			uint16* index_rawdata = p_mesh->mp_index_buffer[0]->rawdata;

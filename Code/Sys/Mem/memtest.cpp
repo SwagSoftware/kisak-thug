@@ -189,8 +189,7 @@ void Test( void )
 		Dbg_Message ( "%x  should be valid address", test2[i] );
 	}
 
-	//test2[16] = new (pool, false) char[1024];
-	test2[16] = new (pool) char[1024];
+	test2[16] = new (pool, false) char[1024];
 	Dbg_Message ( " %x  should be NULL address ( no free slots )", test2[16] ); 
 
 	delete test2[0];

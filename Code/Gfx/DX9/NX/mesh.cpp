@@ -1094,7 +1094,7 @@ DISABLE_FOG:
 		m_lastRenderFlags = renderFlags;
 
 		void* pMem = NULL;
-		mp_vertex_buffer[m_current_write_vertex_buffer]->Lock(0, mp_vertex_buffer[m_current_write_vertex_buffer]->lockedSize, &pMem, D3DLOCK_DISCARD);
+		mp_vertex_buffer[m_current_write_vertex_buffer]->Lock(0, 0, &pMem, D3DLOCK_DISCARD);
 
 		switch (this->m_lastBiggestIndexUsed)
 		{
@@ -1247,7 +1247,7 @@ sMesh *sMesh::Clone( bool instance )
 		// LWSS: deep copy logic.
 		this->mp_vertex_buffer[0]->lockOffset = 0;
 		this->mp_vertex_buffer[0]->lockedSize = this->mp_vertex_buffer[0]->len;
-		this->mp_vertex_buffer[0]->d3dlockFlags = 16;
+		this->mp_vertex_buffer[0]->d3dlockFlags = D3DLOCK_READONLY;
 		
 		p_clone->mp_vertex_buffer[0]->lockOffset = 0;
 		p_clone->mp_vertex_buffer[0]->lockedSize = p_clone->mp_vertex_buffer[0]->len;
@@ -1276,9 +1276,7 @@ sMesh *sMesh::Clone( bool instance )
 		{
 			if( p_clone->m_num_indices[ib] > 0 )
 			{
-				IndexBufferWrapper* newIndexBuffer = new IndexBufferWrapper;
-
-				newIndexBuffer->Init(2 * p_clone->m_num_indices[ib], 0, D3DFMT_INDEX16);
+				IndexBufferWrapper* newIndexBuffer = new IndexBufferWrapper(2 * p_clone->m_num_indices[ib], 0, D3DFMT_INDEX16);
 
 				p_clone->mp_index_buffer[ib] = newIndexBuffer;
 
@@ -1340,50 +1338,6 @@ sMesh *sMesh::Clone( bool instance )
 
 static void* Block;
 
-static VertexBufferWrapper* InitializeVertexBufferWrapper(VertexBufferWrapper* wrapper, size_t len, int d3dusage, int flags, const char* debug_name = NULL)
-{
-	if (debug_name)
-	{
-		strncpy(wrapper->debug_name, debug_name, 63);
-	}
-	wrapper->vertexBuffer = NULL;
-	if ((flags & FLAG_NO_CREATE_VERTEX_BUFFER) == 0)
-	{
-		D3DDevice_CreateVertexBuffer(len, d3dusage | D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT, &wrapper->vertexBuffer, NULL);
-	}
-	wrapper->len = len;
-	wrapper->d3dusageFlags = d3dusage;
-
-	if ((flags & FLAG_NO_ALLOC_RAWDATABUFFER) == 0)
-	{
-		wrapper->rawdata = (BYTE*)malloc(len);
-	}
-	else
-	{
-		wrapper->rawdata = NULL;
-	}
-
-	wrapper->vertexWrapperCreationFlags = flags;
-	wrapper->streamOffset = 0;
-	wrapper->d3dlockFlags = -1;
-	
-	bool hasGlobal = g_meshVertexBuffers != NULL;
-	LinkedList* global = g_meshVertexBuffers;
-
-	LinkedList* newEntry = new LinkedList;
-	newEntry->data = wrapper;
-	newEntry->next = g_meshVertexBuffers;
-	newEntry->prev = NULL;
-
-	g_meshVertexBuffers = newEntry;
-	if (hasGlobal)
-	{
-		global->prev = newEntry;
-	}
-	return wrapper;
-}
-
-
 /******************************************************************/
 /*                                                                */
 /*                                                                */
@@ -1399,8 +1353,7 @@ VertexBufferWrapper* sMesh::AllocateVertexBuffer( uint32 size, int d3dusage, int
 	//
 	//return p_vb_ret;
 
-	VertexBufferWrapper* wrapper = new VertexBufferWrapper;
-	return InitializeVertexBufferWrapper(wrapper, size, d3dusage, flags, debug_name);
+	return new VertexBufferWrapper(size, d3dusage, flags, debug_name);
 }
 
 
@@ -1894,10 +1847,7 @@ void sMesh::Initialize(int				num_vertices,
 	// Create the index buffer(s). (Should be 16byte aligned for best performance).
 	for (int ib = 0; ib < num_index_sets; ++ib)
 	{
-		IndexBufferWrapper* pData = new IndexBufferWrapper;
-		int len = p_num_indices[ib];
-		len *= 2;
-		pData->Init(len, 0, D3DFMT_INDEX16, debug_name);
+		IndexBufferWrapper* pData = new IndexBufferWrapper(p_num_indices[ib] * 2, 0, D3DFMT_INDEX16, debug_name);
 
 		//mp_index_buffer[ib]	= new uint16[p_num_indices[ib]];
 		mp_index_buffer[ib] = pData;

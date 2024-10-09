@@ -31,12 +31,12 @@
 #include <sys\mem\region.h>
 #include "heap.h"
 #include "alloc.h"
-#if !defined(__PLAT_XBOX__)
+//#ifndef __PLAT_XBOX__
 
 #ifndef	__SYS_MEM_MEMPTR_H
 #	include "memptr.h"
 #endif
-#endif
+//#endif
 #include "handle.h"
 
 #if 0
@@ -647,6 +647,7 @@ extern "C"
 #ifdef KISAK_ORIGINAL_ALLOCATOR
 extern "C"
 {
+
 int		Available();
 void*	Malloc( size_t size );
 void	Free( void* mem );

@@ -269,6 +269,9 @@ void		Assert( char* file, uint line, char* reason )
 		_output ("MEM CONTEXT: %s\n",Mem::Manager::sHandle().GetContextName());
 
 		Dbg_Printf( "%s\n", tmp1 );
+#ifdef __PLAT_WN32__
+		__debugbreak();
+#endif
 		assert_trap_handler( tmp1 );
 	}
 	else

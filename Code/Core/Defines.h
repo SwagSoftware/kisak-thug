@@ -35,7 +35,7 @@
 
 #ifdef __PLAT_WN32__
 //#define KISAK_ORIGINAL_ALLOCATOR 1 //LWSS: Moved to CMake
-#define KISAK_ZERO_ALLOCATIONS 1
+//#define KISAK_ZERO_ALLOCATIONS 1
 // Lwss: Used to unfk the cursor in early init code debugging.
 //#define KISAK_EARLY_CURSOR_FIX 1
 

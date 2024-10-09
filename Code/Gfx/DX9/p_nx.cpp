@@ -420,10 +420,10 @@ void CEngine::s_plat_render_world( void )
 						{
 							p_xbox_scene->m_flags |= SCENE_FLAG_RECEIVE_SHADOWS;
 
-							for (int m = 0; m < p_xbox_scene->m_num_mesh_entries; m++)
-							{
-								p_xbox_scene->m_meshes[m]->RawVertexFuckery();
-							}
+							//for (int m = 0; m < p_xbox_scene->m_num_mesh_entries; m++)
+							//{
+							//	p_xbox_scene->m_meshes[m]->RawVertexFuckery();
+							//}
 						}
 
 						NxXbox::render_scene( pXboxScene->GetEngineScene(), NxXbox::vRENDER_OPAQUE |

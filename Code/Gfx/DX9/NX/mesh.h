@@ -58,6 +58,46 @@ struct IndexBufferWrapper
 	void* unk5; // 18
 	char debug_name[64];// lwss add
 
+	IndexBufferWrapper(size_t size, int arg_d3dusage, D3DFORMAT arg_d3dformat, const char* p_debug_name = NULL)
+	{
+		if (p_debug_name)
+		{
+			strncpy(this->debug_name, p_debug_name, 63);
+		}
+		else
+		{
+			memset((void*)debug_name, 0x00, 64);
+		}
+
+		this->indexBuffer = 0;
+		D3DDevice_CreateIndexBuffer(
+			size,
+			arg_d3dusage | D3DUSAGE_WRITEONLY,
+			arg_d3dformat,
+			D3DPOOL_DEFAULT,
+			&this->indexBuffer,
+			0);
+		this->len = size;
+		this->d3dusage = arg_d3dusage;
+		this->d3dformat = arg_d3dformat;
+		this->rawdata = (uint16*)malloc(size);
+		unk4 = NULL;
+		unk5 = NULL;
+
+		LinkedList* v5; // eax
+		LinkedList* v6; // ecx
+		bool v7; // zf
+		v5 = new LinkedList;
+		v6 = g_meshIndexBuffers;
+		v7 = g_meshIndexBuffers == 0;
+		v5->data = this;
+		v5->next = v6;
+		v5->prev = 0;
+		g_meshIndexBuffers = v5;
+		if (!v7)
+			v6->prev = v5;
+	}
+
 	void ReInitD3DBuffer()
 	{
 		if (!this->indexBuffer)
@@ -143,40 +183,6 @@ struct IndexBufferWrapper
 		this->unk4 = 0;
 		//free(this);
 	}
-
-	IndexBufferWrapper* Init(size_t Size, int a3, D3DFORMAT a4, const char* p_debug_name = NULL)
-	{
-		if (p_debug_name)
-		{
-			strncpy(this->debug_name, p_debug_name, 63);
-		}
-		LinkedList* v5; // eax
-		LinkedList* v6; // ecx
-		bool v7; // zf
-
-		this->indexBuffer = 0;
-		D3DDevice_CreateIndexBuffer(
-			Size,
-			a3 | 8,
-			a4,
-			D3DPOOL_DEFAULT,
-			&this->indexBuffer,
-			0);
-		this->len = Size;
-		this->d3dusage = a3;
-		this->d3dformat = a4;
-		this->rawdata = (uint16*)malloc(Size);
-		v5 = new LinkedList;
-		v6 = g_meshIndexBuffers;
-		v7 = g_meshIndexBuffers == 0;
-		v5->data = this;
-		v5->next = v6;
-		v5->prev = 0;
-		g_meshIndexBuffers = v5;
-		if (!v7)
-			v6->prev = v5;
-		return this;
-	}
 }; // size: 24
 
 // Related to Billboards
@@ -203,6 +209,53 @@ struct VertexBufferWrapper
 	int streamOffset; // 0x20
 	char debug_name[64]; // lwss add
 
+	VertexBufferWrapper(size_t len, int d3dusage, int flags, const char* debug_name = NULL)
+	{
+		if (debug_name)
+		{
+			strncpy(this->debug_name, debug_name, 63);
+		}
+		else
+		{
+			memset((void*)debug_name, 0x00, 64);
+		}
+		this->vertexBuffer = NULL;
+		if ((flags & FLAG_NO_CREATE_VERTEX_BUFFER) == 0)
+		{
+			D3DDevice_CreateVertexBuffer(len, d3dusage | D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT, &this->vertexBuffer, NULL);
+		}
+		this->len = len;
+		this->d3dusageFlags = d3dusage;
+
+		if ((flags & FLAG_NO_ALLOC_RAWDATABUFFER) == 0)
+		{
+			this->rawdata = (BYTE*)malloc(len);
+		}
+		else
+		{
+			this->rawdata = NULL;
+		}
+
+		this->vertexWrapperCreationFlags = flags;
+		this->streamOffset = 0;
+		this->d3dlockFlags = -1;
+		this->lockedSize = 0;
+		this->lockOffset = 0;
+
+		bool hasGlobal = g_meshVertexBuffers != NULL;
+		LinkedList* global = g_meshVertexBuffers;
+
+		LinkedList* newEntry = new LinkedList;
+		newEntry->data = this;
+		newEntry->next = g_meshVertexBuffers;
+		newEntry->prev = NULL;
+
+		g_meshVertexBuffers = newEntry;
+		if (hasGlobal)
+		{
+			global->prev = newEntry;
+		}
+	}
 	void ReInitD3DBuffer()
 	{
 		if ((this->vertexWrapperCreationFlags & FLAG_NO_CREATE_VERTEX_BUFFER) != 0)
@@ -299,6 +352,7 @@ struct VertexBufferWrapper
 	HRESULT Lock(UINT arglockOffset, UINT sizeToLock, void** ppbData, DWORD lockFlags)
 	{
 		Dbg_Assert(sizeToLock <= this->len);
+		Dbg_Assert(d3dlockFlags == -1);
 		*ppbData = (arglockOffset + (char*)this->rawdata);
 		this->lockOffset = arglockOffset;
 		this->lockedSize = sizeToLock;
