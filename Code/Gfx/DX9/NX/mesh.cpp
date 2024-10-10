@@ -1,6 +1,3 @@
-//#include <xtl.h>
-//#include <xgraphics.h>
-
 #include <sys/timer.h>
 #include <sys/file/filesys.h>
 #include <core/macros.h>
@@ -1847,7 +1844,7 @@ void sMesh::Initialize(int				num_vertices,
 	// Create the index buffer(s). (Should be 16byte aligned for best performance).
 	for (int ib = 0; ib < num_index_sets; ++ib)
 	{
-		IndexBufferWrapper* pData = new IndexBufferWrapper(p_num_indices[ib] * 2, 0, D3DFMT_INDEX16, debug_name);
+		IndexBufferWrapper* pData = new IndexBufferWrapper(p_num_indices[ib] * sizeof(uint16), 0, D3DFMT_INDEX16, debug_name);
 
 		//mp_index_buffer[ib]	= new uint16[p_num_indices[ib]];
 		mp_index_buffer[ib] = pData;
@@ -1855,7 +1852,7 @@ void sMesh::Initialize(int				num_vertices,
 	}
 
 	// Use the material flags to figure the vertex format.
-	//int vertex_size = 3 * sizeof(float);
+	int vertex_size = 3 * sizeof(float);
 
 	// Include weights (for weighted animation) if present.
 	uint32 biggest_index_used = 0;
@@ -1887,20 +1884,20 @@ void sMesh::Initialize(int				num_vertices,
 			}
 			++p_weight_read;
 		}
-		//vertex_size += sizeof(uint32);
+		vertex_size += sizeof(uint32);
 
 		// lwss add
 		m_lastBiggestIndexUsed = biggest_index_used + 1;
 		if (!biggest_index_used)
 		{
-			uint16 index0 = *(p_matrix_indices + (min_index * 4));
+			uint16 index0 = p_matrix_indices[4 * min_index];
 			uint16* p_index_read = p_matrix_indices + (min_index * 4);
 			int v45 = min_index;
 			// LWSS: logic here sucks and is heavily inferred
 
 			if (min_index > max_index)
 			{
-				this->m_biggest_index_used = v45;
+				this->m_biggest_index_used = index0;
 			}
 			else
 			{
@@ -1911,7 +1908,7 @@ void sMesh::Initialize(int				num_vertices,
 					p_index_read += 4;
 					if (v45 > max_index)
 					{
-						this->m_biggest_index_used = v45;
+						this->m_biggest_index_used = index0;
 						setshit = true;
 						break;
 					}
@@ -1927,11 +1924,11 @@ void sMesh::Initialize(int				num_vertices,
 
 	// Include indices (for weighted animation) if present.
 	// LWSS: Remove from PC
-	//if (p_matrix_indices)
-	//{
-	//	Dbg_Assert(p_weights);
-	//	vertex_size += sizeof(uint16) * 4;
-	//}
+	if (p_matrix_indices)
+	{
+		Dbg_Assert(p_weights);
+		vertex_size += sizeof(uint16) * 4;
+	}
 
 	// Texture coordinates.
 	uint32	tex_coord_pass = 0;
@@ -1964,14 +1961,11 @@ void sMesh::Initialize(int				num_vertices,
 		}
 	}
 
-	//if (tex_coord_pass > 0)
-	//{
-	//	vertex_size += 2 * sizeof(float) * tex_coord_pass;
-	//}
+	if (tex_coord_pass > 0)
+	{
+		vertex_size += 2 * sizeof(float) * tex_coord_pass;
+	}
 
-	// lwss: changes to vertex size
-	int vertex_size = 8 * tex_coord_pass + 12;
-	
 	// Assume no normals for now, unless weight information indicates an animating mesh.
 	bool use_normals = false;
 	//bool use_packed_normals = false;
@@ -1980,7 +1974,7 @@ void sMesh::Initialize(int				num_vertices,
 	{
 		// Need to include normals. They will be packed differently for weighted meshes.
 		use_normals = true;
-		vertex_size = 8 * tex_coord_pass + 24;
+		vertex_size += sizeof(float) * 3;
 		//if (p_weights)
 		//{
 		//	use_packed_normals = true;
@@ -2047,46 +2041,27 @@ void sMesh::Initialize(int				num_vertices,
 		wibble_ptr_thing[2] += (vertex_size * vertices_for_this_mesh + 31) & 0xFFFFFFE0;
 	}
 
+	BYTE* p_byte = NULL;
+
 	if (p_weights && this->m_biggest_index_used == -1)
 	{
 		vertex_size = 76;
-	}
-
-	BYTE* rawdata = NULL;
-
-	if (p_weights && this->m_biggest_index_used == -1)
-	{
-		size_t sz = 76 * this->m_num_vertices;
+		size_t sz = vertex_size * this->m_num_vertices;
 		this->p_rawdata = new BYTE[sz];
 		memset(this->p_rawdata, 0x00, sz);
-		rawdata = this->p_rawdata;
+		p_byte = this->p_rawdata;
 	}
 	else
 	{
-		rawdata = mp_vertex_buffer[0]->GetRawData();
-		mp_vertex_buffer[0]->lockOffset = 0;
-		mp_vertex_buffer[0]->lockedSize = mp_vertex_buffer[0]->len;
-		mp_vertex_buffer[0]->d3dlockFlags = 0;
+		mp_vertex_buffer[0]->Lock(0, 0, (void**)&p_byte, 0);
 	}
 	// lwss end
 	
-	// Lock the vertex buffer.
-	// LWSS: Removed for rawdata buffer instead
-	//BYTE* p_byte;
-	//if (D3D_OK != mp_vertex_buffer[0]->Lock(0,					// Offset to lock.
-	//	0,					// Size to lock ( 0 means all).
-	//	(void**)&p_byte,			// Pointer to data.
-	//	0))	// Flags.
-	//{
-	//	Dbg_Assert(0);
-	//	return;
-	//}
-
 	// Copy in vertex position data (for vertices that are used).
 	uint32		byte_write_offset = 0;
-	float* p_read = p_positions + (min_index * 3);
+	float* p_read = &p_positions[min_index * 3];
 	//float* p_write = (float*)p_byte; // lwss: swap to rawdata
-	float* p_write = (float*)(rawdata);
+	float* p_write = (float*)p_byte;
 
 	for (int v = min_index; v <= max_index; ++v)
 	{
@@ -2102,113 +2077,36 @@ void sMesh::Initialize(int				num_vertices,
 	}
 
 	byte_write_offset += sizeof(float) * 3;
-	//m_vertex_shader[0] |= D3DFVF_XYZ;
-	m_vertex_shader[0] = D3DFVF_XYZ;
-
-	// Copy in vertex weight data.
-	// LWSS: Seems removed in PC
-	//if (p_weights)
-	//{
-	//	uint32* p_weight_read = p_weights + min_index;
-	//	//uint32* p_weight_write = (uint32*)((char*)p_byte + byte_write_offset); // lwss: swap to rawdata
-	//	uint32* p_weight_write = (uint32*)(mp_vertex_buffer[0]->rawdata + 12);
-	//
-	//	for (int v = min_index; v <= max_index; ++v)
-	//	{
-	//		if (p_mesh_workspace_array[v] == 0)
-	//		{
-	//			// This vertex is used.
-	//			p_weight_write[0] = p_weight_read[0];
-	//			p_weight_write = (uint32*)((char*)p_weight_write + vertex_size);
-	//		}
-	//		++p_weight_read;
-	//	}
-	//	byte_write_offset += sizeof(uint32);
-	//
-	//	// No fvf flag setting, since it will be determined at the end.
-	//}
-
-	// Copy in vertex matrix index data.
-	// LWSS: Seems removed in PC.
-	//if (p_matrix_indices)
-	//{
-	//	uint16* p_index_read = p_matrix_indices + (min_index * 4);
-	//	uint16* p_index_write = (uint16*)((char*)p_byte + byte_write_offset);
-	//	for (int v = min_index; v <= max_index; ++v)
-	//	{
-	//		if (p_mesh_workspace_array[v] == 0)
-	//		{
-	//			// Have to multiply the indices by three to get the correct register offset, since there are 3 registers
-	//			// per matrix.
-	//			p_index_write[0] = p_index_read[0] * 3;
-	//			p_index_write[1] = p_index_read[1] * 3;
-	//			p_index_write[2] = p_index_read[2] * 3;
-	//			p_index_write[3] = p_index_read[3] * 3;
-	//			p_index_write = (uint16*)((char*)p_index_write + vertex_size);
-	//		}
-	//		p_index_read += 4;
-	//	}
-	//	byte_write_offset += sizeof(uint16) * 4;
-	//
-	//	// No fvf flag setting, since it will be determined at the end.
-	//}
+	m_vertex_shader[0] |= D3DFVF_XYZ;
 
 	// Copy in normals data.
 	if (use_normals)
 	{
+		Dbg_Assert(byte_write_offset == 12);
 		m_normal_offset = (uint8)byte_write_offset;
-		Dbg_Assert(m_normal_offset == 12);
-		//if (use_packed_normals)
-		//{
-		//	float* p_read = p_normals + (min_index * 3);
-		//	uint32* p_write = (uint32*)((char*)p_byte + byte_write_offset);
-		//	for (int v = min_index; v <= max_index; ++v)
-		//	{
-		//		if (p_mesh_workspace_array[v] == 0)
-		//		{
-		//			// The packed normal format is as follows:
-		//			// 31                                             0
-		//			// |----- 10 -----|----- 11 ------|----- 11 ------|
-		//			// |       z      |       y       |       x       |
-		//			uint32 snx = Ftoi_ASM(p_read[0] * 1023.0f);
-		//			uint32 sny = Ftoi_ASM(p_read[1] * 1023.0f);
-		//			uint32 snz = Ftoi_ASM(p_read[2] * 511.0f);
-		//			p_write[0] = (snx & 0x7FF) | ((sny & 0x7FF) << 11) | ((snz & 0x3FF) << 22);
-		//			p_write = (uint32*)((char*)p_write + vertex_size);
-		//		}
-		//		p_read += 3;
-		//	}
-		//	byte_write_offset += sizeof(uint32);
-		//}
-		//else
+		float* p_read = &p_normals[min_index * 3];
+		float* p_write = (float*)((char*)p_byte + byte_write_offset);
+		for (int v = min_index; v <= max_index; ++v)
 		{
-			float* p_read = p_normals + (min_index * 3);
-			//float* p_write = (float*)((char*)p_byte + byte_write_offset);
-			float* p_write = (float*)(rawdata + 12);
-			for (int v = min_index; v <= max_index; ++v)
+			if (p_mesh_workspace_array[v] == 0)
 			{
-				if (p_mesh_workspace_array[v] == 0)
-				{
-					p_write[0] = p_read[0];
-					p_write[1] = p_read[1];
-					p_write[2] = p_read[2];
-					p_write = (float*)((char*)p_write + vertex_size);
-				}
-				p_read += 3;
+				p_write[0] = p_read[0];
+				p_write[1] = p_read[1];
+				p_write[2] = p_read[2];
+				p_write = (float*)((char*)p_write + vertex_size);
 			}
-			byte_write_offset += sizeof(float) * 3;
+			p_read += 3;
 		}
+		byte_write_offset += sizeof(float) * 3;
 		m_vertex_shader[0] |= D3DFVF_NORMAL;
-		Dbg_Assert(byte_write_offset == 24);
 	}
 
 	// Copy in vertex color data.
 	if (use_colors)
 	{
 		m_diffuse_offset = (uint8)byte_write_offset;
-		DWORD* p_col_read = p_colors + min_index;
-		//DWORD* p_col_write = (DWORD*)((char*)p_byte + byte_write_offset);
-		DWORD* p_col_write = (DWORD*)(rawdata + byte_write_offset);
+		DWORD* p_col_read = &p_colors[min_index];
+		DWORD* p_col_write = (DWORD*)((char*)p_byte + byte_write_offset);
 		for (int v = min_index; v <= max_index; ++v)
 		{
 			if (p_mesh_workspace_array[v] == 0)
@@ -2226,9 +2124,8 @@ void sMesh::Initialize(int				num_vertices,
 	if ((tex_coord_pass > 0) && (p_tex_coords != NULL))
 	{
 		m_uv0_offset = (uint8)byte_write_offset;
-		p_read = p_tex_coords + (min_index * 2 * num_tc_sets);
-		//p_write = (float*)((char*)p_byte + byte_write_offset);
-		p_write = (float*)(rawdata + byte_write_offset);
+		p_read = &p_tex_coords[min_index * 2 * num_tc_sets];
+		p_write = (float*)((char*)p_byte + byte_write_offset);
 
 		for (int v = min_index; v <= max_index; ++v)
 		{
@@ -2248,31 +2145,31 @@ void sMesh::Initialize(int				num_vertices,
 		// LWSS: Simplified to a map below...
 		switch (tex_coord_pass)
 		{
-			case 1:
-			{
-				m_vertex_shader[0] |= D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE2(0);
-				break;
-			}
-			case 2:
-			{
-				m_vertex_shader[0] |= D3DFVF_TEX2 | D3DFVF_TEXCOORDSIZE2(0) | D3DFVF_TEXCOORDSIZE2(1);
-				break;
-			}
-			case 3:
-			{
-				m_vertex_shader[0] |= D3DFVF_TEX3 | D3DFVF_TEXCOORDSIZE2(0) | D3DFVF_TEXCOORDSIZE2(1) | D3DFVF_TEXCOORDSIZE2(2);
-				break;
-			}
-			case 4:
-			{
-				m_vertex_shader[0] |= D3DFVF_TEX4 | D3DFVF_TEXCOORDSIZE2(0) | D3DFVF_TEXCOORDSIZE2(1) | D3DFVF_TEXCOORDSIZE2(2) | D3DFVF_TEXCOORDSIZE2(3);
-				break;
-			}
-			default:
-			{
-				Dbg_MsgAssert(0, ("Bad number of passes"));
-				break;
-			}
+		case 1:
+		{
+			m_vertex_shader[0] |= D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE2(0);
+			break;
+		}
+		case 2:
+		{
+			m_vertex_shader[0] |= D3DFVF_TEX2 | D3DFVF_TEXCOORDSIZE2(0) | D3DFVF_TEXCOORDSIZE2(1);
+			break;
+		}
+		case 3:
+		{
+			m_vertex_shader[0] |= D3DFVF_TEX3 | D3DFVF_TEXCOORDSIZE2(0) | D3DFVF_TEXCOORDSIZE2(1) | D3DFVF_TEXCOORDSIZE2(2);
+			break;
+		}
+		case 4:
+		{
+			m_vertex_shader[0] |= D3DFVF_TEX4 | D3DFVF_TEXCOORDSIZE2(0) | D3DFVF_TEXCOORDSIZE2(1) | D3DFVF_TEXCOORDSIZE2(2) | D3DFVF_TEXCOORDSIZE2(3);
+			break;
+		}
+		default:
+		{
+			Dbg_MsgAssert(0, ("Bad number of passes"));
+			break;
+		}
 		}
 
 		// lwss add
@@ -2281,75 +2178,69 @@ void sMesh::Initialize(int				num_vertices,
 		this->m_tex_coord_pass = tex_coord_pass;
 		// lwss end
 	}
-#pragma region DONE
 	// lwss add (LINE: 549)
 	if (p_weights && this->m_biggest_index_used == -1)
 	{
-		BYTE* v89 = this->p_rawdata + 61;
-		uint16* p_index_read = p_matrix_indices + (min_index * 4);
-		//uint16* p_index_write = (uint16*)v89;
+		uint8* p_index_write = (uint8*)this->p_rawdata + 60;
+		uint16* p_index_read = p_matrix_indices + min_index * 4;
 		for (int v = min_index; v <= max_index; ++v)
 		{
 			if (p_mesh_workspace_array[v] == 0)
 			{
-				// Have to multiply the indices by three to get the correct register offset, since there are 3 registers
-				// per matrix.
-				*(v89 - 1) = *p_index_read;
-				*v89 = *(p_index_read + 1);
-				v89[1] = *(p_index_read + 2);
-				v89[2] = *(p_index_read + 3);
-				v89 += 76;
+				p_index_write[0] = (uint8)p_index_read[0];
+				p_index_write[1] = (uint8)p_index_read[1];
+				p_index_write[2] = (uint8)p_index_read[2];
+				p_index_write[3] = (uint8)p_index_read[3];
 
-				//p_index_write[0] = p_index_read[0];
-				//p_index_write[1] = p_index_read[1];
-				//p_index_write[2] = p_index_read[2];
-				//p_index_write[3] = p_index_read[3];
-				//p_index_write = (uint16*)((char*)p_index_write + 77);
+				p_index_write = (uint8*)((char*)p_index_write + vertex_size);
 			}
 			p_index_read += 4;
 		}
+		byte_write_offset += sizeof(uint8) * 4;
 
-		//uint32* p_weight_read = p_weights + min_index;
-		//uint32* p_weight_write = (uint32*)((char*)p_byte + byte_write_offset);
-		//
-		//for (int v = min_index; v <= max_index; ++v)
-		//{
-		//	if (p_mesh_workspace_array[v] == 0)
-		//	{
-		//		// This vertex is used.
-		//		p_weight_write[0] = p_weight_read[0];
-		//		p_weight_write = (uint32*)((char*)p_weight_write + vertex_size);
-		//	}
-		//	++p_weight_read;
-		//}
-		//byte_write_offset += sizeof(uint32);
-
-		uint32* p_weights_read = p_weights + min_index;
-		uint32* v93 = (uint32 *)(this->p_rawdata + 68);
+		uint32* p_weight_read = p_weights + min_index;
+		uint32* p_weight_write = (uint32*)((char*)p_byte + byte_write_offset);
 		for (int v = min_index; v <= max_index; ++v)
 		{
 			if (p_mesh_workspace_array[v] == 0)
 			{
-				uint32 read0 = *p_weights_read;
-				int read0bits = read0 & 0x7FF;
-				int a16 = read0bits;
+				// This vertex is used.
+				p_weight_write[0] = p_weight_read[0];
+				p_weight_write = (uint32*)((char*)p_weight_write + vertex_size);
+			}
+			++p_weight_read;
+		}
+		byte_write_offset += sizeof(uint32);
+
+		uint32* p_weights_read = &p_weights[min_index];
+		//uint32* p_weights_write = (uint32 *)(this->p_rawdata + 68);
+		//float* p_weights_write = (float*)(this->p_rawdata + 64);
+		float* p_weights_write = (float*)(this->p_rawdata + 64);
+		for (int v = min_index; v <= max_index; ++v)
+		{
+			if (p_mesh_workspace_array[v] == 0)
+			{
+				uint32 read0 = p_weights_read[0];
+				int readbits = read0 & 0x7FF;
 				if ((read0 & 0x400) != 0)
 				{
-					a16 = read0bits - 0x800;
+					readbits -= 0x800;
 				}
-				double v96 = (double)a16 * 0.0009775171056389809;
-				a16 = (read0 >> 11) & 0x7FF;
-				*(float*)(v93 - 1) = (float)v96;
+				p_weights_write[0] = (float)readbits / 1024.0f;
+				readbits = (read0 >> 11) & 0x7FF;
 				if (((read0 >> 11) & 0x400) != 0)
-					a16 = ((read0 >> 11) & 0x7FF) - 2048;
-				double v97 = (double)a16;
-				int v98 = read0 >> 22;
-				a16 = v98;
-				*(float*)v93 = v97 * 0.0009775171056389809;
-				if ((v98 & 0x200) != 0)
-					a16 = v98 - 0x400;
-				v93 += 19;
-				*(float*)(v93 - 18) = (double)a16 * 0.001956947147846222;
+				{
+					readbits -= 0x800;
+				}
+				p_weights_write[1] = (float)readbits / 1024.0f;
+				readbits = (read0 >> 22);
+				if ((readbits & 0x200) != 0)
+				{
+					readbits -= 0x400;
+				}
+				p_weights_write[2] = (float)readbits / 512.0f;
+
+				p_weights_write = (float*)((char*)p_weights_write + vertex_size);
 			}
 			++p_weights_read;
 		}
@@ -2407,12 +2298,7 @@ void sMesh::Initialize(int				num_vertices,
 			pIndexData[i]	= idx + p_mesh_workspace_array[idx];
 		}
 
-		void* dst;
-		if (mp_index_buffer[ib]->indexBuffer->Lock(0, 0, &dst, 0) >= 0)
-		{
-			memcpy(dst, mp_index_buffer[ib]->rawdata, mp_index_buffer[ib]->len);
-			mp_index_buffer[ib]->indexBuffer->Unlock();
-		}
+		mp_index_buffer[ib]->ApplyData();
 	}
 	
 	// Can now remove the mesh workspace array.
@@ -2446,7 +2332,6 @@ void sMesh::Initialize(int				num_vertices,
 	{
 		D3DDevice_SetRenderState(D3DRS_LIGHTING, 0);
 	}
-#pragma endregion
 }
 
 

@@ -1193,6 +1193,9 @@ void PreMgr::WaitAllLoadPre()
 
 bool PreMgr::sPreEnabled()
 {
+#ifdef KISAK_NO_PRE
+	return false;
+#endif
 	return sp_mgr != NULL;
 }
 

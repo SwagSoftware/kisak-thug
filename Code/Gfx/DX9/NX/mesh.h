@@ -209,15 +209,15 @@ struct VertexBufferWrapper
 	int streamOffset; // 0x20
 	char debug_name[64]; // lwss add
 
-	VertexBufferWrapper(size_t len, int d3dusage, int flags, const char* debug_name = NULL)
+	VertexBufferWrapper(size_t len, int d3dusage, int flags, const char* p_debug_name = NULL)
 	{
-		if (debug_name)
+		if (p_debug_name)
 		{
-			strncpy(this->debug_name, debug_name, 63);
+			strncpy(this->debug_name, p_debug_name, 63);
 		}
 		else
 		{
-			memset((void*)debug_name, 0x00, 64);
+			memset((void*)this->debug_name, 0x00, 64);
 		}
 		this->vertexBuffer = NULL;
 		if ((flags & FLAG_NO_CREATE_VERTEX_BUFFER) == 0)
