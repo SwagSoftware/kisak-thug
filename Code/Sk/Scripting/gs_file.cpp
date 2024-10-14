@@ -23,7 +23,7 @@
 #include <sk/components/goaleditorcomponent.h>
 #include <sys/file/pip.h>
 #include <sk/objects/pathman.h>
-#include <core/math.h>
+#include <core/allmath.h>
 #ifdef __PLAT_NGC__
 #include <sys/config/config.h>
 #endif		// __PLAT_NGC__
@@ -109,7 +109,7 @@ void LoadAllStartupQBFiles()
 			if (p_data_backslash)
 			{
 				// lwss: fix this overlap (ASAN)
-				char tmp[MAX_FILENAME_CHARS + 1]{ 0 };
+				char tmp[MAX_FILENAME_CHARS + 1];
 				//strcpy( p_file_name, p_data_backslash+5); // Safe cos it will copy backwards
 				strcpy( tmp, p_data_backslash+5);
 				strcpy(p_file_name, tmp);
@@ -175,23 +175,7 @@ void LoadQB(const char *p_fileName, EBoolAssertIfDuplicateSymbols assertIfDuplic
 	//	printf("Loading %s\n",p_fileName); // REMOVE
 	//}
 	// Call the non-game-specific LoadQB, which open the qb and create all the symbols defined within.
-
-	// hack
-	char		nameConversionBuffer[256];
-	GetModuleFileNameA(NULL, nameConversionBuffer, 255);
-	PathRemoveFileSpecA(nameConversionBuffer);
-	std::string qbPath = nameConversionBuffer + (std::string) + "\\Data\\" + (std::string)p_fileName;
-
-	if (std::filesystem::exists(qbPath))
-	{
-		printf("blackops LoadQBFromFileSystem( %s )\n", p_fileName);
-		Script::LoadQBFromFilesystem(p_fileName, assertIfDuplicateSymbols);
-	}
-	else
-	{
-		printf("blackops LoadQB( %s )\n", p_fileName);
-		Script::LoadQB(p_fileName, assertIfDuplicateSymbols);
-	}
+	Script::LoadQB(p_fileName, assertIfDuplicateSymbols);
 	
 	CSymbolTableEntry *p_sym=GetNextSymbolTableEntry();
 	while (p_sym)

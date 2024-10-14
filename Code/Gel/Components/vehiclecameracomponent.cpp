@@ -6,7 +6,7 @@
 //****************************************************************************
 
 #include <core/defines.h>
-#include <core/math.h>
+#include <core/allmath.h>
 									 
 #include <gel/components/vehiclecameracomponent.h>
 #include <gel/components/vehiclecomponent.h>

@@ -1,5 +1,5 @@
 #include <core/defines.h>
-#include <core/math.h>
+#include <core/allmath.h>
 #include <objects/pathman.h>
 #include <gel/object/compositeobject.h>
 #include <gel/scripting/array.h>

@@ -26,7 +26,7 @@
 *****************************************************************************/
 
 #include <core/macros.h>
-#include <core/math.h>
+#include <core/allmath.h>
 
 #include <gfx/nxflags.h>
 

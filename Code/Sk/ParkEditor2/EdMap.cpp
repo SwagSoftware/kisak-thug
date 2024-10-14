@@ -3,7 +3,7 @@
 #include <sk/ParkEditor2/EdMap.h>
 #include <sk/ParkEditor2/ParkEd.h>
 #include <sk/ParkEditor2/clipboard.h>
-#include <core/math.h>
+#include <core/allmath.h>
 #include <core/crc.h>
 #include <gel/scripting/checksum.h>
 #include <gel/scripting/script.h>

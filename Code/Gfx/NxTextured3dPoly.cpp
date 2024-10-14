@@ -1,5 +1,5 @@
 #include <core/defines.h>
-#include <core/math.h>
+#include <core/allmath.h>
 
 #include <gfx/nxtextured3dpoly.h>
 #include <core/crc.h>

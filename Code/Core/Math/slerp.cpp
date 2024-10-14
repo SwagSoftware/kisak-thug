@@ -22,7 +22,7 @@
 **							  	  Includes									**
 *****************************************************************************/
 
-#include <core/math.h>
+#include <core/allmath.h>
 #include <core/math/slerp.h>
 
 namespace Mth

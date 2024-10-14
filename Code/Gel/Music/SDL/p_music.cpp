@@ -1,6 +1,6 @@
 #include <Core/macros.h>
 #include <Core/Defines.h>
-#include <Core/math.h>
+#include <Core/allmath.h>
 #include <Core/crc.h>
 
 #include "p_music.h"

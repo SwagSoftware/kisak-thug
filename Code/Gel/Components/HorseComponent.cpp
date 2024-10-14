@@ -6,7 +6,7 @@
 //****************************************************************************
 
 #include <core/defines.h>
-#include <core/math.h>
+#include <core/allmath.h>
 #include <core/math/slerp.h>
 										
 #include <gel/components/horsecomponent.h>

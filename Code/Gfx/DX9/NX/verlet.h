@@ -1,7 +1,7 @@
 #ifndef __VERLET_H
 #define __VERLET_H
 
-#include <core/math.h>
+#include <core/allmath.h>
 
 void			UpdateVerletSystem( void );
 //void			DrawVerletSystem( void );

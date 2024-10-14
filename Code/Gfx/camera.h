@@ -16,7 +16,7 @@
 #include <core/defines.h>
 #endif
 #include <core/support.h>
-#include <core/math.h>
+#include <core/allmath.h>
 #ifdef __PLAT_NGC__
 #include "sys/ngc/p_camera.h"
 #endif		// __PLAT_NGC__

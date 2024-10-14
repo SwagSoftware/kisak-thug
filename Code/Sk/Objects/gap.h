@@ -11,7 +11,7 @@
 #endif
 
 #ifndef __CORE_MATH_H
-#include <core/math.h>
+#include <core/allmath.h>
 #endif
 
 #include <core/list.h>

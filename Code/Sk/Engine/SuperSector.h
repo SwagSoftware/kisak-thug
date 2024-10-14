@@ -27,7 +27,7 @@
 #include <core/defines.h>
 #endif
 
-#include <core/math.h>
+#include <core/allmath.h>
 #include <core/math/geometry.h>
 
 /*****************************************************************************

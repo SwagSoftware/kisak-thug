@@ -30,7 +30,7 @@
 #include <core/defines.h>
 #include <core/macros.h>
 #include <core/singleton.h>
-#include <core/math.h>
+#include <core/allmath.h>
 
 #include <sys/timer.h>
 #include <sys/config/config.h>

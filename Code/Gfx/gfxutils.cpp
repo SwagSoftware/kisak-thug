@@ -11,7 +11,7 @@
 
 #include <gfx/gfxutils.h>
 
-#include <core/math.h>
+#include <core/allmath.h>
 #include <core/math/vector.h>
 
 #include <gel/scripting/script.h>

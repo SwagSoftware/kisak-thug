@@ -11,7 +11,7 @@
 
 #include <sk/objects/cutscenedetails.h>
 
-#include <core/math.h>
+#include <core/allmath.h>
 
 #include <gel/assman/assman.h>
 #include <gel/assman/assettypes.h>

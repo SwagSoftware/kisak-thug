@@ -9,7 +9,7 @@
 **							  	  Includes									**
 *****************************************************************************/
 
-#include <core/math.h>
+#include <core/allmath.h>
 #include <core/singleton.h>
 #include <gfx/gfxman.h>
 #include <gfx/camera.h>

@@ -2,7 +2,7 @@
 #define __RENDER_H
 
 //#include <xgmath.h> // lwss: Xbox only
-#include <core/math.h>
+#include <core/allmath.h>
 #include <core/math/geometry.h>
 #include <gfx/DX9/p_nxmodel.h>
 #include "mesh.h"

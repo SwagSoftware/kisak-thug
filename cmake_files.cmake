@@ -98,7 +98,7 @@ set(CORE
 	"${SRC_DIR}/Core/LookupTable.h"
 	"${SRC_DIR}/Core/LookupTable.cpp"
 	"${SRC_DIR}/Core/macros.h"
-	"${SRC_DIR}/Core/math.h"
+	"${SRC_DIR}/Core/allmath.h"
 	"${SRC_DIR}/Core/singleton.h"
 	"${SRC_DIR}/Core/StringHashTable.h"
 	"${SRC_DIR}/Core/support.h"

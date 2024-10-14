@@ -24,7 +24,7 @@
 *****************************************************************************/
 
 #include <core/defines.h>
-#include <core/math.h>
+#include <core/allmath.h>
 #include <gfx/bbox.h>
 #include <core/math/vector.h>
 #include <core/math/vector.inl>

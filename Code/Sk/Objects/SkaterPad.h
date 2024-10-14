@@ -6,7 +6,7 @@
 
 #include <core/defines.h>
 #include <core/support.h>
-#include <core/math.h>
+#include <core/allmath.h>
 #include <sk\objects\skaterbutton.h>
 
 namespace Inp

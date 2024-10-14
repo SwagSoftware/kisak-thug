@@ -5,7 +5,7 @@
 //* CREATION DATE:  2/27/2002
 //****************************************************************************
 
-#include <core/math.h>
+#include <core/allmath.h>
 
 #include <gfx/nxgeom.h>
 #include <gfx/image/imagebasic.h>

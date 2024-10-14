@@ -14,7 +14,7 @@
 #include <gel/scripting/array.h>
 #include <gel/scripting/symboltable.h>
 #include <core/crc.h>
-#include <core/math.h>
+#include <core/allmath.h>
 #include <core/math/vector.h>
 
 							 

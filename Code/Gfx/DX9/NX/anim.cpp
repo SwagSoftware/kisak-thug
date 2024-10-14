@@ -6,7 +6,7 @@
 #include <core/defines.h>
 #include <core/debug.h>
 #include <core/HashTable.h>
-#include <core/math.h>
+#include <core/allmath.h>
 #include <core/math/geometry.h>
 #include <sys/file/filesys.h>
 #include <sys/timer.h>

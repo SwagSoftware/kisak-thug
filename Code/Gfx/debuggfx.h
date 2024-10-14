@@ -24,7 +24,7 @@
 *****************************************************************************/
 
 
-#include <core/math.h>
+#include <core/allmath.h>
 #include <core/support.h>
 #include <core/singleton.h>
 #ifndef __GEL_OBJECT_H

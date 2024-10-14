@@ -29,7 +29,7 @@
 #include <core/singleton.h>
 
 #include <core/task.h>
-#include <core/math.h>
+#include <core/allmath.h>
 
 #include <sys/sys.h>
 #include <sys/mem/memman.h>

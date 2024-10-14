@@ -7,7 +7,7 @@
 
 #include <gel/components/avoidcomponent.h>
 
-#include <core/math.h>
+#include <core/allmath.h>
 									
 #include <gel/object/compositeobject.h>
 

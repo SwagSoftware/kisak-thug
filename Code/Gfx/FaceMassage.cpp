@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // FaceMassage.cpp
 
-#include <core/math.h>
+#include <core/allmath.h>
 
 #include <gel/Scripting/script.h>
 #include <gel/scripting/array.h>

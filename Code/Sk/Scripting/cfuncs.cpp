@@ -22,7 +22,7 @@
 //#include <libscf.h>
 
 #include <core/defines.h>
-#include <core/math.h>
+#include <core/allmath.h>
 #include <core/thread.h>
 #include <core/singleton.h>
 #include <core/macros.h>

@@ -18,7 +18,7 @@
 #include <gel/scripting/script.h>
 #include <gel/scripting/scriptcache.h>
 #include <core/crc.h> // For Crc::GenerateCRCFromString
-#include <core/math.h>
+#include <core/allmath.h>
 #include <sk/components/goaleditorcomponent.h>
 
 namespace SkateScript

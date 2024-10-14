@@ -54,17 +54,17 @@ void restart_dirty_scripts()
 
 void LoadQBFromFilesystem(const char* p_fileName, EBoolAssertIfDuplicateSymbols assertIfDuplicateSymbols)
 {
-	//uint8 *p_qb=(uint8*)
-
-	// allocate memory, and load the file
-	int	file_size;
-	//Mem::Manager::sHandle().PushContext(Mem::Manager::sHandle().TopDownHeap());
-	uint8* p_file_data = (uint8*)File::LoadAllocNoPre(p_fileName);
-	//Mem::Manager::sHandle().PopContext();
-	Dbg_MsgAssert(p_file_data, ("Failsed to load %s\n", p_fileName));
-
-	ParseQB(p_fileName, p_file_data, assertIfDuplicateSymbols);
-	restart_dirty_scripts(); // hope this doesn't break anything lol!
+	////uint8 *p_qb=(uint8*)
+	//
+	//// allocate memory, and load the file
+	//int	file_size;
+	////Mem::Manager::sHandle().PushContext(Mem::Manager::sHandle().TopDownHeap());
+	//uint8* p_file_data = (uint8*)File::LoadAllocNoPre(p_fileName);
+	////Mem::Manager::sHandle().PopContext();
+	//Dbg_MsgAssert(p_file_data, ("Failsed to load %s\n", p_fileName));
+	//
+	//ParseQB(p_fileName, p_file_data, assertIfDuplicateSymbols);
+	//restart_dirty_scripts(); // hope this doesn't break anything lol!
 }
 
 // Loads a QB file.

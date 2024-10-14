@@ -5,7 +5,7 @@
 #define __OBJECTS_RAIL_H
                         
 #include <core/defines.h>
-#include <core/math.h>
+#include <core/allmath.h>
 #include <gfx/nxflags.h>
                            
 namespace Script

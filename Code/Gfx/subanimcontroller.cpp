@@ -7,7 +7,7 @@
 
 #include <gfx/subanimcontroller.h>
 
-#include <core/math.h>
+#include <core/allmath.h>
 
 #include <gel/components/animationcomponent.h>
 #include <gel/object/compositeobject.h>

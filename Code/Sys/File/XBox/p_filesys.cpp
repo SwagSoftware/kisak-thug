@@ -23,21 +23,30 @@
 **							  	  Includes									**
 *****************************************************************************/
 
-//#include <xtl.h>
+#ifdef __PLAT_XBOX__
+#include <xtl.h>
+#endif
 #include <stdio.h>
 #include <string.h>
+#ifdef __PLAT_WN32__
 #include <shlwapi.h> // lwss: yes I am that lazy
+#endif
 
 #include <core/defines.h>
 #include <core/support.h>
 #include <sys/file/filesys.h>
 #include <sys/file/AsyncFilesys.h>
 #include <sys/file/PRE.h>
-//#include <sys/file/xbox/p_streamer.h>
+#ifdef __PLAT_XBOX__
+#include <sys/file/xbox/p_streamer.h>
+#endif
 #include <sys/config/config.h>
 
-//#include <gfx/xbox/nx/nx_init.h>
+#ifdef __PLAT_XBOX__
+#include <gfx/xbox/nx/nx_init.h>
+#else
 #include <gfx/DX9/nx/nx_init.h>
+#endif
 
 /*****************************************************************************
 **							  DBG Information								**
@@ -137,6 +146,7 @@ static void* prefopen( const char *filename, const char *mode )
 		nameConversionBuffer[index - 2] = 'x';
 	}
 
+#ifdef __PLAT_WN32__
 	// LWSS: Fuck your .xbx extension!!
 	char* xbx = StrStrIA(nameConversionBuffer, ".xbx");
 	if (xbx)
@@ -146,37 +156,39 @@ static void* prefopen( const char *filename, const char *mode )
 		xbx[2] = '\0';
 		xbx[3] = '\0';
 	}
+#endif
 
+#ifdef __PLAT_XBOX__
 	// If this is a .pre file, switch to a .prx file.
-	// LWSS: dont.
-	//if(((( nameConversionBuffer[index - 1] ) == 'e' ) || (( nameConversionBuffer[index - 1] ) == 'x' )) &&
-	//    (( nameConversionBuffer[index - 2] ) == 'r' ) &&
-	//    (( nameConversionBuffer[index - 3] ) == 'p' ))
-	//{
-#	//	ifdef __PAL_BUILD__
-	//	// Switch to a .prf, .prg or .prx file, depending on language.
-	//	switch( Config::GetLanguage())
-	//	{
-	//		case Config::LANGUAGE_FRENCH:
-	//		{
-	//			nameConversionBuffer[index - 1] = 'f';
-	//			break;
-	//		}
-	//		case Config::LANGUAGE_GERMAN:
-	//		{
-	//			nameConversionBuffer[index - 1] = 'g';
-	//			break;
-	//		}
-	//		default:
-	//		{
-	//			nameConversionBuffer[index - 1] = 'x';
-	//			break;
-	//		}
-	//	}
-#	//	else
-	//	nameConversionBuffer[index - 1] = 'x';
-#	//	endif // __PLAT_BUILD__
-	//}
+	if(((( nameConversionBuffer[index - 1] ) == 'e' ) || (( nameConversionBuffer[index - 1] ) == 'x' )) &&
+	    (( nameConversionBuffer[index - 2] ) == 'r' ) &&
+	    (( nameConversionBuffer[index - 3] ) == 'p' ))
+	{
+#		ifdef __PAL_BUILD__
+		// Switch to a .prf, .prg or .prx file, depending on language.
+		switch( Config::GetLanguage())
+		{
+			case Config::LANGUAGE_FRENCH:
+			{
+				nameConversionBuffer[index - 1] = 'f';
+				break;
+			}
+			case Config::LANGUAGE_GERMAN:
+			{
+				nameConversionBuffer[index - 1] = 'g';
+				break;
+			}
+			default:
+			{
+				nameConversionBuffer[index - 1] = 'x';
+				break;
+			}
+		}
+#		else
+		nameConversionBuffer[index - 1] = 'x';
+#		endif // __PLAT_BUILD__
+	}
+#endif
 
 	// First we try reading the file from the utility partition (z:\) on the HD, rather than the DVD.
 	HANDLE h_file = INVALID_HANDLE_VALUE;
@@ -189,8 +201,10 @@ static void* prefopen( const char *filename, const char *mode )
 	if( h_file == INVALID_HANDLE_VALUE )
 	{
 		// Not on the utility partition, so load it from the DVD.
-		// LWSS: NO!
+		// LWSS: Load from D:\ on xbox
+		#ifdef __PLAT_XBOX__
 		//nameConversionBuffer[0] = 'D';
+		#endif
 		h_file = CreateFile( nameConversionBuffer, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL );
 
 		// Deal with various error returns.

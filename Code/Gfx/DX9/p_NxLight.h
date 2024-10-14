@@ -8,7 +8,7 @@
 #include <core/defines.h>
 #endif
 
-#include <core/math.h>
+#include <core/allmath.h>
 #include <gfx/image/imagebasic.h>
 #include <gfx/nxlight.h>
 

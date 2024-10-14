@@ -1,7 +1,7 @@
 #include <core/defines.h>
 #include <sk/ParkEditor2/ParkGen.h>
 #include <sk/ParkEditor2/EdMap.h>			// Mick:  Added as we need to iterate over the ConcreteMetaPieces
-#include <core/math.h>
+#include <core/allmath.h>
 
 #include <gel/collision/collision.h>
 #include <gel/collision/colltridata.h>

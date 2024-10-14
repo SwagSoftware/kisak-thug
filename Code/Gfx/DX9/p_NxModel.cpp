@@ -5,7 +5,7 @@
 //* CREATION DATE:  12/21/2002
 //****************************************************************************
 
-#include <core/math.h>
+#include <core/allmath.h>
 
 #include "gfx/nxmodel.h"
 #include "gfx/skeleton.h"

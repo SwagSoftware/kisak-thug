@@ -52,7 +52,7 @@ If there is no score, then it will not count as a trick, and you just get the sc
 
 #include <core/defines.h>
 #include <core/singleton.h>
-#include <core/math.h>
+#include <core/allmath.h>
 #include <sk/objects/gap.h>
 #include <gel/scripting/script.h>
 #include <gel/scripting/struct.h>

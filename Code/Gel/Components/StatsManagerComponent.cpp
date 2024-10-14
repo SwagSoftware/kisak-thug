@@ -22,7 +22,7 @@
 #include <gel/scripting/component.h>
 #include <gel/scripting/utils.h>
 
-#include <core/math.h>
+#include <core/allmath.h>
 #include <core/math/math.h>
 #include <core/flags.h>
 #include <sk/modules/skate/score.h>

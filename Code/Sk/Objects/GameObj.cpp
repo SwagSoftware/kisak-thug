@@ -7,7 +7,7 @@
 
 #include <sk/objects/gameobj.h>
 
-#include <core/math.h>
+#include <core/allmath.h>
 
 #include <gel/objman.h>
 #include <gel/components/modelcomponent.h>

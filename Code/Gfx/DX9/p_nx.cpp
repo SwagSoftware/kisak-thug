@@ -54,7 +54,7 @@
 #include	"gfx\DX9/p_NxTextured3dPoly.h"
 #include	"gfx\DX9/p_NxNewParticleMgr.h"
 #include	"gfx\DX9/p_NxWeather.h"
-#include	"core\math.h"
+#include	"core/allmath.h"
 #include 	"sk\engine\SuperSector.h"					
 #include 	"gel\scripting\script.h"
 

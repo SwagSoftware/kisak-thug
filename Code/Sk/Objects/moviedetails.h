@@ -17,7 +17,7 @@
 #endif
 
 #include <core/list.h>
-#include <core/math.h>
+#include <core/allmath.h>
 
 #include <gfx/animcontroller.h>						 
 

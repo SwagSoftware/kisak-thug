@@ -2,7 +2,7 @@
 
 #include <sk\objects\skaterpad.h>
 #include <gel\inpman.h>
-#include <core\math.h>
+#include <core/allmath.h>
 
 //#define		PS2_SIMULATING_XBOX
 

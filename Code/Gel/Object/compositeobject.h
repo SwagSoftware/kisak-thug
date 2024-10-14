@@ -10,7 +10,7 @@
 
 #include <core/defines.h>
 #include <core/list.h>
-#include <core/math.h>
+#include <core/allmath.h>
 #include <sys/profiler.h>
 #include <gel/object.h>
 #include <gel/object/basecomponent.h>

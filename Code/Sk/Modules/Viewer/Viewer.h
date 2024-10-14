@@ -25,7 +25,7 @@
 **							  	  Includes									**
 *****************************************************************************/
 
-#include <core/math.h>
+#include <core/allmath.h>
 
 #include <gel/module.h>
 #include <gel/inpman.h>

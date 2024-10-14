@@ -21,6 +21,10 @@
 #ifndef __CORE_MATH_VECTOR_H
 #define __CORE_MATH_VECTOR_H
 
+#ifdef __PLAT_XBOX__ // lwss: compile fix for xbox
+#include <iostream>
+#endif
+
 // (Mick) If this is defined, then vectors will be initialized to (0,0,0,1), and
 // matrices to:
 // (1,0,0,0)

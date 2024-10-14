@@ -11,7 +11,7 @@
 #include <core/defines.h>
 #include <core/support.h>
 
-#include <core/math.h>
+#include <core/allmath.h>
 
 #include <gfx/baseanimcontroller.h>
 #include <gfx/pose.h>

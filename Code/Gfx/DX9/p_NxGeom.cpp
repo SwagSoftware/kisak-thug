@@ -8,7 +8,7 @@
 
 #include <gfx/DX9/p_nxgeom.h>
 
-#include <core/math.h>
+#include <core/allmath.h>
 
 #include <gfx/skeleton.h>
 #include <gfx/DX9/p_nxmesh.h>

@@ -5,9 +5,9 @@
 #ifndef __CORE_DEFINES_H
 #include <core/defines.h>
 #endif
-#include <core/math.h>
+#include <core/allmath.h>
 
-#include <core/math.h>
+#include <core/allmath.h>
 #include <gfx/debuggfx.h>
 #include <core/math/geometry.h>
 #include <gel/collision/collision.h>

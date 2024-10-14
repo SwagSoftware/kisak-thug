@@ -25,7 +25,7 @@
 **							  	  Includes									**
 *****************************************************************************/
 
-#include <core/math.h>
+#include <core/allmath.h>
 #include <sys/mem/CompactPool.h>
 #include <sys/mem/Poolable.h>
 

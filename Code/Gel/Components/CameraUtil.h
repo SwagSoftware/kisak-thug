@@ -10,7 +10,7 @@
 
 #include <core/defines.h>
 #include <core/support.h>
-#include <core/math.h>
+#include <core/allmath.h>
 
 #define SKATERCAMERACOMPONENT_PERFECT_ABOVE			(3.0f)
 			

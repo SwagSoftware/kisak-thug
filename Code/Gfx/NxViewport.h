@@ -27,7 +27,7 @@
 #include <core/defines.h>
 #endif
 #include <core/support.h>
-#include <core/math.h>
+#include <core/allmath.h>
 #include <gfx/camera.h>
 #include <gel/objptr.h>
 			  

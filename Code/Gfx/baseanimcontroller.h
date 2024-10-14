@@ -12,7 +12,7 @@
 #include <core/support.h>
 
 // for procedural bones, which will be moved to another file...
-#include <core/math.h>
+#include <core/allmath.h>
 
 namespace Obj
 {

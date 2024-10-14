@@ -1,7 +1,7 @@
 #ifndef __MESH_H
 #define __MESH_H
 
-#include <core\math.h>
+#include <core/allmath.h>
 #include <core\math\geometry.h>
 #include <gfx\nx.h>
 #include "material.h"

@@ -23,9 +23,8 @@
 *****************************************************************************/
 
 
-#include <core/math.h>
+#include <core/allmath.h>
 #include <core/defines.h>
-//#include <core/math.h>
 #include <core/math/math.h>
 #include <core/math/vector.h>
 #include <core/math/matrix.h>

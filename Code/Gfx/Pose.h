@@ -14,7 +14,7 @@
 
 #include <core/defines.h>
 
-#include <core/math.h>
+#include <core/allmath.h>
 
 /*****************************************************************************
 **								   Defines									**

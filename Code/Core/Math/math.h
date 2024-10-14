@@ -17,7 +17,6 @@
 **	Description:	Math Library											**
 **																			**
 *****************************************************************************/
-
 #ifndef __CORE_MATH_MATH_H
 #define __CORE_MATH_MATH_H
 

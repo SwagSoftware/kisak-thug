@@ -14,7 +14,7 @@
 // For EShadowType
 #include <gfx/shadow.h>
 
-#include <core/math.h>
+#include <core/allmath.h>
 			
 #include <gel/object/basecomponent.h>
 

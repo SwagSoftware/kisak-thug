@@ -20,7 +20,7 @@
 // TODO:  These won't be needed after the initial
 // matrix data gets moved to the SKE file
 #include <core/crc.h>
-#include <core/math.h>
+#include <core/allmath.h>
 #include <gfx/nxanimcache.h>
 #include <gfx/bonedanim.h>
 #include <gfx/nxmiscfx.h>
