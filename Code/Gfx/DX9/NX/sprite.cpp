@@ -283,20 +283,20 @@ void sSprite::BeginDraw( void )
 	{
 		// lwss: change for pc
 		//set_pixel_shader( PixelShader4 );
-		D3DDevice_SetTextureStageState(0, D3DTSS_COLOROP, 5);
-		D3DDevice_SetTextureStageState(0, D3DTSS_ALPHAOP, 5);
+		D3DDevice_SetTextureStageState(0, D3DTSS_COLOROP, D3DTSS_ALPHAARG1);
+		D3DDevice_SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTSS_ALPHAARG1);
 		set_texture(0, mp_texture->pD3DTexture);
 	}
 	else
 	{
 		//set_pixel_shader( PixelShader5 );
-		D3DDevice_SetTextureStageState(0, D3DTSS_COLOROP, 3);
-		D3DDevice_SetTextureStageState(0, D3DTSS_ALPHAOP, 3);
+		D3DDevice_SetTextureStageState(0, D3DTSS_COLOROP, D3DTSS_COLORARG2);
+		D3DDevice_SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTSS_COLORARG2);
 		set_texture( 0, NULL );
 	}
 
-	D3DDevice_SetTextureStageState(0, D3DTSS_COLORARG2, 1);
-	D3DDevice_SetTextureStageState(0, D3DTSS_ALPHAARG2, 1);
+	D3DDevice_SetTextureStageState(0, D3DTSS_COLORARG2, D3DTSS_COLOROP);
+	D3DDevice_SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTSS_COLOROP);
 }
 
 
@@ -313,8 +313,6 @@ void sSprite::Draw(void)
 	float v0 = 1.0f;
 	float u1, v1;
 
-	float verts[28];
-
 	if (mp_texture)
 	{
 		u1 = (float)mp_texture->ActualWidth / (float)mp_texture->BaseWidth;
@@ -330,145 +328,207 @@ void sSprite::Draw(void)
 	float abs_scale_x = m_scale_x;
 	float abs_scale_y = m_scale_y;
 
-	// lwss: changes here... (yes I know what a fking epsilon is)
+	// lwss add
 	if (abs_scale_x == 0.0f || abs_scale_y == 0.0f)
 	{
 		return;
 	}
 
-	if( abs_scale_x < 0.0f )
+	if (abs_scale_x < 0.0f)
 	{
+		float temp = u0;
 		u0 = u1;
-		u1 = 0.0f;
+		u1 = temp;
 		abs_scale_x = -abs_scale_x;
 	}
-	if( abs_scale_y < 0.0f )
+	if (abs_scale_y < 0.0f)
 	{
+		float temp = v0;
 		v0 = v1;
-		v1 = 1.0f;
+		v1 = temp;
 		abs_scale_y = -abs_scale_y;
 	}
+
+
+	// lwss: This is based on the FVF below with set_vertex_shader
+	// D3DFVF_TEX1 | D3DFVF_DIFFUSE | D3DFVF_XYZRHW
+	struct SpriteVertex2D
+	{
+		SpriteVertex2D()
+		{
+			x = 1.0f;
+			y = 1.0f;
+			z = 0.0f;
+			rhw = 0.0f;
+			color = D3DCOLOR_XRGB(255, 255, 255);
+			u = 0.0f;
+			v = 1.0f;
+		}
+		float x;
+		float y;
+		float z;
+		float rhw;
+		DWORD color;
+		float u;
+		float v;
+	};
+
+	SpriteVertex2D vertexes[4]{};
 
 	float x0 = -( m_xhot * abs_scale_x );
 	float y0 = -( m_yhot * abs_scale_y );
 	float x1 = x0 + (m_width * abs_scale_x);
 	float y1 = y0 + (m_height * abs_scale_y);
-	uint32 v8 = this->m_rgba & 0xFF00FF00 | BYTE2(this->m_rgba) | ((unsigned __int8)this->m_rgba << 16);
-	float v36 = abs_scale_x * (double)(unsigned __int16)this->m_width + x0;
-	float v9 = abs_scale_y * (double)(unsigned __int16)this->m_height + y0;
 
-	//DWORD	current_color	= ( m_rgba & 0xFF00FF00 ) | (( m_rgba & 0xFF ) << 16 ) | (( m_rgba & 0xFF0000 ) >> 16 );
-	float v11;
-	float v10;
-	// lwss: add extra if()
-	if (this->m_rgba & 0xFF000000 | (BYTE2(this->m_rgba) | ((unsigned __int8)this->m_rgba << 16)) & 0xFF000000)
+	float v36 = abs_scale_x * (float)(unsigned __int16)this->m_width + x0;
+	float v9 = abs_scale_y * (float)(unsigned __int16)this->m_height + y0;
+
+	DWORD	current_color	= this->m_rgba & 0xFF00FF00 | BYTE2(this->m_rgba) | ((unsigned __int8)this->m_rgba << 16);
+
+	// lwss add
+	if (!(current_color & 0xFF000000))
 	{
-		// KISAKTODO: logic cleanup
-		if (m_rot == 0.0f)
+		return;
+	}
+	if (m_rot == 0.0f)
+	{
+		x0 += m_xpos;
+		y0 += m_ypos;
+		x1 += m_xpos;
+		y1 += m_ypos;
+
+		// Nasty hack - if the sprite is intended to cover the screen from top to bottom or left to right,
+		// bypass the addtional offset added by SCREEN_CONV.
+		if ((x0 <= 0.0f) && (x1 >= 640.0f))
 		{
-			float posX = x0 + m_xpos;
-			float posY = y0 + m_ypos;
-			float posX2 = v36 + m_xpos;
-			float posY2 = v9 + m_ypos;
-
-
-			float calculatedX;
-			float calculatedX2;
-			float calculatedY;
-			float calculatedY2;
-
-			if (posX > 0.0f || posX2 < 640.0f)
-			{
-				calculatedX = posX * NxXbox::EngineGlobals.screen_conv_x_multiplier + NxXbox::EngineGlobals.screen_conv_x_offset;
-				calculatedX2 = NxXbox::EngineGlobals.screen_conv_x_offset + posX2 * EngineGlobals.screen_conv_x_multiplier;
-				v11 = 0.0f;
-				v10 = 1.0f;
-			}
-			else
-			{
-				v11 = 0.0f;
-				v10 = 1.0f;
-				calculatedX = 0.0f;
-				calculatedX2 = EngineGlobals.backbuffer_width;
-			}
-
-			if (posY > v11 || posY2 < 480.0f)
-			{
-				calculatedY = posY * NxXbox::EngineGlobals.screen_conv_y_multiplier + NxXbox::EngineGlobals.screen_conv_y_offset;
-				calculatedY2 = NxXbox::EngineGlobals.screen_conv_y_offset + posY2 * NxXbox::EngineGlobals.screen_conv_y_multiplier;
-			}
-			else
-			{
-				calculatedY = v11;
-				calculatedY2 = NxXbox::EngineGlobals.backbuffer_height;
-			}
-			verts[0] = calculatedX;
-			verts[1] = calculatedY;
-			verts[7] = calculatedX;
-			verts[8] = calculatedY2;
-			verts[14] = calculatedX2;
-			verts[21] = calculatedX2;
-			verts[15] = calculatedY;
-			verts[22] = calculatedY2;
+			x0 = 0.0f;
+			x1 = (float)NxXbox::EngineGlobals.backbuffer_width;
 		}
 		else
 		{
-			Mth::Vector p0( x0, y0, 0.0f, 0.0f );
-			Mth::Vector p1( x1, y0, 0.0f, 0.0f );
-			Mth::Vector p2( x0, y1, 0.0f, 0.0f );
-			Mth::Vector p3( x1, y1, 0.0f, 0.0f );
-			
-			p0.RotateZ( m_rot );
-			p1.RotateZ( m_rot );
-			p2.RotateZ( m_rot );
-			p3.RotateZ( m_rot );
-
-			p0[X]	= SCREEN_CONV_X( p0[X] + m_xpos );
-			p0[Y]	= SCREEN_CONV_Y( p0[Y] + m_ypos );
-			p1[X]	= SCREEN_CONV_X( p1[X] + m_xpos );
-			p1[Y]	= SCREEN_CONV_Y( p1[Y] + m_ypos );
-			p2[X]	= SCREEN_CONV_X( p2[X] + m_xpos );
-			p2[Y]	= SCREEN_CONV_Y( p2[Y] + m_ypos );
-			p3[X]	= SCREEN_CONV_X( p3[X] + m_xpos );
-			p3[Y]	= SCREEN_CONV_Y( p3[Y] + m_ypos );
-
-			v10 = 1.0f;
-			v11 = 0.0f;
+			x0 = SCREEN_CONV_X(x0);
+			x1 = SCREEN_CONV_X(x1);
 		}
 
-		verts[2] = v11;
-		verts[4] = v8;
-		verts[3] = v10;
-		verts[18] = v8;
-		verts[11] = v8;
-		verts[5] = u0;
-		verts[25] = v8;
-		verts[6] = v0;
-		verts[16] = v11;
-		verts[17] = v10;
-		verts[19] = u1;
-		verts[20] = v0;
-		verts[9] = v11;
-		verts[10] = v10;
-		verts[12] = u0;
-		verts[13] = v1;
-		verts[23] = verts[9];
-		verts[24] = v10;
-		verts[26] = u1;
-		verts[27] = v1;
-
-		//STDMETHOD(DrawIndexedPrimitiveUP)(THIS_ D3DPRIMITIVETYPE PrimitiveType, UINT MinVertexIndex, UINT NumVertices, 
-		// UINT PrimitiveCount, CONST void* pIndexData, D3DFORMAT IndexDataFormat, CONST void* pVertexStreamZeroData,
-		// UINT VertexStreamZeroStride) PURE;
-		set_vertex_shader(D3DFVF_TEX1 | D3DFVF_DIFFUSE | D3DFVF_XYZRHW);
-		D3DDevice_SetTextureStageState(0, D3DTSS_COLOROP, 5);
-		D3DDevice_SetTextureStageState(0, D3DTSS_ALPHAOP, 5);
-
-		static uint16 s_index_data[] = { 0, 1, 2, 1, 3, 2, 0, 0xC2DC };
-		if (!g_disableRendering)
+		if ((y0 <= 0.0f) && (y1 >= 480.0f))
 		{
-			D3DDevice_DrawIndexedPrimitiveUP(D3DPT_TRIANGLELIST, 0, 4, 2, s_index_data, D3DFMT_INDEX16, verts, 28);
+			y0 = 0.0f;
+			y1 = (float)NxXbox::EngineGlobals.backbuffer_height;
 		}
+		else
+		{
+			y0 = SCREEN_CONV_Y(y0);
+			y1 = SCREEN_CONV_Y(y1);
+		}
+
+		vertexes[0].x = x0;
+		vertexes[0].y = y0;
+		vertexes[0].z = 0;
+		vertexes[0].rhw = 1.0f;
+		vertexes[0].color = current_color;
+		vertexes[0].u = u0;
+		vertexes[0].v = v0;
+
+
+		vertexes[1].x = x0;
+		vertexes[1].y = y1;
+		vertexes[1].z = 0;
+		vertexes[1].rhw = 1.0f;
+		vertexes[1].color = current_color;
+		vertexes[1].u = u0;
+		vertexes[1].v = v1;
+
+		vertexes[2].x = x1;
+		vertexes[2].y = y0;
+		vertexes[2].z = 0;
+		vertexes[2].rhw = 1.0f;
+		vertexes[2].color = current_color;
+		vertexes[2].u = u1;
+		vertexes[2].v = v0;
+
+		vertexes[3].x = x1;
+		vertexes[3].y = y1;
+		vertexes[3].z = 0;
+		vertexes[3].rhw = 1.0f;
+		vertexes[3].color = current_color;
+		vertexes[3].u = u1;
+		vertexes[3].v = v1;
+}
+	else
+	{
+		Mth::Vector p0( x0, y0, 0.0f, 0.0f );
+		Mth::Vector p1( x1, y0, 0.0f, 0.0f );
+		Mth::Vector p2( x0, y1, 0.0f, 0.0f );
+		Mth::Vector p3( x1, y1, 0.0f, 0.0f );
+			
+		p0.RotateZ( m_rot );
+		p1.RotateZ( m_rot );
+		p2.RotateZ( m_rot );
+		p3.RotateZ( m_rot );
+
+		p0[X] = SCREEN_CONV_X(p0[X] + m_xpos);
+		p0[Y] = SCREEN_CONV_Y(p0[Y] + m_ypos);
+		p1[X] = SCREEN_CONV_X(p1[X] + m_xpos);
+		p1[Y] = SCREEN_CONV_Y(p1[Y] + m_ypos);
+		p2[X] = SCREEN_CONV_X(p2[X] + m_xpos);
+		p2[Y] = SCREEN_CONV_Y(p2[Y] + m_ypos);
+		p3[X] = SCREEN_CONV_X(p3[X] + m_xpos);
+		p3[Y] = SCREEN_CONV_Y(p3[Y] + m_ypos);
+
+		vertexes[0].x = p0[X];
+		vertexes[0].y = p0[Y];
+		vertexes[0].z = 0;
+		vertexes[0].rhw = 1.0f;
+		vertexes[0].color = current_color;
+		vertexes[0].u = u0;
+		vertexes[0].v = v0;
+
+		vertexes[1].x = p2[X];
+		vertexes[1].y = p2[Y];
+		vertexes[1].z = 0;
+		vertexes[1].rhw = 1.0f;
+		vertexes[1].color = current_color;
+		vertexes[1].u = u0;
+		vertexes[1].v = v1;
+
+		vertexes[2].x = p1[X];
+		vertexes[2].y = p1[Y];
+		vertexes[2].z = 0;
+		vertexes[2].rhw = 1.0f;
+		vertexes[2].color = current_color;
+		vertexes[2].u = u1;
+		vertexes[2].v = v0;
+
+
+		vertexes[3].x = p3[X];
+		vertexes[3].y = p3[Y];
+		vertexes[3].z = 0;
+		vertexes[3].rhw = 1.0f;
+		vertexes[3].color = current_color;
+		vertexes[3].u = u1;
+		vertexes[3].v = v1;
+	}
+
+	//STDMETHOD(DrawIndexedPrimitiveUP)(THIS_ D3DPRIMITIVETYPE PrimitiveType, UINT MinVertexIndex, UINT NumVertices, 
+	// UINT PrimitiveCount, CONST void* pIndexData, D3DFORMAT IndexDataFormat, CONST void* pVertexStreamZeroData,
+	// UINT VertexStreamZeroStride) PURE;
+	set_vertex_shader(D3DFVF_TEX1 | D3DFVF_DIFFUSE | D3DFVF_XYZRHW); // 0x144
+	D3DDevice_SetTextureStageState(0, D3DTSS_COLOROP, 5);
+	D3DDevice_SetTextureStageState(0, D3DTSS_ALPHAOP, 5);
+
+	static uint16 s_index_data[] = { 0, 1, 2, 1, 3, 2, 0, 0xC2DC };
+	if (!g_disableRendering)
+	{
+		// D3DPRIMITIVETYPE PrimitiveType,
+		// UINT MinVertexIndex,
+		// UINT NumVertices,
+		// UINT PrimitiveCount,
+		// CONST void* pIndexData,
+		// D3DFORMAT IndexDataFormat,
+		// CONST void* pVertexStreamZeroData,
+		// UINT VertexStreamZeroStride
+
+		D3DDevice_DrawIndexedPrimitiveUP(D3DPT_TRIANGLELIST, 0, 4, 2, s_index_data, D3DFMT_INDEX16, &vertexes[0], 28);
 	}
 
 	//if( m_rot != 0.0f )
@@ -625,7 +685,7 @@ void sSprite::Draw(void)
 void sSprite::EndDraw( void )
 {
 	// Vertices have been submitted - nothing more to do.
-	// LWSS: add more to do
+	// LWSS: added more to do for PC
 	D3DDevice_SetTextureStageState(0, D3DTSS_COLOROP, 4);
 	D3DDevice_SetTextureStageState(0, D3DTSS_ALPHAOP, 4);
 }
