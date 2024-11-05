@@ -51,16 +51,17 @@ void CXboxScene::DestroySectorMeshes( void )
 /*                                                                */
 /*                                                                */
 /******************************************************************/
-void CXboxScene::plat_post_load(NxXbox::VertexMysteryMeat* p_meat)
+void CXboxScene::plat_post_load(void* p_meat)
 {
 	// LWSS add
 	if (p_meat)
 	{
-		Dbg_Assert(D3D_OK == D3DDevice_CreateVertexBuffer(p_meat->length, 8, 0, D3DPOOL_DEFAULT, &p_meat->vertexBuffer, 0));
-		p_meat->vertexBuffer->Lock(0, 0, &p_meat->lockedPtr, 0);
-		p_meat->streamOffset = 0;
-		this->p_vertex_buffer = p_meat->vertexBuffer;
-		this->p_vertex_buffer_len = p_meat->length;
+		NxXbox::VertexMysteryMeat* meat = (NxXbox::VertexMysteryMeat*)p_meat;
+		Dbg_Assert(D3D_OK == D3DDevice_CreateVertexBuffer(meat->length, 8, 0, D3DPOOL_DEFAULT, &meat->vertexBuffer, 0));
+		meat->vertexBuffer->Lock(0, 0, &meat->lockedPtr, 0);
+		meat->streamOffset = 0;
+		this->p_vertex_buffer = meat->vertexBuffer;
+		this->p_vertex_buffer_len = meat->length;
 	}
 	// LWSS end
 	 
@@ -72,7 +73,7 @@ void CXboxScene::plat_post_load(NxXbox::VertexMysteryMeat* p_meat)
 	{
 		CXboxGeom *p_xbox_geom = static_cast<CXboxGeom*>(pSector->GetGeom());
 
-		p_xbox_geom->CreateMeshArray(p_meat);
+		p_xbox_geom->CreateMeshArray((NxXbox::VertexMysteryMeat *)p_meat);
 
 		// First time through we just want to count the meshes,
 		p_xbox_geom->RegisterMeshArray( true );
@@ -83,8 +84,9 @@ void CXboxScene::plat_post_load(NxXbox::VertexMysteryMeat* p_meat)
 	// LWSS add
 	if (p_meat)
 	{
-		p_meat->vertexBuffer->Unlock();
-		p_meat->lockedPtr = NULL;
+		NxXbox::VertexMysteryMeat* meat = (NxXbox::VertexMysteryMeat*)p_meat;
+		meat->vertexBuffer->Unlock();
+		meat->lockedPtr = NULL;
 	}
 	// LWSS end
 

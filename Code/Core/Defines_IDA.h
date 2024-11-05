@@ -8,6 +8,8 @@
 
 */
 
+#ifdef __PLAT_WN32__
+
 #ifndef HEXRAYS_DEFS_H
 #define HEXRAYS_DEFS_H
 
@@ -77,6 +79,7 @@ typedef int16 _BOOL2;
 typedef int32 _BOOL4;
 typedef int64 _BOOL8;
 
+#ifndef __PLAT_XBOX
 #ifndef _WINDOWS_
 typedef int8 BYTE;
 typedef int16 WORD;
@@ -84,6 +87,8 @@ typedef int32 DWORD;
 typedef int32 LONG;
 typedef int BOOL;       // uppercase BOOL is usually 4 bytes
 #endif
+#endif
+
 typedef int64 QWORD;
 #ifndef __cplusplus
 typedef int bool;       // we want to use bool in our C programs
@@ -468,3 +473,4 @@ void __noreturn __break(uint16 code, uint16 subcode);
 #define ADJ(p) (__parentof(p) *)(p-__deltaof(p))
 
 #endif // HEXRAYS_DEFS_H
+#endif

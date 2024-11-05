@@ -29,9 +29,9 @@
 // lwss: Enable Original Allocator (Vs. Raw Malloc/Realloc/Free)
 // The original is better since it can actually go up/down the heap and resize things.
 // Calling plain realloc will reallocate things in a completely different location almost always.
-#ifndef __PLAT_WN32__
-#define KISAK_ORIGINAL_ALLOCATOR
-#endif
+
+// LWSS: Seems to be used to Navmesh
+#define TESTING_GUNSLINGER 1
 
 #ifdef __PLAT_WN32__
 //#define KISAK_ORIGINAL_ALLOCATOR 1 //LWSS: Moved to CMake
@@ -70,9 +70,6 @@ extern bool g_windowJustWentOutOfFocus;
 extern bool g_windowHasBeenDisplayedEver;
 extern bool gbQuit;
 extern bool g_hasJustEnteredNetworkGame;
-
-// LWSS: Seems to be used to Navmesh
-#define TESTING_GUNSLINGER 1
 
 // MSVC Error-fix
 #define stricmp _stricmp
@@ -695,6 +692,7 @@ inline void*	operator new[]( size_t size, Mem::Allocator* pAlloc, bool assert_on
 	return mem;
 }
 
+#if 0
 #ifndef __PLAT_WN32__
 /******************************************************************/
 /*                                                                */
@@ -715,6 +713,7 @@ inline void* 	operator new[]( size_t size, void* pLocation )
 {
 	return pLocation;
 }
+#endif
 #endif
 
 #ifndef __PLAT_NGC__

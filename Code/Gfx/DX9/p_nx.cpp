@@ -754,7 +754,12 @@ CScene *CEngine::s_plat_load_scene_from_memory( void *p_mem, CTexDict *p_tex_dic
 /*                                                                */
 /*                                                                */
 /******************************************************************/
+#ifdef __PLAT_WN32__
+// lwss: PC version has mystery meat for now.
 CScene *CEngine::s_plat_load_scene( const char *p_name, CTexDict *p_tex_dict, bool add_super_sectors, bool is_sky, bool is_dictionary, NxXbox::VertexMysteryMeat* p_meat)
+#else
+CScene *CEngine::s_plat_load_scene( const char *p_name, CTexDict *p_tex_dict, bool add_super_sectors, bool is_sky, bool is_dictionary)
+#endif
 {
 	CSector*		pSector;
 	CXboxSector*	pXboxSector;

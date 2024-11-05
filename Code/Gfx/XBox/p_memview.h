@@ -3,6 +3,11 @@
 #ifndef	__P_MEMVIEW_H__
 #define	__P_MEMVIEW_H__
 
+namespace Mem
+{
+	class Heap;
+}
+
 void MemView_Display();
 void MemView_Input(uint buttons, uint makes, uint breaks);
 void MemView_Alloc( void *v);

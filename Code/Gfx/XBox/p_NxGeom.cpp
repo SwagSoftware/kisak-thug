@@ -8,7 +8,7 @@
 
 #include <gfx/xbox/p_nxgeom.h>
 
-#include <core/math.h>
+#include <core/allmath.h>
 
 #include <gfx/skeleton.h>
 #include <gfx/xbox/p_nxmesh.h>

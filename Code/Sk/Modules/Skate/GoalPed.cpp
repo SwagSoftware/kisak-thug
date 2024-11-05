@@ -79,8 +79,8 @@ const char* CGoalPed::GetProFirstName()
 	Script::CStruct* pParams = GetGoalParams();
 	
 	// grab the pro
-	const char* p_default_pro_name = nullptr;
-	const char* p_alternate_pro_name = nullptr;
+	const char* p_default_pro_name = NULL;
+	const char* p_alternate_pro_name = NULL;
 	if ( !pParams->GetText( CRCD(0x944b2900,"pro"), &p_default_pro_name ) )
 	{
 		// printf("no pro associated with this goal\n");

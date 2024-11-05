@@ -231,8 +231,12 @@ public:
 			  
 	static CScene	*			s_plat_create_scene(const char *p_name, CTexDict *p_tex_dict,
 													bool add_super_sectors = true);	// creates an empty scene
-	static CScene	*			s_plat_load_scene(const char *p_name, CTexDict *p_tex_dict, bool add_super_sectors,
-												  bool is_sky, bool is_dictionary, struct NxXbox::VertexMysteryMeat* p_meat);		// load a platform specific scene file
+	// lwss: PC version has mystery meat for now.
+#ifdef __PLAT_WN32__
+	static CScene	*			s_plat_load_scene(const char *p_name, CTexDict *p_tex_dict, bool add_super_sectors, bool is_sky, bool is_dictionary, struct NxXbox::VertexMysteryMeat* p_meat);		// load a platform specific scene file
+#else
+	static CScene* s_plat_load_scene(const char* p_name, CTexDict* p_tex_dict, bool add_super_sectors, bool is_sky, bool is_dictionary);		// load a platform specific scene file
+#endif
 	static CScene	*			s_plat_load_scene_from_memory(void *p_data, CTexDict *p_tex_dict, bool add_super_sectors,
 												  bool is_sky, bool is_dictionary);		// load a platform specific scene file
 	static bool					s_plat_add_scene(CScene *p_scene, const char *p_filename);

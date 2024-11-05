@@ -5,11 +5,11 @@
 
 // If included in PC code, then uint8 and Dbg_MsgAssert will need to be defined.
 // lwss: why thank you ^^
-#ifdef __PLAT_WN32__
+//#ifdef __PLAT_WN32__
 #include <Core/Defines.h>
 #include <Gel/Scripting/tokens.h>
 using namespace Script;
-#endif
+//#endif
 								   
 // Returns a pointer to the next token after p_token.
 // It won't necessarily skip over the complete format of the data that is expected

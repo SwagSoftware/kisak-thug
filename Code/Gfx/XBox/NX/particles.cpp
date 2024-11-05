@@ -25,7 +25,7 @@
 *****************************************************************************/
 		
 #include <xtl.h>
-#include <core/math.h>
+#include <core/allmath.h>
 #include <gfx/NxTexMan.h>
 #include <gfx/xbox/p_nxtexture.h>
 #include "render.h"

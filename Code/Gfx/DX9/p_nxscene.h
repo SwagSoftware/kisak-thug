@@ -24,7 +24,7 @@ public:
 	void						DestroySectorMeshes( void );
 
 private:		// It's all private, as it is machine specific
-	virtual void				plat_post_load(NxXbox::VertexMysteryMeat* p_meat);
+	virtual void				plat_post_load(void* p_meat = NULL);
 	virtual bool				plat_load_textures( const char *p_name );	// load textures 
 	virtual bool				plat_load_collision( const char *p_name );	// load collision data
 	virtual bool				plat_unload_add_scene( void );

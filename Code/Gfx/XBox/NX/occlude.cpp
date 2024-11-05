@@ -25,7 +25,7 @@
 		
 #include <xtl.h>
 #include <xgmath.h>
-#include <core/math.h>
+#include <core/allmath.h>
 #include <gfx/debuggfx.h>
 #include "occlude.h"
 

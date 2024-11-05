@@ -17,7 +17,7 @@
 **	Description:						 									**
 **																			**
 *****************************************************************************/
-
+#if 0
 /*****************************************************************************
 **							  	  Includes									**
 *****************************************************************************/
@@ -284,7 +284,7 @@ void *PreFile::GetContainedFile(const char *pName)
 	if (!pFile) 
 		return NULL;
 	
-	dumbSkyFile *pHandle = &pFile->sky;
+	void *pHandle = pFile;
 	// kinda roundabout, but sets mp_activeFile
 	GetContainedFileByHandle(pHandle);
 	
@@ -311,12 +311,13 @@ uint8 *PreFile::GetContainedFileByHandle(void *pHandle)
 	while(pFile)
 	{
 		uint8 *pCompressedData = pFile->pCompressedData;
-		if (pCompressedData && &pFile->sky == pHandle)
+		//if (pCompressedData && &pFile->sky == pHandle)
+		if (pCompressedData && &pFile == pHandle)
 		{
 			mp_activeFile = pFile;
 			
 			if (mp_activeFile->compressedDataSize)
-			return mp_activeFile->pData;
+				return mp_activeFile->pData;
 			else
 				return mp_activeFile->pCompressedData;
 		}
@@ -346,7 +347,8 @@ void *PreFile::LoadContainedFile( const char *pName, int *p_size, void *p_dest )
 		return NULL;
 	}	
 	
-	*p_size = pFile->sky.SOF;
+	//*p_size = pFile->sky.SOF;
+	p_size = pFile->m_filesize;
 	
 	p_dest = Mem::Malloc( pFile->sky.SOF );
 	
@@ -1152,6 +1154,6 @@ void *PreMgr::LoadFile( const char *pName, int *p_size, void *p_dest )
 
 } // namespace File
 
-
+#endif
 
 

@@ -245,7 +245,7 @@ gsiSocketGethostbyname(n) SOC_GetHostByName(n)
 		typedef int HOSTENT;
 	#endif
 
-	char * inet_ntoa(IN_ADDR in_addr);
+	//char * inet_ntoa(IN_ADDR in_addr); // lwss: Remove Decl
 #endif
 
 #if defined(SN_SYSTEMS) 

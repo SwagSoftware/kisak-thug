@@ -7451,7 +7451,9 @@ bool Manager::ScriptEnteredNetworkGame(Script::CScriptStructure *pParams, Script
     
 	mlp_manager->AddLogicTask( *gamenet_man->m_enter_chat_task );
 	// lwss add
+#ifdef __PLAT_WN32__
 	g_hasJustEnteredNetworkGame = true;
+#endif
 	// lwss end
 	mlp_manager->AddLogicTask( *gamenet_man->m_render_scores_task );
 	gamenet_man->m_scores_on = true;

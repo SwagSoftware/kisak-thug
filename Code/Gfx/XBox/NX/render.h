@@ -2,7 +2,7 @@
 #define __RENDER_H
 
 #include <xgmath.h>
-#include <core/math.h>
+#include <core/allmath.h>
 #include <core/math/geometry.h>
 #include <gfx/xbox/p_nxmodel.h>
 #include "mesh.h"

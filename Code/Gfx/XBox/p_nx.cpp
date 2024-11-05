@@ -50,7 +50,7 @@
 #include	"gfx\xbox\p_NxTextured3dPoly.h"
 #include	"gfx\xbox\p_NxNewParticleMgr.h"
 #include	"gfx\xbox\p_NxWeather.h"
-#include	"core\math.h"
+#include	"core\allmath.h"
 #include 	"sk\engine\SuperSector.h"					
 #include 	"gel\scripting\script.h"
 

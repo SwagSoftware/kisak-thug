@@ -44,7 +44,7 @@ public:
 								CScene( int sector_table_size = 10 );
 	virtual						~CScene();
 
-	void						PostLoad(const char *p_name, NxXbox::VertexMysteryMeat* p_meat);
+	void						PostLoad(const char *p_name, void* p_meat = NULL);
 	void						PostAdd(const char *p_name, Nx::CTexDict * p_tex_dict);
 	bool						LoadTextures(const char *p_name);			// load scene textures
 	bool						LoadCollision(const char *p_name, bool is_net=false);			// load scene collision data
@@ -155,7 +155,7 @@ private:
 	////////////////////////////////////////////////////////////
 	// Platform specific function calls	
 	//
-	virtual void				plat_post_load(NxXbox::VertexMysteryMeat* p_meat);
+	virtual void				plat_post_load(void* p_meat);
 	virtual void				plat_post_add();
 	virtual bool				plat_load_textures(const char *p_name);		// load textures 
 	virtual bool				plat_load_collision(const char *p_name);	// load collision data

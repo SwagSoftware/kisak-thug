@@ -44,8 +44,8 @@ namespace Sys
 #endif
 
 #ifdef	__PLAT_XBOX__
-#include <gfx/DX9/nx/nx_init.h>
-#include <gfx/DX9/nx/render.h>
+#include <gfx/xbox/nx/nx_init.h>
+#include <gfx/xbox/nx/render.h>
 #endif
 
 /*****************************************************************************

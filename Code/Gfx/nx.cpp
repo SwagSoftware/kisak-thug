@@ -31,7 +31,11 @@
 //#include <sk/modules/skate/skate.h>		// For getting list of movable objects
 
 #include <sys/replay/replay.h>
+
+// lwss add for vertex mystery meat
+#ifdef __PLAT_WN32__
 #include <Gfx/DX9/NX/mesh.h>
+#endif
 
 #ifdef	__PLAT_NGPS__
 namespace NxPs2
@@ -260,16 +264,26 @@ CScene	*		CEngine::sLoadScene(const char *p_name, CTexDict *p_tex_dict,
 
 	Mem::PushMemProfile((char*)full_name);
 
+	// lwss add: some nasty changes for PC
+#ifdef __PLAT_WN32__
 	NxXbox::VertexMysteryMeat meat;
 	memset(&meat, 0x00, sizeof(NxXbox::VertexMysteryMeat));
 	CScene *loaded_scene = s_plat_load_scene(full_name, p_tex_dict, add_super_sectors, is_sky, is_dictionary, &meat);
+#else
+	CScene* loaded_scene = s_plat_load_scene(full_name, p_tex_dict, add_super_sectors, is_sky, is_dictionary);
+#endif
+	// lwss end
 
 	loaded_scene->SetID(Script::GenerateCRC(p_name)); 	// store the checksum of the scene name
 
 	loaded_scene->SetTexDict(p_tex_dict);					  
 					  
 	// Do post-load processing
+#ifdef __PLAT_WN32__
 	loaded_scene->PostLoad(full_name, &meat);
+#else
+	loaded_scene->PostLoad(full_name);
+#endif
 
 	// Put in scene array
 	int i;

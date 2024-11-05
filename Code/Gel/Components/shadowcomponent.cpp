@@ -24,7 +24,9 @@
 #include <gfx/nxlight.h>
 #include <gfx/shadow.h>
 
+#ifdef __PLAT_WN32__
 #include <gfx/DX9/NX/nx_init.h>
+#endif
 
 namespace Obj
 {
@@ -114,10 +116,12 @@ void CShadowComponent::InitFromStructure( Script::CStruct* pParams )
 	}
 
 	// lwss add: PC specific
+#ifdef __PLAT_WN32__
 	if (m_shadowType == CRCD(0x76A54CD1, "detailed") && !NxXbox::EngineGlobals.g_Registry_options_flag_1_MSAA)
 	{
 		m_shadowType = CRCD(0x3e84c2fd, "simple");
 	}
+#endif
 	// lwss end
 
 	switch ( m_shadowType )

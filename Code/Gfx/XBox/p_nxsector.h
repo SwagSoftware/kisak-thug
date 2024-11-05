@@ -1,7 +1,7 @@
 #ifndef	__GFX_P_NX_SECTOR_H__
 #define	__GFX_P_NX_SECTOR_H__
 
-#include 	<core\math.h>
+#include 	<core\allmath.h>
 #include 	<core\math\geometry.h>
 #include 	"gfx\NxSector.h"
 #include 	"gfx\Image\ImageBasic.h"

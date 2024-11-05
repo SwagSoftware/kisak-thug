@@ -26,7 +26,7 @@
 #include <xtl.h>
 #include <core/macros.h>
 #include <core/defines.h>
-#include <core/math.h>
+#include <core/allmath.h>
 #include <sys/file/xbox/hed.h>
 #include <gel/soundfx/soundfx.h>
 

@@ -27,7 +27,7 @@
 
 #include <core/macros.h>
 #include <core/defines.h>
-#include <core/math.h>
+#include <core/allmath.h>
 #include <core/crc.h>
 #include <gel/soundfx/soundfx.h>
 

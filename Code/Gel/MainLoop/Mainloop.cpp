@@ -318,9 +318,10 @@ void		Manager::MainLoop( void )
 
 #endif
 
-	//while ( !done )
-	while ( !gbQuit )
+	while ( !done )
 	{
+// lwss Add
+#ifdef __PLAT_WN32__
 		//if (g_windowJustWentOutOfFocus)
 		//{
 		//	if (D3DDevice_TestCooperativeLevel() != D3DERR_DEVICELOST)
@@ -379,6 +380,8 @@ void		Manager::MainLoop( void )
 		Tmr::Vblank();
 		Tmr::PreUpdateTimerInfo();
 	
+#endif
+// lwss end
 		if (trigger_profiling)
 		{
 			printf ("\nProfiling.....Start of main loop\n\n");

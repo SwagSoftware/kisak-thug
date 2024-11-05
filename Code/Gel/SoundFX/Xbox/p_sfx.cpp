@@ -811,7 +811,7 @@ void InitSoundFX( CSfxManager *p_sfx_manager )
 
         // Read the image in
         DWORD dwBytesRead;
-        BOOL bResult = ReadFile( hFile, p_buffer, size, &dwBytesRead, 0 );
+        BOOL bResult = ReadFile( hFile, p_buffer, size, (LPDWORD)&dwBytesRead, 0 );
 		if( !bResult )
         {
 			Dbg_Assert( 0 );
@@ -1358,7 +1358,7 @@ void PerFrameUpdate( void )
 		if( VoiceSimulator[i].p_buffer )
 		{
 			DWORD status;
-			HRESULT hr = VoiceSimulator[i].p_buffer->GetStatus( &status );
+			HRESULT hr = VoiceSimulator[i].p_buffer->GetStatus( (LPDWORD)&status );
 			if(( hr == DS_OK ) && ( status == 0 ))
 			{
 				// This sound has stopped playing, so we can release the buffer.

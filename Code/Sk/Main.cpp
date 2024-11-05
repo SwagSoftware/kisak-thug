@@ -551,8 +551,8 @@ int main ( sint argc, char** argv )
 #endif
 
 	
-	//while (  true )
-	while (!gbQuit)
+	while (  true )
+	//while (!gbQuit)
 	{	
 		Mem::Manager::sHandle().BottomUpHeap()->PushContext();
 		Mem::Manager::sHandle().PushMemoryMarker(MAINLOOP_MEMMARKER);
