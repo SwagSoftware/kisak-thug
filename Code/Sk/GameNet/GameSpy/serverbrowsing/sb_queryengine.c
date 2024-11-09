@@ -314,6 +314,7 @@ void SBQueryEngineInit(SBQueryEngine *engine, int maxupdates, int queryversion, 
 		sndev_set_options(0, SN_DEV_SET_PING_RESET, &optval, sizeof(optval));
 	}
 	#else
+	#define SOCK_RAW        3 // lwss hack
 	engine->icmpsock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
 	#endif
 #endif

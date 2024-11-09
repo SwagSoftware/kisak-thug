@@ -1360,20 +1360,11 @@ inline	Metrics*	Conn::GetOutboundMetrics( void )
 *****************************************************************************/
 
 #ifdef __PLAT_XBOX__
+#define inet_ntoa my_inet_ntoa
 // Need this to be outside the Net:: namespace...
-inline char* inet_ntoa( struct in_addr addr )
+extern "C"
 {
-	IN_ADDR		in_a;
-	in_a.S_un	= addr.S_un;
-
-	const int	STRING_BUFFER_SIZE = 100;
-//	static char	string_buffer[STRING_BUFFER_SIZE];
-//	int			rv = XNetInAddrToString( in_a, string_buffer, STRING_BUFFER_SIZE );
-
-	// Cheesy hack for now.
-	static char	string_buffer[STRING_BUFFER_SIZE] = "0.0.0.0";
-
-	return string_buffer;
+	char* my_inet_ntoa(struct in_addr addr);
 }
 #endif
 

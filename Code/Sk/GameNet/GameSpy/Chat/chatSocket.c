@@ -196,6 +196,19 @@ CHATBool ciSocketInit(ciSocket * sock, const char * nick)
 	return CHATTrue;	
 }
 
+#ifdef _XBOX
+// LWSS: HACK
+#define SO_DEBUG        0x0001          /* turn on debugging info recording */
+#define SO_ACCEPTCONN   0x0002          /* socket has had listen() */
+#define SO_REUSEADDR    0x0004          /* allow local address reuse */
+#define SO_KEEPALIVE    0x0008          /* keep connections alive */
+#define SO_DONTROUTE    0x0010          /* just use interface addresses */
+#define SO_BROADCAST    0x0020          /* permit sending of broadcast msgs */
+#define SO_USELOOPBACK  0x0040          /* bypass hardware when possible */
+#define SO_LINGER       0x0080          /* linger on close if data present */
+#define SO_OOBINLINE    0x0100          /* leave received OOB data in line */
+#endif
+
 CHATBool ciSocketConnect(ciSocket * sock,
 					 const char * serverAddress,
 					 int port)

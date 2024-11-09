@@ -61,7 +61,7 @@ typedef struct GSIResolveHostnameInfo
 // * threading enabled
 // * and async lookup enabled
 ////////////////////////////////////////////////////////////////////////////////
-#if	(defined(_WIN32) || /*defined(_PS2) ||*/ defined(_UNIX) || defined (_REVOLUTION)) && !defined(GSI_NO_THREADS) && !defined(GSI_NO_ASYNC_DNS)
+#if	(defined(_WIN32) || /*defined(_PS2) ||*/ defined(_UNIX) || defined (_REVOLUTION)) && !defined(GSI_NO_THREADS) && !defined(GSI_NO_ASYNC_DNS) && !defined(_XBOX)
 
 ////////////////////////////////////////////////////////////////////////////////
 #if defined(_WIN32) /*|| defined(_PS2)*/
@@ -1781,7 +1781,7 @@ static const char * GOAGetUniqueID_Internal(void)
 #endif // _PS2
 
 
-#if ((defined(_WIN32) && !defined(_XBOX)) || defined(_UNIX))
+#if ((defined(_WIN32) /*&& !defined(_XBOX)*/) || defined(_UNIX))
 
 static void GenerateID(char *keyval)
 {
@@ -1819,7 +1819,7 @@ const char * GOAGetUniqueID_Internal(void)
 	static char keyval[PATH_MAX] = "";
 	unsigned int ret;
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(_XBOX)
 	int docreate;
 	HKEY thekey;
 	DWORD thetype = REG_SZ;
@@ -1847,7 +1847,7 @@ const char * GOAGetUniqueID_Internal(void)
 	if (ret != 0 || strlen(keyval) != 19)//need to generate a new key
 	{
 		GenerateID(keyval);
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(_XBOX)
 		if (docreate)
 		{
 			ret = RegCreateKeyExA(HKEY_CURRENT_USER, REG_KEY, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &thekey, &disp);
@@ -1864,7 +1864,7 @@ const char * GOAGetUniqueID_Internal(void)
 #endif
 	}
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(_XBOX)
 	RegCloseKey(thekey);
 #endif
 

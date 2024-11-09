@@ -3218,3 +3218,24 @@ int	BitStream::ReadSignedValue( int num_bits )
 /******************************************************************/
 
 }	// namespace Net
+
+// lwss add
+#ifdef __PLAT_XBOX__
+extern "C"
+{
+char* my_inet_ntoa(struct in_addr addr)
+{
+	IN_ADDR		in_a;
+	in_a.S_un = addr.S_un;
+
+	const int	STRING_BUFFER_SIZE = 100;
+	//	static char	string_buffer[STRING_BUFFER_SIZE];
+	//	int			rv = XNetInAddrToString( in_a, string_buffer, STRING_BUFFER_SIZE );
+
+		// Cheesy hack for now.
+	static char	string_buffer[STRING_BUFFER_SIZE] = "0.0.0.0";
+
+	return string_buffer;
+}
+}
+#endif

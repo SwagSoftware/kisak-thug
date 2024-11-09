@@ -20,8 +20,8 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				OptimizeForProcessor="2"
-				AdditionalIncludeDirectories="..\..\Code;..\..\Code\Core;..\..\Code\Sk"
-				PreprocessorDefinitions="_DEBUG;WIN32;_XBOX;__PLAT_XBOX__;KISAK_ORIGINAL_ALLOCATOR"
+				AdditionalIncludeDirectories="..\..\Code;..\..\xbox\Bink;..\..\Code\Core;..\..\Code\Sk"
+				PreprocessorDefinitions="_DEBUG;WIN32;_XBOX;__PLAT_XBOX__;KISAK_ORIGINAL_ALLOCATOR;UNIQUEID;GSI_NO_THREADS"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -34,10 +34,10 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="xapilibd.lib d3d8d.lib d3dx8d.lib xgraphicsd.lib dsoundd.lib dmusicd.lib xboxkrnl.lib goblib.lib xbdm.lib xvoiced.lib xonlinesd.lib"
+				AdditionalDependencies="xapilibd.lib d3d8d.lib d3dx8d.lib xgraphicsd.lib dsoundd.lib dmusicd.lib xboxkrnl.lib xbdm.lib xvoiced.lib xonlinesd.lib binkxbox.lib"
 				OutputFile=".\Debug\jamp-debug.exe"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories=".\Debug"
+				AdditionalLibraryDirectories="..\..\xbox\Bink;.\Debug"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/$(ProjectName).pdb"
 				SubSystem="2"
@@ -930,9 +930,6 @@
 			<Filter
 				Name="Music"
 				Filter="">
-				<File
-					RelativePath="..\..\Code\Gel\Music\binkaudio.c">
-				</File>
 				<File
 					RelativePath="..\..\Code\Gel\Music\music.cpp">
 				</File>
@@ -2173,6 +2170,257 @@
 						RelativePath="..\..\Code\Sk\GameNet\XBox\p_voice.h">
 					</File>
 				</Filter>
+				<Filter
+					Name="GameSpy"
+					Filter="">
+					<File
+						RelativePath="..\..\Code\Sk\GameNet\GameSpy\darray.c">
+					</File>
+					<File
+						RelativePath="..\..\Code\Sk\GameNet\GameSpy\hashtable.c">
+					</File>
+					<File
+						RelativePath="..\..\Code\Sk\GameNet\GameSpy\md5c.c">
+					</File>
+					<Filter
+						Name="Chat"
+						Filter="">
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\Chat\chatCallbacks.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\Chat\chatChannel.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\Chat\chatCrypt.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\Chat\chatHandlers.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\Chat\chatMain.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\Chat\chatSocket.c">
+						</File>
+					</Filter>
+					<Filter
+						Name="Common"
+						Filter="">
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\common\gsAssert.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\common\gsAvailable.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\common\gsCore.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\common\gsCrypt.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\common\gsDebug.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\common\gsLargeInt.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\common\gsMemory.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\common\gsPlatform.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\common\gsPlatformSocket.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\common\gsPlatformThread.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\common\gsPlatformUtil.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\common\gsRC4.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\common\gsSHA1.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\common\gsSoap.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\common\gsSSL.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\common\gsStringUtil.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\common\gsUdpEngine.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\common\gsXML.c">
+						</File>
+						<Filter
+							Name="XBox"
+							Filter="">
+							<File
+								RelativePath="..\..\Code\Sk\GameNet\GameSpy\common\win32\gsUtilWin32.c">
+							</File>
+						</Filter>
+					</Filter>
+					<Filter
+						Name="ghttp"
+						Filter="">
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\ghttp\ghttpBuffer.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\ghttp\ghttpCallbacks.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\ghttp\ghttpCommon.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\ghttp\ghttpConnection.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\ghttp\ghttpEncryption.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\ghttp\ghttpMain.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\ghttp\ghttpPost.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\ghttp\ghttpProcess.c">
+						</File>
+					</Filter>
+					<Filter
+						Name="gt2"
+						Filter="">
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\gt2\gt2Auth.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\gt2\gt2Buffer.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\gt2\gt2Callback.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\gt2\gt2Connection.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\gt2\gt2Encode.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\gt2\gt2Filter.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\gt2\gt2Main.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\gt2\gt2Message.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\gt2\gt2Socket.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\gt2\gt2Utility.c">
+						</File>
+					</Filter>
+					<Filter
+						Name="Peer"
+						Filter="">
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\Peer\peerAutoMatch.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\Peer\peerCallbacks.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\Peer\peerGlobalCallbacks.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\Peer\peerHost.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\Peer\peerKeys.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\Peer\peerMain.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\Peer\peerMangle.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\Peer\peerOperations.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\Peer\peerPing.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\Peer\peerPlayers.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\Peer\peerQR.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\Peer\peerRooms.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\Peer\peerSB.c">
+						</File>
+					</Filter>
+					<Filter
+						Name="PINGER"
+						Filter="">
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\pinger\pingerMain.c">
+						</File>
+					</Filter>
+					<Filter
+						Name="serverbrowsing"
+						Filter="">
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\serverbrowsing\sb_crypt.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\serverbrowsing\sb_queryengine.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\serverbrowsing\sb_server.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\serverbrowsing\sb_serverbrowsing.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\serverbrowsing\sb_serverlist.c">
+						</File>
+					</Filter>
+					<Filter
+						Name="natneg"
+						Filter="">
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\natneg\NATify.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\natneg\natneg.c">
+						</File>
+					</Filter>
+					<Filter
+						Name="qr2"
+						Filter="">
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\qr2\qr2.c">
+						</File>
+						<File
+							RelativePath="..\..\Code\Sk\GameNet\GameSpy\qr2\qr2regkeys.c">
+						</File>
+					</Filter>
+				</Filter>
 			</Filter>
 			<Filter
 				Name="Modules"
@@ -2691,6 +2939,9 @@
 				</File>
 				<File
 					RelativePath="..\..\Code\Sys\File\pip.h">
+				</File>
+				<File
+					RelativePath="..\..\Code\Sys\File\PRE.cpp">
 				</File>
 				<File
 					RelativePath="..\..\Code\Sys\File\PRE.h">

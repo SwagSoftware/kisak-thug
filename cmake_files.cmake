@@ -885,7 +885,6 @@ source_group("Sk/GameNet" FILES ${SK_GAMENET})
 set(SK_GAMENET_GAMESPYSLOP
 	"${SRC_DIR}/Sk/GameNet/GameSpy/Chat/chat.h"
 	"${SRC_DIR}/Sk/GameNet/GameSpy/Chat/chatASCII.h"
-	"${SRC_DIR}/Sk/GameNet/GameSpy/Chat/chatc/chatc.c"
 	"${SRC_DIR}/Sk/GameNet/GameSpy/Chat/chatCallbacks.c"
 	"${SRC_DIR}/Sk/GameNet/GameSpy/Chat/chatCallbacks.h"
 	"${SRC_DIR}/Sk/GameNet/GameSpy/Chat/chatChannel.c"
@@ -986,7 +985,6 @@ set(SK_GAMENET_GAMESPYSLOP
 	"${SRC_DIR}/Sk/GameNet/GameSpy/natneg/natneg.c"
 	"${SRC_DIR}/Sk/GameNet/GameSpy/natneg/natneg.h"
 	"${SRC_DIR}/Sk/GameNet/GameSpy/natneg/nninternal.h"
-	"${SRC_DIR}/Sk/GameNet/GameSpy/natneg/simpletest/simpletest.c"
 	
 	"${SRC_DIR}/Sk/GameNet/GameSpy/Peer/peer.h"
 	"${SRC_DIR}/Sk/GameNet/GameSpy/Peer/peerAscii.h"

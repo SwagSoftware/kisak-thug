@@ -3527,7 +3527,7 @@ void peerStartGameA
 	///////////////////////
 	piSendChannelUTM(peer, connection->rooms[StagingRoom], PI_UTM_LAUNCH, message, PEERFalse);
 
-#if 1
+#if 0
 	// Send an old-style launch command.
 	// THIS IS ONLY NEEDED FOR BACKWARDS COMPATIBILITY AND SHOULD BE REMOVED AT SOME POINT IN THE FUTURE.
 	////////////////////////////////////////////////////////////////////////////////////////////////////

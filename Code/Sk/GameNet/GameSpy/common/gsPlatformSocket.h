@@ -242,10 +242,22 @@ gsiSocketGethostbyname(n) SOC_GetHostByName(n)
 		typedef struct hostent HOSTENT;
 		struct hostent * gethostbyname(const char* name);
 	#else
-		typedef int HOSTENT;
+		// hostent support
+		struct hostent
+		{
+			char* h_name;       
+			char** h_aliases;    
+			gsi_u16 h_addrtype; // AF_INET
+			gsi_u16 h_length;   
+			char** h_addr_list; 
+		};
+
+		typedef struct hostent HOSTENT;
+		struct hostent * gethostbyname(const char* name);
 	#endif
 
-	//char * inet_ntoa(IN_ADDR in_addr); // lwss: Remove Decl
+	//char * __stdcall inet_ntoa(struct in_addr);
+	#define inet_ntoa my_inet_ntoa
 #endif
 
 #if defined(SN_SYSTEMS) 
