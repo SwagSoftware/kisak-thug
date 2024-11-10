@@ -35,7 +35,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="xapilibd.lib d3d8d.lib d3dx8d.lib xgraphicsd.lib dsoundd.lib dmusicd.lib xboxkrnl.lib xbdm.lib xvoiced.lib xonlinesd.lib binkxbox.lib"
-				OutputFile=".\Debug\jamp-debug.exe"
+				OutputFile=".\Debug\kisak-thugx-debug.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\xbox\Bink;.\Debug"
 				GenerateDebugInformation="TRUE"
@@ -51,7 +51,7 @@
 				Name="VCPreLinkEventTool"/>
 			<Tool
 				Name="XboxDeploymentTool"
-				RemotePath="xe:\JK3\$(TargetName).xbe"/>
+				RemotePath="xe:\KisakThugX\$(TargetName).xbe"/>
 			<Tool
 				Name="XboxImageTool"
 				StackSize="0x40000"

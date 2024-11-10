@@ -613,7 +613,12 @@ void*	Heap::allocate( size_t size, bool assert_on_fail )
 		if ( new_size > 0 )	// create new free node for left-over memory
 		{
 			p_freeblock->mSize = size;
-			new ((void*)p_leftover) BlockHeader( this, new_size );			
+
+			// lwss hack: So the BlockHeader has its Spt::Class inheritance commented out. This means there is no operator new[](void* location) override. And therefore it will infinite recursion on XBox
+			BlockHeader* p_header = (BlockHeader*)p_leftover;
+			*p_header = BlockHeader(this, new_size);
+			//new (p_leftover) BlockHeader( this, new_size );			
+
 			mUsedBlocks++;
 			free( p_leftover );
 		}
@@ -653,7 +658,10 @@ void*	Heap::allocate( size_t size, bool assert_on_fail )
 #endif
 		if ( p_freeblock )
 		{
-			new ((void*)p_freeblock) BlockHeader( this, size );
+			// lwss hack: So the BlockHeader has its Spt::Class inheritance commented out. This means there is no operator new[](void* location) override. And therefore it will infinite recursion on XBox
+			BlockHeader* p_header = (BlockHeader*)p_freeblock;
+			*p_header = BlockHeader(this, size);
+			//new (p_freeblock) BlockHeader( this, size );
 
 			mUsedBlocks++;
 #ifdef __EFFICIENT__
@@ -803,7 +811,7 @@ void* Heap::reallocate_down( size_t newSize, void *pOld )
 #ifdef __PLAT_NGC__
 	newSize = (uint)nAlignUpBy( newSize, 5 );	// all allocations aligned by 32 bytes
 #else
-	newSize = (uint)nAlignUpBy( newSize, 4 );	// all allocations aligned by 16 bytes (LWSS: Accurate for PC)
+	newSize = (uint)nAlignUpBy( newSize, 4 );	// all allocations aligned by 16 bytes (LWSS: Accurate for PC/XBox)
 #endif
 #endif		// __EFFICIENT__
 	

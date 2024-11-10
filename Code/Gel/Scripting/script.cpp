@@ -312,6 +312,7 @@ CScript::~CScript()
 // This gets called whenever mScriptChecksum is changed.
 void CScript::check_if_needs_to_be_watched_in_debugger()
 {
+	return; // KISAKTODO: Script Debuggery
 	Dbg::SWatchedScript *p_watched_script_info=Dbg::CScriptDebugger::Instance()->GetScriptWatchInfo(mScriptChecksum);
 	if (p_watched_script_info)
 	{

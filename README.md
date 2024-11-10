@@ -31,6 +31,7 @@ This was initially done with an IDA-minded approach to be 1:1 as possible.
 
 #### TODO
 - Fix NetPlay
+- Keyboard controls
 - Unstub Additional Gfx features (particles, billboards, ...)
 - Fix resolution code to not be hard-stuck at 640x480
 - SDL Windowing Code
@@ -44,3 +45,11 @@ This was initially done with an IDA-minded approach to be 1:1 as possible.
 
 After I was already finished with the port and able to load into New Jersey, I found [TONYRE](https://github.com/cuckydev/TONYRE) This is another wip sourceport that I didn't know about that - seems to have propped up about a year ago(kisak-thug was long in the planning stage). However, his is quite different and doesn't discourage me from continuing the project. Blackops adapted their mini+SDL audio code, which we're using for now.
 
+
+### XBox
+
+(Used 5849 Dec. 2003 XDK)
+
+Download XBox ISO, then use extract-xiso to extract the files, finally copy the files over to your XBox
+
+For XDK: `xbcp -r -y 'C:\Users\Thugn\Downloads\Tony Hawk''s Underground (USA).xiso\data' xE:\KisakThugX\`
