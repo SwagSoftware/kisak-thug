@@ -59,7 +59,8 @@
 				NoLibWarn="TRUE"
 				TitleID="0x4C41000B"
 				LANKey="4C41000B4C41000B4C41000B4C41000B"
-				TitleName="Jedi Knight: Jedi Academy"/>
+				TitleName="Kisak-THUG: Open Ground X"
+				TitleImage="../../xbox/titleimage.xbx"/>
 		</Configuration>
 		<Configuration
 			Name="Release|Xbox"
@@ -92,7 +93,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="xapilib.lib d3d8I.lib d3dx8.lib xgraphics.lib dsound.lib dmusic.lib xboxkrnl.lib goblib.lib xvoice.lib xbdm.lib xonlines.lib"
-				OutputFile=".\Release\jamp-release.exe"
+				OutputFile=".\Release\kisak-thugx-release.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=".\Release"
 				GenerateDebugInformation="TRUE"
@@ -111,13 +112,13 @@
 				Name="VCPreLinkEventTool"/>
 			<Tool
 				Name="XboxDeploymentTool"
-				RemotePath="xe:\JK3\$(TargetName).xbe"/>
+				RemotePath="xe:\KisakThugX\$(TargetName).xbe"/>
 			<Tool
 				Name="XboxImageTool"
 				StackSize="0x40000"
 				TitleID="0x4C41000B"
 				LANKey="4C41000B4C41000B4C41000B4C41000B"
-				TitleName="Jedi Knight: Jedi Academy"/>
+				TitleName="Kisak-THUG: Open Ground X"/>
 		</Configuration>
 		<Configuration
 			Name="FinalBuild|Xbox"
@@ -150,7 +151,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="xapilib.lib d3d8.lib d3dx8.lib xgraphics.lib dsound.lib dmusic.lib xboxkrnl.lib goblib.lib xvoice.lib xonlines.lib"
-				OutputFile=".\FinalBuild\jamp-final.exe"
+				OutputFile=".\FinalBuild\kisak-thugx-final.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=".\FinalBuild"
 				GenerateDebugInformation="TRUE"
@@ -169,14 +170,14 @@
 				Name="VCPreLinkEventTool"/>
 			<Tool
 				Name="XboxDeploymentTool"
-				RemotePath="xe:\JK3\$(TargetName).xbe"/>
+				RemotePath="xe:\KisakThugX\$(TargetName).xbe"/>
 			<Tool
 				Name="XboxImageTool"
 				StackSize="0x40000"
 				LimitAvailableMemoryTo64MB="TRUE"
 				TitleID="0x4C41000B"
 				LANKey="4C41000B4C41000B4C41000B4C41000B"
-				TitleName="Jedi Knight: Jedi Academy"/>
+				TitleName="Kisak-THUG: Open Ground X"/>
 		</Configuration>
 	</Configurations>
 	<References>
