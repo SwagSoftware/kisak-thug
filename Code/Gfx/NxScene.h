@@ -155,7 +155,11 @@ private:
 	////////////////////////////////////////////////////////////
 	// Platform specific function calls	
 	//
+#ifdef __PLAT_WN32__
 	virtual void				plat_post_load(void* p_meat);
+#else
+	virtual void				plat_post_load();
+#endif
 	virtual void				plat_post_add();
 	virtual bool				plat_load_textures(const char *p_name);		// load textures 
 	virtual bool				plat_load_collision(const char *p_name);	// load collision data

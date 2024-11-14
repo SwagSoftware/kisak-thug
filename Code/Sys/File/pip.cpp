@@ -343,7 +343,7 @@ void LoadPre(const char *p_preFileName)
 
 
 	// Reallocate the buffer.
-#ifdef __PLAT_WN32__
+#if defined(__PLAT_WN32__) || defined(__PLAT_XBOX__)
 	char* p_new_file_data = (char*)Mem::Malloc(new_pre_buffer_size);
 	memcpy(p_new_file_data + new_pre_buffer_size - old_pre_buffer_size + name_size, p_old_file_data + name_size, old_pre_buffer_size - name_size);
 	memcpy(p_new_file_data, p_old_file_data, name_size);

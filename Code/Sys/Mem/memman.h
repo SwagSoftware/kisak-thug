@@ -687,10 +687,15 @@ extern "C"
 	{
 		return false; 
 	}
-	inline size_t	GetAllocSize(void* pAddr)
+	inline size_t GetAllocSize(void* pAddr)
 	{
-#ifdef __PLAT_WN32__
+#if defined(__PLAT_WN32__)
 		return _msize(pAddr);
+#else
+		// KISAKTODO: This is ultra shitty, is there another way?
+		MEMORY_BASIC_INFORMATION basicInfo;
+		VirtualQuery(pAddr, &basicInfo, sizeof(MEMORY_BASIC_INFORMATION));
+		return basicInfo.RegionSize;
 #endif
 	}
 	inline void* ReallocateDown(size_t newSize, void* pOld)

@@ -21,7 +21,7 @@
 				Optimization="0"
 				OptimizeForProcessor="2"
 				AdditionalIncludeDirectories="..\..\Code;..\..\xbox\Bink;..\..\Code\Core;..\..\Code\Sk"
-				PreprocessorDefinitions="_DEBUG;WIN32;_XBOX;__PLAT_XBOX__;KISAK_ORIGINAL_ALLOCATOR;UNIQUEID;GSI_NO_THREADS"
+				PreprocessorDefinitions="_DEBUG;WIN32;_XBOX;__PLAT_XBOX__;KISAK_ORIGINAL_ALLOCATOR;KISAK_ZERO_ALLOCATIONS;UNIQUEID;GSI_NO_THREADS;KISAK_XBOX_DISABLE_WIDESCREEN"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"

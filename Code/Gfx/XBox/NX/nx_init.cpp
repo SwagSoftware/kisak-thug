@@ -241,6 +241,7 @@ void InitialiseEngine( void )
 //	params.MultiSampleType					= D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_LINEAR;
 
 	// Set flag for widescreen where appropriate.
+	#ifndef KISAK_XBOX_DISABLE_WIDESCREEN
 	if( video_flags & XC_VIDEO_FLAGS_WIDESCREEN )
 	{
 		params.Flags			|= D3DPRESENTFLAG_WIDESCREEN;
@@ -248,11 +249,13 @@ void InitialiseEngine( void )
 		// Optionally set up 720×480 back buffer.
 		// Set up 16:9 projection transform.
 	}
+	#endif
 
 	
 	// Set flag for progrssive scan where appropriate.
 	if( video_flags & XC_VIDEO_FLAGS_HDTV_720p )
 	{
+	#ifndef KISAK_XBOX_DISABLE_WIDESCREEN
 		params.Flags			|= D3DPRESENTFLAG_PROGRESSIVE | D3DPRESENTFLAG_WIDESCREEN;
 		params.BackBufferWidth	= 1280;
 		params.BackBufferHeight	= 720;
@@ -264,8 +267,10 @@ void InitialiseEngine( void )
 		EngineGlobals.screen_conv_y_multiplier	= 720.0f / 480.0f;
 		EngineGlobals.screen_conv_x_offset		= 32;
 		EngineGlobals.screen_conv_y_offset		= 32;
+	#endif
 	}
-	else if( video_flags & XC_VIDEO_FLAGS_HDTV_480p )
+	//else if( video_flags & XC_VIDEO_FLAGS_HDTV_480p )
+	if( video_flags & XC_VIDEO_FLAGS_HDTV_480p )
 	{
 		params.Flags			|= D3DPRESENTFLAG_PROGRESSIVE;
 	}

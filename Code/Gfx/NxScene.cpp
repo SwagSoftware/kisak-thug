@@ -400,7 +400,11 @@ void			CScene::PostLoad(const char *p_name, void* p_meat)
 {
 	strcpy(m_scene_filename, p_name);	// needs name for Pip::Unload()
 
+#ifdef __PLAT_WN32__
 	plat_post_load(p_meat);
+#else
+	plat_post_load();
+#endif
 }
 
 /******************************************************************/
@@ -1179,7 +1183,11 @@ Image::RGBA	CScene::GetMajorityColor() const
 /*                                                                */
 /******************************************************************/
 
-void			CScene::plat_post_load(void* p_meat)
+#ifdef __PLAT_WN32__
+void				CScene::plat_post_load(void* p_meat)
+#else
+void				CScene::plat_post_load()
+#endif
 {
 	printf ("STUB: PostLoad\n");
 }
