@@ -428,7 +428,9 @@ static IDirect3DPixelShader9* get_pixel_shader( sMaterial *p_material )
 		{
 			int blend_mode_value = blend_modes[curr_blend_mode + 1];
 			uses_prev = false;
-			int v33 = 0;
+			// Previous-mask lerp uses the prior pass's alpha: base (r0.a) for the first detail
+			// pass, else the preceding detail's preserved alpha (r1.a).
+			int v33 = ( curr_blend_mode >= 2 ) ? 4 : 0;
 			int v2 = 4;
 
 			if (blend_mode_value == vBLEND_MODE_BLEND_PREVIOUS_MASK || blend_mode_value == vBLEND_MODE_BLEND_INVERSE_PREVIOUS_MASK)
