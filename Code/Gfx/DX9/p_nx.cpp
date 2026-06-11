@@ -265,6 +265,15 @@ void CEngine::s_plat_post_render( void )
 			D3DDevice_Present(0, 0, 0, 0);
 		}
 
+		if( NxXbox::EngineGlobals.focus_blur )
+		{
+			++NxXbox::EngineGlobals.focus_blur_duration;
+		}
+		else
+		{
+			NxXbox::EngineGlobals.focus_blur_duration = 0;
+		}
+
 		if( NxXbox::EngineGlobals.screenshot_name[0] != 0 )
 		{
 			Spt::SingletonPtr< Gfx::Manager > gfx_manager;

@@ -354,8 +354,7 @@ sMesh::~sMesh( void )
 					D3DDevice_SetStreamSource( 0, NULL, 0, 0 );
 				}
 			
-				uint8 *p_del = (uint8*)mp_vertex_buffer[i];
-				delete p_del;
+				delete mp_vertex_buffer[i];
 				mp_vertex_buffer[i]	= NULL;
 			}
 		}
@@ -1016,15 +1015,12 @@ DISABLE_FOG:
 	}
 
 	// Pointless submitting a mesh with zero indices.
-	//if( m_num_indices == 0 )
-	if( m_num_indices[0] == 0 ) // lwss: thugbug??
+	if( m_num_indices[0] == 0 )
 		return;
 
+	D3DDevice_GetTransform((D3DTRANSFORMSTATETYPE)256, &v50);
 	if (this->m_biggest_index_used != -1)
 	{
-		//STDMETHOD(SetTransform)(THIS_ D3DTRANSFORMSTATETYPE State, CONST D3DMATRIX * pMatrix) PURE;
-		//STDMETHOD(GetTransform)(THIS_ D3DTRANSFORMSTATETYPE State, D3DMATRIX * pMatrix) PURE;
-		D3DDevice_GetTransform((D3DTRANSFORMSTATETYPE)256, &v50);
 		XGMatrixMultiply(&v51, (D3DXMATRIX*)&pBoneTransforms[this->m_biggest_index_used], &v50);
 		D3DDevice_SetTransform((D3DTRANSFORMSTATETYPE)256, &v51);
 	}
@@ -1277,7 +1273,7 @@ sMesh *sMesh::Clone( bool instance )
 
 				p_clone->mp_index_buffer[ib] = newIndexBuffer;
 
-				memcpy(newIndexBuffer->rawdata, p_clone->mp_index_buffer[ib]->rawdata, 2 * p_clone->m_num_indices[ib]);
+				memcpy(newIndexBuffer->rawdata, this->mp_index_buffer[ib]->rawdata, 2 * p_clone->m_num_indices[ib]);
 
 				void* v28;
 				if (this->mp_index_buffer[ib]->indexBuffer->Lock(0, 0, &v28, 0) >= 0)
@@ -1359,9 +1355,10 @@ VertexBufferWrapper* sMesh::AllocateVertexBuffer( uint32 size, int d3dusage, int
 /*                                                                */
 /*                                                                */
 /******************************************************************/
-// LWSS: Should be ok, assuming rawdata is intact
 void sMesh::Crunch( void )
 {
+	return;
+#if 0
 	uint16 *p_indices = mp_index_buffer[0]->rawdata;
 
 	uint32 i0 = p_indices[0];
@@ -1418,6 +1415,7 @@ void sMesh::Crunch( void )
 		i0 = i1;
 		i1 = i2;
 	}
+#endif
 }
 
 
@@ -2178,11 +2176,11 @@ void sMesh::Initialize(int				num_vertices,
 		this->m_tex_coord_pass = tex_coord_pass;
 		// lwss end
 	}
-	// lwss add (LINE: 549)
 	if (p_weights && this->m_biggest_index_used == -1)
 	{
 		uint8* p_index_write = (uint8*)this->p_rawdata + 60;
 		uint16* p_index_read = p_matrix_indices + min_index * 4;
+
 		for (int v = min_index; v <= max_index; ++v)
 		{
 			if (p_mesh_workspace_array[v] == 0)

@@ -89,11 +89,15 @@ static void gammaInitTable( void )
 {
 	// Create the gamma intensity lookup table.
 	// It works like this: given a colour value r [0,255] do r' = gammaTable.red[r] etc.
+	//
 	for( int i = 0; i < gammaDomain; ++i )
 	{
-		gammaTable.red[i]	= (BYTE)((float)gammaRange * pow(((float)i / (float)gammaDomain ), 1.0f / gammaValueR ));
-		gammaTable.green[i]	= (BYTE)((float)gammaRange * pow(((float)i / (float)gammaDomain ), 1.0f / gammaValueG ));
-		gammaTable.blue[i]	= (BYTE)((float)gammaRange * pow(((float)i / (float)gammaDomain ), 1.0f / gammaValueB ));
+		float fr = (float)pow(((float)i / (float)gammaDomain ), 1.0f / gammaValueR ) * 65535.0f;
+		float fg = (float)pow(((float)i / (float)gammaDomain ), 1.0f / gammaValueG ) * 65535.0f;
+		float fb = (float)pow(((float)i / (float)gammaDomain ), 1.0f / gammaValueB ) * 65535.0f;
+		gammaTable.red[i]	= (WORD)(( fr > 65535.0f ) ? 65535.0f : (( fr < 0.0f ) ? 0.0f : fr ));
+		gammaTable.green[i]	= (WORD)(( fg > 65535.0f ) ? 65535.0f : (( fg < 0.0f ) ? 0.0f : fg ));
+		gammaTable.blue[i]	= (WORD)(( fb > 65535.0f ) ? 65535.0f : (( fb < 0.0f ) ? 0.0f : fb ));
 	}
 }
 

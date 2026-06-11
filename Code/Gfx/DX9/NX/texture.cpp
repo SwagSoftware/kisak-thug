@@ -432,48 +432,61 @@ sTexture *LoadTexture( const char *p_filename )
 		Dbg_Assert( 0 );
 	}
 
-	void* pBits;
-
-	if (!arbitrary_texture_size || had_clut_depth)
 	{
-		void* data = malloc(num_bytes);
-		void* pBits = NULL;
-		bool pBitsNeedFree = false;
+		uint32 src_bpp = (unsigned int)header.bit_depth >> 3;	// 1 (P8) / 2 (16-bit) / 4 (32-bit)
 
-		File::Read(data, num_bytes, 1, p_FH);
+		char* p_src = (char*)malloc( num_bytes );
+		File::Read( p_src, num_bytes, 1, p_FH );
 
-		if (arbitrary_texture_size)
+		char* p_packed;
+		bool  free_packed = false;
+		if( arbitrary_texture_size )
 		{
-			pBits = data;
+			p_packed = p_src;
 		}
 		else
 		{
-			if (had_clut_depth)
-			{
-				pBits = malloc(num_bytes);
-				pBitsNeedFree = true;
-			}
-			else
-			{
-				pBits = locked_rect.pBits;
-			}
-			Unswizzle((char*)pBits, (char*)data, header.width, header.height, (unsigned int)header.bit_depth >> 3);
-		}
-		if (had_clut_depth)
-		{
-			DwordizeTexelData((int)locked_rect.pBits, (int)pBits, num_bytes, (int)p_clut);
+			p_packed = (char*)malloc( num_bytes );
+			free_packed = true;
+			Unswizzle( p_packed, p_src, base_width, base_height, src_bpp );
 		}
 
-		free(p_clut);
-		free(data);
-		if (pBitsNeedFree)
+		char* p_linear = (char*)malloc( base_width * base_height * 4 );
+		if( had_clut_depth )
 		{
-			free(pBits);
+			DwordizeTexelData( (int)p_linear, (int)p_packed, base_width * base_height, (int)p_clut );
 		}
-	}
-	else
-	{
-		File::Read(locked_rect.pBits, num_bytes, 1, p_FH);
+		else if( header.bit_depth == 16 )
+		{
+			const uint16* p_in  = (const uint16*)p_packed;
+			uint32*       p_out = (uint32*)p_linear;
+			for( int t = 0; t < base_width * base_height; ++t )
+			{
+				uint16 c = p_in[t];
+				uint32 a = ( c & 0x8000 ) ? 0xFFu : 0x00u;
+				uint32 r = ( c >> 10 ) & 0x1F; r = ( r << 3 ) | ( r >> 2 );
+				uint32 g = ( c >>  5 ) & 0x1F; g = ( g << 3 ) | ( g >> 2 );
+				uint32 b =   c         & 0x1F; b = ( b << 3 ) | ( b >> 2 );
+				p_out[t] = ( a << 24 ) | ( r << 16 ) | ( g << 8 ) | b;
+			}
+		}
+		else
+		{
+			memcpy( p_linear, p_packed, base_width * base_height * 4 );
+		}
+
+		uint32 dst_row_bytes = base_width * 4;
+		for( int row = 0; row < base_height; ++row )
+		{
+			memcpy( (char*)locked_rect.pBits + row * locked_rect.Pitch,
+			        p_linear + row * dst_row_bytes,
+			        dst_row_bytes );
+		}
+
+		free( p_linear );
+		if( free_packed ) free( p_packed );
+		free( p_src );
+		if( p_clut ) free( p_clut );
 	}
 
 	// Read texture bitmap data directly into texture. 

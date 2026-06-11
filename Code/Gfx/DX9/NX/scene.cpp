@@ -400,7 +400,6 @@ void sScene::HidePolys( uint32 mask, sCASData *p_cas_data, uint32 num_entries )
 					p_indices[i - 1] |= 0x8000;
 					break;
 				}
-				p_mesh->mp_index_buffer[0]->ApplyData();
 				index0	= index1;
 				index1	= index2;
 			}

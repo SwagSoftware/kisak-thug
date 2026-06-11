@@ -472,7 +472,7 @@ void sBillboardMaterialBatch::Render( void )
 		vector_upload[9]	= BillboardManager.m_at[Y];
 		vector_upload[10]	= BillboardManager.m_at[Z];
 		//D3DDevice_SetVertexShaderConstantFast( 4, (void*)( &vector_upload[0] ), 3 );
-		D3DDevice_GetVertexShaderConstantF(4, &vector_upload[0], 3);
+		D3DDevice_SetVertexShaderConstantF(4, (const float*)&vector_upload[0], 3);
 
 		for( node = mp_entries[0]->GetNext(); node; node = next )
 		{

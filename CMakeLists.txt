@@ -4,7 +4,7 @@ project(KisakThug)
 set(BIN_NAME "KisakThug")
 set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Code")
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_GENERATOR_PLATFORM "WIN32")
 
 include(cmake_files.cmake)
@@ -50,3 +50,12 @@ set_property(TARGET KisakThug PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CO
 target_link_libraries(KisakThug PUBLIC dinput8.lib dsound.lib dxguid.lib d3dx9d.lib XInput.lib d3d9.lib SDL2.lib Winmm.lib Shlwapi.lib)
 target_link_options(KisakThug PRIVATE /machine:x86)
 set_target_properties(KisakThug PROPERTIES WIN32_EXECUTABLE TRUE)
+
+# --- Visual Studio debugger run configuration (F5) ---
+# CMake makes ALL_BUILD the default startup project, which isn't runnable, and it would
+# launch from the project dir (build/) where the game can't find its assets. Make KisakThug
+# the startup project and run it from its output dir (build/Debug), where the Data/, Faces/
+# and Save/ folders live next to the .exe.
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT KisakThug)
+set_target_properties(KisakThug PROPERTIES
+    VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:KisakThug>")

@@ -489,7 +489,7 @@ int main ( sint argc, char** argv )
 		{
 			if(snProfInit(_4KHZ, profdata, sizeof(profdata)) != 0)
 			{
-				printf("Profiler init failed\n"); // see SN_PRF… in LIBSN.H
+				printf("Profiler init failed\n"); // see SN_PRFï¿½ in LIBSN.H
 			}
 		}	
 	}	
@@ -550,10 +550,9 @@ int main ( sint argc, char** argv )
 #endif
 #endif
 
-	
-	while (  true )
-	//while (!gbQuit)
-	{	
+
+	while ( !gbQuit )
+	{
 		Mem::Manager::sHandle().BottomUpHeap()->PushContext();
 		Mem::Manager::sHandle().PushMemoryMarker(MAINLOOP_MEMMARKER);
 		{

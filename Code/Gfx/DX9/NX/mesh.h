@@ -310,7 +310,7 @@ struct VertexBufferWrapper
 			itr->data = 0;
 			itr->prev = 0;
 			itr->next = 0;
-			free(itr);
+			delete itr;
 		}
 	}
 	~VertexBufferWrapper()
@@ -338,7 +338,6 @@ struct VertexBufferWrapper
 		this->d3dlockFlags = 0;
 		this->vertexWrapperCreationFlags = 0;
 		this->streamOffset = 0;
-		free(this);
 	}
 
 	// LWSS add so I can add conditional breakpoints.

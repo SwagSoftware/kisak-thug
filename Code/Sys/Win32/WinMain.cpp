@@ -5,6 +5,7 @@
 #include <Gfx/nx.h>
 
 #include <windows.h>
+#include <stdlib.h>		// atoi for the display launch-arg parser
 
 #include <Gfx/DX9/NX/render.h>
 
@@ -539,6 +540,50 @@ static bool Win32_CreateDirectInput8(HINSTANCE inst, HWND hwnd, LPCSTR lpSubKey)
 // Defined in Sk/Main.cpp
 int main(sint argc, char** argv);
 
+static void Win32_ParseDisplayArgs(int argc, char** argv)
+{
+    NxXbox::EngineGlobals.cmdline_width = 0;
+    NxXbox::EngineGlobals.cmdline_height = 0;
+    NxXbox::EngineGlobals.cmdline_fullscreen = false;
+
+    for (int i = 1; i < argc; ++i)
+    {
+        const char* a = argv[i];
+        if ((!stricmp(a, "-w") || !stricmp(a, "-width")) && (i + 1 < argc))
+        {
+            NxXbox::EngineGlobals.cmdline_width = atoi(argv[++i]);
+        }
+        else if ((!stricmp(a, "-h") || !stricmp(a, "-height")) && (i + 1 < argc))
+        {
+            NxXbox::EngineGlobals.cmdline_height = atoi(argv[++i]);
+        }
+        else if (!stricmp(a, "-fullscreen") || !stricmp(a, "-fs"))
+        {
+            NxXbox::EngineGlobals.cmdline_fullscreen = true;
+        }
+        else if (!stricmp(a, "-windowed") || !stricmp(a, "-window"))
+        {
+            NxXbox::EngineGlobals.cmdline_fullscreen = false;
+        }
+        else
+        {
+            int w = 0, h = 0;
+            if (sscanf(a, "%dx%d", &w, &h) == 2 && w > 0 && h > 0)
+            {
+                NxXbox::EngineGlobals.cmdline_width = w;
+                NxXbox::EngineGlobals.cmdline_height = h;
+            }
+        }
+    }
+
+    if (NxXbox::EngineGlobals.cmdline_width > 0 && NxXbox::EngineGlobals.cmdline_height > 0)
+    {
+        printf("[display] command-line resolution: %dx%d (%s)\n",
+            NxXbox::EngineGlobals.cmdline_width, NxXbox::EngineGlobals.cmdline_height,
+            NxXbox::EngineGlobals.cmdline_fullscreen ? "fullscreen" : "windowed");
+    }
+}
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine, int nCmdShow)
 {
     hEvent = CreateEventA(NULL, TRUE, FALSE, 0);
@@ -551,7 +596,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine,
 
     Win32_ParseCommandLineForNetplayOptions(lpCmdLine);
 
-    Win32_CreateClassAndWindow("Kisak", "Kisak Hawk's OpenGround", 100, 100, 640, 480, Win32_WNDPROC, hInstance, 103, 1);
+    Win32_ParseDisplayArgs(__argc, __argv);
+    int win_w = (NxXbox::EngineGlobals.cmdline_width  > 0) ? NxXbox::EngineGlobals.cmdline_width  : 1280;
+    int win_h = (NxXbox::EngineGlobals.cmdline_height > 0) ? NxXbox::EngineGlobals.cmdline_height : 960;
+    Win32_CreateClassAndWindow("Kisak", "Kisak Hawk's OpenGround", 100, 100, win_w, win_h, Win32_WNDPROC, hInstance, 103, 1);
     Win32_ProcessMsgPump();
 
     if (!NxXbox::EngineGlobals.hWnd)

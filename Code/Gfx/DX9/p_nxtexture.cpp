@@ -622,6 +622,8 @@ static Lst::HashTable<Nx::CTexture>* LoadTextureFile_Internal(void*& p_stream, L
 		//	p_texture->pD3DTexture->UnlockRect(mip_level); // lwss add
 		//}
 
+		uint32 mip_width = base_width;
+		uint32 mip_height = base_height;
 		for (uint32 mip_level = 0; mip_level < p_texture->Levels; ++mip_level)
 		{
 			uint32 texture_level_data_size;
@@ -634,9 +636,62 @@ static Lst::HashTable<Nx::CTexture>* LoadTextureFile_Internal(void*& p_stream, L
 			}
 			else
 			{
-				Read(locked_rect.pBits, texture_level_data_size, 1, p_FH, is_file);
+				char* p_src = (char*)malloc(texture_level_data_size);
+				Read(p_src, texture_level_data_size, 1, p_FH, is_file);
+
+				if (p_texture->DXT > 0)
+				{
+					// Block-compressed (DXT1 = 8 bytes/block, DXT5 = 16), 4x4 texel blocks.
+					// Not swizzled - just copy each row of blocks honoring the surface pitch.
+					uint32 block_bytes   = (texture_format == D3DFMT_DXT1) ? 8 : 16;
+					uint32 block_cols    = (mip_width  + 3) >> 2;
+					uint32 block_rows    = (mip_height + 3) >> 2;
+					uint32 src_row_bytes = block_cols * block_bytes;
+					for (uint32 row = 0; row < block_rows; ++row)
+					{
+						memcpy((char*)locked_rect.pBits + row * locked_rect.Pitch,
+						       p_src + row * src_row_bytes,
+						       src_row_bytes);
+					}
+				}
+				else
+				{
+					// Linear destination: 16-bit (A1R5G5B5) is 2 bytes/texel, everything
+					// else (32-bit, or palette-expanded) is 4 bytes/texel.
+					uint32 dst_bpp       = (p_texture->TexelDepth == 16) ? 2 : 4;
+					uint32 dst_row_bytes = mip_width * dst_bpp;
+					char*  p_linear      = (char*)malloc(mip_width * mip_height * dst_bpp);
+
+					if (read_palette_data)
+					{
+						// 8-bit palettized: deswizzle the indices, then expand through the CLUT.
+						char* workspace = (char*)malloc(mip_width * mip_height);
+						NxXbox::Unswizzle(workspace, p_src, mip_width, mip_height, 1);
+						NxXbox::DwordizeTexelData((int)p_linear, (int)workspace, mip_width * mip_height, (int)palette_data);
+						free(workspace);
+					}
+					else
+					{
+						// Direct color texels (16- or 32-bit): deswizzle in place.
+						NxXbox::Unswizzle(p_linear, p_src, mip_width, mip_height, dst_bpp);
+					}
+
+					// Blit the tightly-packed linear image into the surface, honoring pitch.
+					for (uint32 row = 0; row < mip_height; ++row)
+					{
+						memcpy((char*)locked_rect.pBits + row * locked_rect.Pitch,
+						       p_linear + row * dst_row_bytes,
+						       dst_row_bytes);
+					}
+					free(p_linear);
+				}
+
+				free(p_src);
 				p_texture->pD3DTexture->UnlockRect(mip_level); // lwss add
 			}
+
+			if (mip_width  > 1) mip_width  >>= 1;
+			if (mip_height > 1) mip_height >>= 1;
 		}
 
 		// lwss: add hack from PC

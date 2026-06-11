@@ -360,7 +360,7 @@ static IDirect3DPixelShader9* get_pixel_shader( sMaterial *p_material )
 	for( uint32 p = 0; p < p_material->m_passes; ++p )
 	{
 		//code |= ( blend_modes[p] << ( 5 * ( p + 1 )));
-		code |= blend_modes[p] << v9;
+		code |= blend_modes[p + 1] << v9;
 		v9 += 5;
 	}
 
@@ -368,6 +368,7 @@ static IDirect3DPixelShader9* get_pixel_shader( sMaterial *p_material )
 	uint32 ignore_bf = p_material->GetIgnoreVertexAlphaPasses();
 	uint32 new_code = ((ignore_bf | (8 * mcm)) << 22) | code;
 	//code |= ( ignore_bf << 25 );
+	code = new_code;
 
 	// Check also to see if material color modulation is required.
 	//if( mcm )
@@ -564,13 +565,16 @@ ASSEMBLE:
 	if (D3DXAssembleShader(shader_buffer, strlen(shader_buffer), 0, 0, 0, &p_shader_buffer, &p_err) != D3D_OK)
 	{
 		Dbg_MsgAssert(0, ("Failed to Assemble Shader!"));
+		if( p_err ) p_err->Release();
 		return NULL;
 	}
+	if( p_err ) p_err->Release();
 
 	Swog("%s\n\n\n", shader_buffer);
 
 	IDirect3DPixelShader9* shader_handle;
 	Dbg_Assert(D3D_OK == D3DDevice_CreatePixelShader((DWORD*)p_shader_buffer->GetBufferPointer(), &shader_handle));
+	p_shader_buffer->Release();
 
 	sPixelShaderTable.PutItem(code, shader_handle);
 
@@ -1578,13 +1582,12 @@ void set_blend_mode( uint32 mode )
 					dest_blend	= D3DBLEND_SRCALPHA;
 					break;				
 				}
-				case vBLEND_MODE_MODULATE_FIXED:	// ( Dst - 0 ) * Fixed + 0	
+				case vBLEND_MODE_MODULATE_FIXED:	// ( Dst - 0 ) * Fixed + 0
 				{
 					blend_op	= D3DBLENDOP_ADD;
 					src_blend	= D3DBLEND_ZERO;
-					//dest_blend	= D3DBLEND_BLENDFACTOR;
-					dest_blend	= D3DBLEND_SRCALPHA;
-					break;				
+					dest_blend	= D3DBLEND_BLENDFACTOR;
+					break;
 				}
 				case vBLEND_MODE_BRIGHTEN:			// ( Dst - 0 ) * Src + Dst
 				{
@@ -1961,11 +1964,13 @@ void set_render_state( uint32 type, uint32 state )
 				{
 					D3DDevice_SetRenderState( D3DRS_SPECULARENABLE, TRUE );
 					D3DDevice_SetRenderState( D3DRS_LOCALVIEWER, TRUE );
+					EngineGlobals.is_d3drs_localviewer_on = true;
 				}
 				else
 				{
 					D3DDevice_SetRenderState( D3DRS_SPECULARENABLE, FALSE );
 					D3DDevice_SetRenderState( D3DRS_LOCALVIEWER, FALSE );
+					EngineGlobals.is_d3drs_localviewer_on = false;
 				}
 			}
 			break;

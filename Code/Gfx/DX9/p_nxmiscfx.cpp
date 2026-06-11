@@ -853,10 +853,9 @@ bool plat_texture_splat( Nx::CSector **pp_sectors, Nx::CCollStatic **pp_collisio
 						Gfx::AddDebugLine( v2, v0, MAKE_RGB( 0, 200, 200 ), MAKE_RGB( 0, 200, 200 ), 1 );
 #						endif // DRAW_DEBUG_LINES
 					} // index comparison if()
-
-					p_mesh->mp_index_buffer[0]->ApplyData();
-					p_mesh->mp_vertex_buffer[0]->Unlock();
 				}
+				p_mesh->mp_index_buffer[0]->ApplyData();
+				p_mesh->mp_vertex_buffer[0]->Unlock();
 			}
 		}
 		++pp_sectors;

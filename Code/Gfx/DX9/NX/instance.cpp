@@ -191,6 +191,7 @@ void render_instances( uint32 flags )
 		// Then the instances with no bone transforms. These will require fixed function lighting.
 		D3DDevice_SetRenderState(D3DRS_LIGHTING, TRUE);
 		D3DDevice_SetRenderState(D3DRS_COLORVERTEX, TRUE);
+		D3DDevice_SetRenderState(D3DRS_NORMALIZENORMALS, TRUE);
 		D3DDevice_LightEnable(0, TRUE);
 		D3DDevice_LightEnable(1, TRUE);
 
@@ -372,7 +373,8 @@ void CInstance::Render( uint32 flags )
 			}
 
 			D3DDevice_SetRenderState( D3DRS_LIGHTING, TRUE );
-			
+			D3DDevice_SetRenderState( D3DRS_NORMALIZENORMALS, TRUE );	// CPU-skinned normals aren't unit length
+
 			l0.Diffuse.r	= EngineGlobals.directional_light_color[4];
 			l0.Diffuse.g	= EngineGlobals.directional_light_color[5];
 			l0.Diffuse.b	= EngineGlobals.directional_light_color[6];
@@ -454,6 +456,7 @@ void CInstance::Render( uint32 flags )
 				}
 				// lwss add
 				D3DDevice_SetRenderState(D3DRS_LIGHTING, TRUE);
+				D3DDevice_SetRenderState(D3DRS_NORMALIZENORMALS, TRUE);	// CPU-skinned normals aren't unit length
 				l0.Diffuse.r = EngineGlobals.directional_light_color[4];
 				l0.Diffuse.g =   EngineGlobals.directional_light_color[5];
 				l0.Diffuse.b =   EngineGlobals.directional_light_color[6];

@@ -66,6 +66,9 @@ typedef struct cuck
 	DWORD				dword_7CEC7C;
 	DWORD				vertex_buffer_length;
 	HWND				hWnd; // LWSS: Add for PC port (this is the proper spot)
+	int					cmdline_width;
+	int					cmdline_height;
+	bool				cmdline_fullscreen;
 	bool				gbQuit;
 	IDirect3DSurface9*	p_RenderSurface;
 	IDirect3DSurface9*	p_ZStencilSurface;

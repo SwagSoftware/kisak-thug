@@ -345,12 +345,14 @@ void InitialiseEngine( void )
 	ZeroMemory( &params, sizeof( D3DPRESENT_PARAMETERS ));
 
 	//params.Windowed = FALSE;
-	params.Windowed = TRUE;
+	params.Windowed = EngineGlobals.cmdline_fullscreen ? FALSE : TRUE;
 	params.hDeviceWindow = EngineGlobals.hWnd;
 
 	int graphicsLevel = 3 - EngineGlobals.g_Registry_resolution_setting;
 	if (graphicsLevel > 3)
 		graphicsLevel = 3;
+	if (graphicsLevel < 0)			// guard against an out-of-range registry value
+		graphicsLevel = 0;
 
 	static const int heights[] = { 1024, 768, 600, 480 };
 	static const int widths[] = { 1280, 1024, 800, 640 };
@@ -358,9 +360,22 @@ void InitialiseEngine( void )
 	static int s_engineResolutionWidth = widths[graphicsLevel];
 	static int s_engineResolutionHeight = heights[graphicsLevel];
 
-#ifndef KISAK_EARLY_CURSOR_FIX
-	SetWindowPos(EngineGlobals.hWnd, 0, 0, 0, s_engineResolutionWidth, s_engineResolutionHeight, SWP_NOZORDER);
-#endif
+	s_engineResolutionWidth  = (EngineGlobals.cmdline_width  > 0) ? EngineGlobals.cmdline_width  : 1280;
+	s_engineResolutionHeight = (EngineGlobals.cmdline_height > 0) ? EngineGlobals.cmdline_height : 960;
+
+	if (params.Windowed)
+	{
+		RECT wr = { 0, 0, s_engineResolutionWidth, s_engineResolutionHeight };
+		AdjustWindowRect(&wr, 0x80C80000, FALSE);
+		SetWindowPos(EngineGlobals.hWnd, HWND_NOTOPMOST, 0, 0,
+			wr.right - wr.left, wr.bottom - wr.top, SWP_NOMOVE | SWP_NOZORDER);
+	}
+	else
+	{
+		SetWindowLongA(EngineGlobals.hWnd, GWL_STYLE, WS_POPUP | WS_VISIBLE);
+		SetWindowPos(EngineGlobals.hWnd, HWND_TOP, 0, 0,
+			s_engineResolutionWidth, s_engineResolutionHeight, SWP_FRAMECHANGED);
+	}
 
 	params.BackBufferWidth = s_engineResolutionWidth;
 	params.BackBufferHeight = s_engineResolutionHeight;
@@ -469,7 +484,7 @@ TRY_THE_FUCK_AGAIN:
 
 	EngineGlobals.dontConvertBlendModes = true;
 
-	if ((deviceCaps.SrcBlendCaps & 0x2000 == 0) || (deviceCaps.DestBlendCaps & 0x2000 == 0))
+	if ((( deviceCaps.SrcBlendCaps & 0x2000 ) == 0 ) || (( deviceCaps.DestBlendCaps & 0x2000 ) == 0 ))
 	{
 		EngineGlobals.dontConvertBlendModes = false;
 	}

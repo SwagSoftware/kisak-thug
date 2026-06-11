@@ -430,10 +430,11 @@ SFont* LoadFont( const char *Filename, bool memory_resident )
 	}
 	else
 	{
+		//Filename += NumBytes + 1024; // lwss add
+		//CopyMemory(v55, &Filename[NumBytes], sizeof(v55)); // lwss add
 		CopyMemory( p_temp_texel_data, Filename, NumBytes );
-		//Filename += NumBytes;
-		Filename += NumBytes + 1024; // lwss add
-		CopyMemory(v55, &Filename[NumBytes], sizeof(v55)); // lwss add
+		CopyMemory(v55, &Filename[NumBytes], sizeof(v55));
+		Filename += NumBytes + 1024; // skip past texel data + palette to the subtexture table
 	}
 
 	// lwss add
