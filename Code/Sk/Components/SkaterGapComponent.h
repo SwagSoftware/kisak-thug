@@ -62,7 +62,7 @@ public:
 	void							ClearPendingGaps (   );
 	void							AwardPendingGaps (   );
 	
-	CSkater*						GetSkater() { return static_cast< CSkater* >(GetObj()); }
+	CSkater*						GetSkater() { return static_cast< CSkater* >(GetObject()); }
 
 	static CBaseComponent*			s_create();
 	

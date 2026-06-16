@@ -56,7 +56,7 @@ public:
 	virtual void					ProcessWait( Script::CScript * pScript );
 	
 	void							SetObj(CCompositeObject* p_object) {mp_object = p_object;} // lwss: renamed to match below
-	CCompositeObject*				GetObj() const {return mp_object;} // lwss: renamed due to windows macro cancer :((
+	CCompositeObject*				GetObject() const {return mp_object;} // lwss: renamed due to windows macro cancer :((
 	CBaseComponent*					GetNext() const {return mp_next;}
 	CBaseComponent*					GetNextSameType() const {return mp_next_same_type;}
 	void							SetNextSameType( CBaseComponent *p_component ){ mp_next_same_type = p_component; }

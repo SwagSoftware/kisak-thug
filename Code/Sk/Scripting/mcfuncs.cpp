@@ -720,7 +720,7 @@ static void s_insert_game_save_info(uint32 fileType, CStruct *p_struct)
 
 		case 0x62896edf: // CreatedGoals
 		{
-			Obj::CCompositeObject *p_obj=(Obj::CCompositeObject*)Obj::CTracker::Instance()->GetObj(CRCD(0x81f01058,"GoalEditor"));
+			Obj::CCompositeObject *p_obj=(Obj::CCompositeObject*)Obj::CTracker::Instance()->GetObject(CRCD(0x81f01058,"GoalEditor"));
 			Dbg_MsgAssert(p_obj,("No GoalEditor object"));
 			Obj::CGoalEditorComponent *p_goal_editor=GetGoalEditorComponentFromObject(p_obj);
 			Dbg_MsgAssert(p_goal_editor,("No goal editor component ???"));
@@ -961,7 +961,7 @@ static void s_generate_summary_info(CStruct *p_summaryInfo, uint32 fileType, CSt
 			case 0x3bf882cc: // Park
 			case 0x62896edf: // CreatedGoals
 			{
-				Obj::CCompositeObject *p_obj=(Obj::CCompositeObject*)Obj::CTracker::Instance()->GetObj(CRCD(0x81f01058,"GoalEditor"));
+				Obj::CCompositeObject *p_obj=(Obj::CCompositeObject*)Obj::CTracker::Instance()->GetObject(CRCD(0x81f01058,"GoalEditor"));
 				Dbg_MsgAssert(p_obj,("No GoalEditor object"));
 				Obj::CGoalEditorComponent *p_goal_editor=GetGoalEditorComponentFromObject(p_obj);
 				Dbg_MsgAssert(p_goal_editor,("No goal editor component ???"));
@@ -1357,7 +1357,7 @@ static void s_read_game_save_info(uint32 fileType, CStruct *p_struct, CScript *p
 
 		case 0x62896edf: // CreatedGoals
 		{
-			Obj::CCompositeObject *p_obj=(Obj::CCompositeObject*)Obj::CTracker::Instance()->GetObj(CRCD(0x81f01058,"GoalEditor"));
+			Obj::CCompositeObject *p_obj=(Obj::CCompositeObject*)Obj::CTracker::Instance()->GetObject(CRCD(0x81f01058,"GoalEditor"));
 			Dbg_MsgAssert(p_obj,("No GoalEditor object"));
 			Obj::CGoalEditorComponent *p_goal_editor=GetGoalEditorComponentFromObject(p_obj);
 			Dbg_MsgAssert(p_goal_editor,("No goal editor component ???"));

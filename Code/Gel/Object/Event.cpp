@@ -867,7 +867,7 @@ void CEventHandlerTable::pass_event(CEvent *pEvent, CObject *pObject, bool broad
 	//				printf ("Source = 0x%x  %s,  target = 0x%x, %s\n",source_id, Script::FindChecksumName(source_id),pObject->GetID(),Script::FindChecksumName(pObject->GetID()));
 					if ( source_id != pObject->GetID() )
 					{
-						Obj::CObject * p_source_object = Obj::CTracker::Instance()->GetObj(source_id);
+						Obj::CObject * p_source_object = Obj::CTracker::Instance()->GetObject(source_id);
 						if (p_source_object)
 						{
 	//						printf ("objects types %d, %d\n",pObject->GetType(), p_source_object->GetType());

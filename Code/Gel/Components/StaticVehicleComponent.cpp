@@ -66,7 +66,7 @@ void CStaticVehicleComponent::InitFromStructure( Script::CStruct* pParams )
 
 void CStaticVehicleComponent::Finalize()
 {
-	CModelComponent* p_model_component = static_cast< CModelComponent* >(GetModelComponentFromObject(GetObj()));
+	CModelComponent* p_model_component = static_cast< CModelComponent* >(GetModelComponentFromObject(GetObject()));
 	Dbg_Assert(p_model_component);
 	Nx::CModel* p_model = p_model_component->GetModel();
 	Dbg_Assert(p_model);
@@ -95,7 +95,7 @@ void CStaticVehicleComponent::Finalize()
 	body_pos[Z] = -body_matrix[W][Y];
 	body_pos[W] = 1.0f;
 	
-	CSkeletonComponent* p_skeleton_component = static_cast< CSkeletonComponent* >(GetSkeletonComponentFromObject(GetObj()));
+	CSkeletonComponent* p_skeleton_component = static_cast< CSkeletonComponent* >(GetSkeletonComponentFromObject(GetObject()));
 	Dbg_Assert(p_skeleton_component);
 	Dbg_Assert(p_skeleton_component->GetSkeleton());
 	Mth::Matrix* p_matrices = p_skeleton_component->GetSkeleton()->GetMatrices();

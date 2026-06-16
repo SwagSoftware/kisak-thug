@@ -144,7 +144,7 @@ void CCollideAndDieComponent::RefreshFromStructure( Script::CStruct* pParams )
 
 void CCollideAndDieComponent::Finalize()
 {
-	mp_suspend_component =  GetSuspendComponentFromObject( GetObj() );
+	mp_suspend_component =  GetSuspendComponentFromObject( GetObject() );
 }
 	
 
@@ -175,7 +175,7 @@ void CCollideAndDieComponent::Update()
 	{
 		if(( Tmr::GetTime() - m_birth_time ) > vFIREBALL_LIFETIME )
 		{
-			GetObj()->MarkAsDead();
+			GetObject()->MarkAsDead();
 		}
 		else
 		{
@@ -183,7 +183,7 @@ void CCollideAndDieComponent::Update()
 			{
 				if( Tmr::GetTime() > m_death_time )
 				{
-					GetObj()->MarkAsDead();
+					GetObject()->MarkAsDead();
 				}
 			}
 			else
@@ -191,11 +191,11 @@ void CCollideAndDieComponent::Update()
 				Mth::Vector vel, start, end;
 				CFeeler feeler;
 		
-				vel = GetObj()->GetVel();
+				vel = GetObject()->GetVel();
 				vel.Normalize();
 				if( m_first_frame )
 				{
-					start = GetObj()->GetPos();
+					start = GetObject()->GetPos();
 				}
 				else
 				{
@@ -203,7 +203,7 @@ void CCollideAndDieComponent::Update()
 				}
 				
 				start[Y] += FEET( 2 );
-				end = GetObj()->GetPos();
+				end = GetObject()->GetPos();
 				end[Y] += FEET( 2 );
 				end += ( vel * m_radius );
 				feeler.SetStart( start );
@@ -215,7 +215,7 @@ void CCollideAndDieComponent::Update()
 					{
 						CProjectileCollisionComponent* proj_comp;
 
-						proj_comp = GetProjectileCollisionComponentFromObject( GetObj());
+						proj_comp = GetProjectileCollisionComponentFromObject( GetObject());
 						if( proj_comp )
 						{
 							proj_comp->MarkAsDying();
@@ -244,7 +244,7 @@ void CCollideAndDieComponent::Update()
 			}
 		}
 
-		m_last_pos = GetObj()->GetPos();
+		m_last_pos = GetObject()->GetPos();
 		m_first_frame = false;
 	}
 }

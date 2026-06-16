@@ -92,7 +92,7 @@ CObjectHookManagerComponent::~CObjectHookManagerComponent()
 void CObjectHookManagerComponent::InitFromStructure( Script::CStruct* pParams )
 {
 	// There needs to be a NodeArrayComponent attached for the ObjectHookManagerComponent to operate.
-	CNodeArrayComponent *p_nodearray_component = GetNodeArrayComponentFromObject( GetObj());
+	CNodeArrayComponent *p_nodearray_component = GetNodeArrayComponentFromObject( GetObject());
 	Dbg_MsgAssert( p_nodearray_component, ( "ObjectHookManagerComponent created without NodeArrayComponent" ));
 
 	// Remove the CObjectHookManager if present.

@@ -118,7 +118,7 @@ void CVehicleCameraComponent::RefreshFromStructure( Script::CStruct* pParams )
 
 void CVehicleCameraComponent::Finalize (   )
 {
-	mp_camera_lookaround_component = GetCameraLookAroundComponentFromObject(GetObj());
+	mp_camera_lookaround_component = GetCameraLookAroundComponentFromObject(GetObject());
 	
 	Dbg_Assert(mp_camera_lookaround_component);
 	
@@ -134,7 +134,7 @@ void CVehicleCameraComponent::Update()
 {
 	// NOTE: plenty of room for optimiziation
 	
-	GetCameraComponentFromObject(GetObj())->StoreOldPosition();
+	GetCameraComponentFromObject(GetObject())->StoreOldPosition();
 	
 	calculate_attractor_direction();
 	
@@ -231,7 +231,7 @@ void CVehicleCameraComponent::reset_camera (   )
 	
 	apply_state();
 	
-	GetCameraComponentFromObject(GetObj())->Update();
+	GetCameraComponentFromObject(GetObject())->Update();
 }
 
 /******************************************************************/
@@ -306,9 +306,9 @@ void CVehicleCameraComponent::apply_state (   )
 	m_orientation_matrix[Y][W] = 0.0f;
 	m_orientation_matrix[Z][W] = 0.0f;
 	
-	GetObj()->SetPos(m_pos);
-	GetObj()->SetMatrix(m_orientation_matrix);
-	GetObj()->SetDisplayMatrix(m_orientation_matrix);
+	GetObject()->SetPos(m_pos);
+	GetObject()->SetMatrix(m_orientation_matrix);
+	GetObject()->SetDisplayMatrix(m_orientation_matrix);
 }
 
 }

@@ -75,7 +75,7 @@ void CSkaterCleanupStateComponent::RefreshFromStructure( Script::CStruct* pParam
 
 void CSkaterCleanupStateComponent::Finalize(   )
 {
-	mp_state_component = GetSkaterStateComponentFromObject(GetObj());
+	mp_state_component = GetSkaterStateComponentFromObject(GetObject());
 	
 	Dbg_Assert(mp_state_component);
 }
@@ -96,12 +96,12 @@ void CSkaterCleanupStateComponent::Update()
 	// Dan: shouldn't need to do this; the suspend components update themselves
 	// Perform LOD/culling/occluding
 	// NOTE: Move to CModeldComponent::Update?  Ask Gary about this.
-	// GetSuspendComponentFromObject(GetObj())->CheckModelActive();
+	// GetSuspendComponentFromObject(GetObject())->CheckModelActive();
 	
 	// Don't update the shadow if running a replay. The replay code will update it, using the replay dummy skater's position and matrix.
 	// if (!Replay::RunningReplay())
 	// {
-	GetSkater()->UpdateShadow(GetObj()->m_pos, GetObj()->m_matrix);
+	GetSkater()->UpdateShadow(GetObject()->m_pos, GetObject()->m_matrix);
 	// }
 }
 

@@ -96,11 +96,11 @@ void CSkaterAdjustPhysicsComponent::RefreshFromStructure( Script::CStruct* pPara
 
 void CSkaterAdjustPhysicsComponent::Finalize (   )
 {
-	mp_core_physics_component = GetSkaterCorePhysicsComponentFromObject(GetObj());
-	mp_model_component = GetModelComponentFromObject(GetObj());
-	mp_shadow_component = GetShadowComponentFromObject(GetObj());
-	mp_movable_contact_component = GetMovableContactComponentFromObject(GetObj());
-	mp_state_component = GetSkaterStateComponentFromObject(GetObj());
+	mp_core_physics_component = GetSkaterCorePhysicsComponentFromObject(GetObject());
+	mp_model_component = GetModelComponentFromObject(GetObject());
+	mp_shadow_component = GetShadowComponentFromObject(GetObject());
+	mp_movable_contact_component = GetMovableContactComponentFromObject(GetObject());
+	mp_state_component = GetSkaterStateComponentFromObject(GetObject());
 
 	Dbg_Assert(mp_core_physics_component);
 	Dbg_Assert(mp_model_component);
@@ -117,7 +117,7 @@ void CSkaterAdjustPhysicsComponent::Finalize (   )
 void CSkaterAdjustPhysicsComponent::Update()
 {
 	// If on the ground, or moving downwards, then allow us to hit a car again		
-	if (mp_core_physics_component->GetState() == GROUND || GetObj()->m_vel[Y] < 0.0f)
+	if (mp_core_physics_component->GetState() == GROUND || GetObject()->m_vel[Y] < 0.0f)
 	{
 		mp_core_physics_component->SetFlagTrue(CAN_HIT_CAR);
 	}
@@ -129,7 +129,7 @@ void CSkaterAdjustPhysicsComponent::Update()
 
 	uber_frig();
 
-	GetObj()->m_old_pos = GetObj()->m_pos;
+	GetObject()->m_old_pos = GetObject()->m_pos;
 }
 
 /******************************************************************/
@@ -173,20 +173,20 @@ void CSkaterAdjustPhysicsComponent::uber_frig (   )
 	
 	m_uber_frigged_this_frame = false;
 
-	if (GetObj()->m_pos != mp_core_physics_component->m_safe_pos)
+	if (GetObject()->m_pos != mp_core_physics_component->m_safe_pos)
 	{		
 		#ifdef	__NOPT_ASSERT__
 		if (! (Tmr::GetRenderFrame() & 15) )
 		{
-			TrackingLine2(4, GetObj()->m_old_pos, GetObj()->m_pos);	  // 4 = line
+			TrackingLine2(4, GetObject()->m_old_pos, GetObject()->m_pos);	  // 4 = line
 		}
 		#endif
 		
-		mp_core_physics_component->m_col_start = GetObj()->m_pos;
-		mp_core_physics_component->m_col_end = GetObj()->m_pos;
+		mp_core_physics_component->m_col_start = GetObject()->m_pos;
+		mp_core_physics_component->m_col_end = GetObject()->m_pos;
 
 		// Very minor adjustment to move origin away from vert walls
-		mp_core_physics_component->m_col_start += GetObj()->m_matrix[Y] * 0.001f;
+		mp_core_physics_component->m_col_start += GetObject()->m_matrix[Y] * 0.001f;
 		
 		mp_core_physics_component->m_col_start[Y] += 8.0f;
 		mp_core_physics_component->m_col_end[Y] -= FEET(400);
@@ -203,9 +203,9 @@ void CSkaterAdjustPhysicsComponent::uber_frig (   )
 					&& (mp_core_physics_component->GetState() == GROUND || mp_core_physics_component->GetState() == AIR))
 				{
 					if (!mp_core_physics_component->m_feeler.IsMovableCollision() 
-						|| mp_core_physics_component->m_feeler.GetMovingObject() != mp_movable_contact_component->GetContact()->GetObj())
+						|| mp_core_physics_component->m_feeler.GetMovingObject() != mp_movable_contact_component->GetContact()->GetObject())
 					{
-						GetObj()->m_vel += mp_movable_contact_component->GetContact()->GetObj()->GetVel();
+						GetObject()->m_vel += mp_movable_contact_component->GetContact()->GetObject()->GetVel();
 						DUMP_VELOCITY;
 						mp_movable_contact_component->LoseAnyContact();
 					}
@@ -214,14 +214,14 @@ void CSkaterAdjustPhysicsComponent::uber_frig (   )
 			
 			static Mth::Vector xa, xb, xc;
 
-			float height = GetObj()->m_pos[Y] - mp_core_physics_component->m_feeler.GetPoint()[Y];
+			float height = GetObject()->m_pos[Y] - mp_core_physics_component->m_feeler.GetPoint()[Y];
 
 			mp_state_component->m_height = height;
 			
 			// if we are below the ground, then move him up
 			if (height < 0.001f)
 			{
-				GetObj()->m_pos[Y] = mp_core_physics_component->m_feeler.GetPoint()[Y] + 0.001f; 	// above ground by a fraction of an inch
+				GetObject()->m_pos[Y] = mp_core_physics_component->m_feeler.GetPoint()[Y] + 0.001f; 	// above ground by a fraction of an inch
 				DUMP_POSITION;
 				height = 0.0f;
 			}
@@ -242,38 +242,38 @@ void CSkaterAdjustPhysicsComponent::uber_frig (   )
 				
 				// ignore non-collidable, under-ok
 				feeler.SetIgnore(mFD_NON_COLLIDABLE | mFD_UNDER_OK, 0);
-				feeler.SetStart(GetObj()->m_pos + Mth::Vector(0.0f, 3000.0f, 0.0f, 0.0f));
-				feeler.SetEnd(GetObj()->m_pos + GetObj()->m_matrix[Y]);
+				feeler.SetStart(GetObject()->m_pos + Mth::Vector(0.0f, 3000.0f, 0.0f, 0.0f));
+				feeler.SetEnd(GetObject()->m_pos + GetObject()->m_matrix[Y]);
 				if (feeler.GetCollision())
 				{
 					// Something above me that I'm not supposed to be under; just move the skater back to the old pos, and flip him
 					
 					// if only just under it, then pop me up
-					if ((GetObj()->m_pos - feeler.GetPoint()).LengthSqr() < 6.0f * 6.0f)
+					if ((GetObject()->m_pos - feeler.GetPoint()).LengthSqr() < 6.0f * 6.0f)
 					{
-						GetObj()->m_pos = feeler.GetPoint();
+						GetObject()->m_pos = feeler.GetPoint();
 						DUMP_POSITION;
 					}
 					else
 					{
 						// if we are not moving, then pop us up above the face we detected a collision with
-						if ((GetObj()->m_pos - mp_core_physics_component->m_safe_pos).LengthSqr() < 1.0f * 1.0f)
+						if ((GetObject()->m_pos - mp_core_physics_component->m_safe_pos).LengthSqr() < 1.0f * 1.0f)
 						{
-							GetObj()->m_pos = feeler.GetPoint();
+							GetObject()->m_pos = feeler.GetPoint();
 							DUMP_POSITION;
 						}
 						else
 						{
-							GetObj()->m_pos = mp_core_physics_component->m_safe_pos;
+							GetObject()->m_pos = mp_core_physics_component->m_safe_pos;
 							DUMP_POSITION;
 						}
-						GetObj()->m_vel = GetObj()->m_vel * (-1.0f / 2.0f);
+						GetObject()->m_vel = GetObject()->m_vel * (-1.0f / 2.0f);
 						DUMP_VELOCITY;
 						if (mp_core_physics_component->GetState() == RAIL)
 						{
 							mp_core_physics_component->SetState(AIR);			// Stop grinding
-							GetObj()->SelfEvent(CRCD(0xafaa46ba, "OffRail"));					// regular exception
-							GetObj()->m_pos[Y] += 2.0f;								// make sure we are out of the rail...
+							GetObject()->SelfEvent(CRCD(0xafaa46ba, "OffRail"));					// regular exception
+							GetObject()->m_pos[Y] += 2.0f;								// make sure we are out of the rail...
 							DUMP_POSITION;
 						}
 					}
@@ -283,7 +283,7 @@ void CSkaterAdjustPhysicsComponent::uber_frig (   )
 			m_nudge = 0;	
 			
 			 // Mick:  Set a safe position.  Here there was a collision, so safe
-			mp_core_physics_component->m_safe_pos = GetObj()->m_pos;
+			mp_core_physics_component->m_safe_pos = GetObject()->m_pos;
 			
 		}
 		else
@@ -308,7 +308,7 @@ void CSkaterAdjustPhysicsComponent::uber_frig (   )
 				
 				if (m_nudge < 5)
 				{
-					GetObj()->m_pos = mp_core_physics_component->m_safe_pos + uberfrig_nudges[m_nudge++];
+					GetObject()->m_pos = mp_core_physics_component->m_safe_pos + uberfrig_nudges[m_nudge++];
 					DUMP_POSITION;
 				}
 				else
@@ -317,7 +317,7 @@ void CSkaterAdjustPhysicsComponent::uber_frig (   )
 					m_nudge = 0;
 				}
 				
-				GetObj()->m_vel = -GetObj()->m_vel + Mth::Vector(0.101f, 0.101f, 0.1001f);
+				GetObject()->m_vel = -GetObject()->m_vel + Mth::Vector(0.101f, 0.101f, 0.1001f);
 				DUMP_VELOCITY;
 				
 				// special case for wallrides, lip tricks and suchlike
@@ -340,7 +340,7 @@ void CSkaterAdjustPhysicsComponent::uber_frig (   )
 
 void CSkaterAdjustPhysicsComponent::check_inside_objects (   )
 {
-	if (mp_movable_contact_component->CheckInsideObjects(GetObj()->m_pos, mp_core_physics_component->m_safe_pos))
+	if (mp_movable_contact_component->CheckInsideObjects(GetObject()->m_pos, mp_core_physics_component->m_safe_pos))
 	{
 		MESSAGE("found to be inside a moving object");
 		
@@ -350,14 +350,14 @@ void CSkaterAdjustPhysicsComponent::check_inside_objects (   )
 		if (mp_core_physics_component->GetState() == RAIL)
 		{
 			mp_core_physics_component->SetState(AIR);
-			GetObj()->SelfEvent(CRCD(0xafaa46ba, "OffRail"));
+			GetObject()->SelfEvent(CRCD(0xafaa46ba, "OffRail"));
 		}
-		else if (GetObj()->m_pos == mp_core_physics_component->m_safe_pos)
+		else if (GetObject()->m_pos == mp_core_physics_component->m_safe_pos)
 		{
 			// Set velocity to zero, otherwise we can get stuck inside things as the velocity from this frame will keep pushing you back inside things
 			// especially if m_safe_pos is just inside the object, when there will be no collision detected
 			// If we are on a rail, let them keep the velocity as maybe we can handle it next frame
-			GetObj()->GetVel().Set();
+			GetObject()->GetVel().Set();
 		}
 	}
 }

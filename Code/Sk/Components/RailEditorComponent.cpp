@@ -2173,11 +2173,11 @@ void CRailEditorComponent::Finalize()
 	// Get the pointers to the other required components.
 	
 	Dbg_MsgAssert(mp_input_component==NULL,("mp_input_component not NULL ?"));
-	mp_input_component = GetInputComponentFromObject(GetObj());
+	mp_input_component = GetInputComponentFromObject(GetObject());
 	Dbg_MsgAssert(mp_input_component,("CRailEditorComponent requires parent object to have an input component!"));
 
 	Dbg_MsgAssert(mp_editor_camera_component==NULL,("mp_editor_camera_component not NULL ?"));
-	mp_editor_camera_component = GetEditorCameraComponentFromObject(GetObj());
+	mp_editor_camera_component = GetEditorCameraComponentFromObject(GetObject());
 	Dbg_MsgAssert(mp_editor_camera_component,("CRailEditorComponent requires parent object to have an EditorCamera component!"));
 }
 	
@@ -2197,7 +2197,7 @@ void CRailEditorComponent::Update()
 	if (control_pad.m_x.GetTriggered())
 	{
 		control_pad.m_x.ClearTrigger();
-		Script::RunScript(CRCD(0x415f2afa,"RailEditorX"),NULL,GetObj());
+		Script::RunScript(CRCD(0x415f2afa,"RailEditorX"),NULL,GetObject());
 	}	
 
 	#ifdef __PLAT_NGC__
@@ -2216,23 +2216,23 @@ void CRailEditorComponent::Update()
 	if (control_pad.m_triangle.GetTriggered())
 	{
 		control_pad.m_triangle.ClearTrigger();
-		Script::RunScript(CRCD(0x3ad21c4e,"RailEditorTriangle"),NULL,GetObj());
+		Script::RunScript(CRCD(0x3ad21c4e,"RailEditorTriangle"),NULL,GetObject());
 	}	
 
 	if (control_pad.m_square.GetTriggered())
 	{
 		control_pad.m_square.ClearTrigger();
-		Script::RunScript(CRCD(0xd8d956c9,"RailEditorSquare"),NULL,GetObj());
+		Script::RunScript(CRCD(0xd8d956c9,"RailEditorSquare"),NULL,GetObject());
 	}	
 	#endif
 	
 	if (control_pad.m_circle.GetTriggered())
 	{
 		control_pad.m_circle.ClearTrigger();
-		Script::RunScript(CRCD(0xc18d5b19,"RailEditorCircle"),NULL,GetObj());
+		Script::RunScript(CRCD(0xc18d5b19,"RailEditorCircle"),NULL,GetObject());
 	}	
 
-	Script::RunScript(CRCD(0x97153f0e,"RailEditorEveryFrame"),NULL,GetObj());
+	Script::RunScript(CRCD(0x97153f0e,"RailEditorEveryFrame"),NULL,GetObject());
 }
 
 void CRailEditorComponent::Clear()

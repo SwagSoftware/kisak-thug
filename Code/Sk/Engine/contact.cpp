@@ -38,7 +38,7 @@ CContact::CContact(Obj::CCompositeObject *p_moving_object )
 bool		CContact::ObjectExists()
 {
 	// With smart pointers, GetObj will just return NULL if the object has been deleted 
-	return (GetObj() != NULL);
+	return (GetObject() != NULL);
 }
 
 // call this once per frame, to calculate the movement of the contact point

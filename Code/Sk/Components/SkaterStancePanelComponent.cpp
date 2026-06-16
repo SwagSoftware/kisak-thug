@@ -80,7 +80,7 @@ void CSkaterStancePanelComponent::RefreshFromStructure( Script::CStruct* pParams
 
 void CSkaterStancePanelComponent::Finalize (   )
 {
-	mp_core_physics_component = GetSkaterCorePhysicsComponentFromObject(GetObj());
+	mp_core_physics_component = GetSkaterCorePhysicsComponentFromObject(GetObject());
 	
 	Dbg_Assert(mp_core_physics_component);
 }
@@ -93,7 +93,7 @@ void CSkaterStancePanelComponent::Finalize (   )
 void CSkaterStancePanelComponent::Update()
 {
 	Front::CSpriteElement* p_stance_icon = static_cast< Front::CSpriteElement* >(Front::CScreenElementManager::Instance()->GetElement(
-		CRCD(0x968ae5dd, "the_boardstance_sprite") + static_cast< CSkater* >(GetObj())->GetHeapIndex()
+		CRCD(0x968ae5dd, "the_boardstance_sprite") + static_cast< CSkater* >(GetObject())->GetHeapIndex()
 	).Convert());
 	
 	Dbg_Assert(p_stance_icon);
@@ -142,7 +142,7 @@ CBaseComponent::EMemberFunctionResult CSkaterStancePanelComponent::CallMemberFun
 			if (m_in_nollie == false)
 			{
 				m_in_nollie = true;
-				GetObj()->BroadcastEvent(CRCD(0x8157ab31, "SkaterEnterNollie"));
+				GetObject()->BroadcastEvent(CRCD(0x8157ab31, "SkaterEnterNollie"));
 			}
 			break;
 
@@ -151,7 +151,7 @@ CBaseComponent::EMemberFunctionResult CSkaterStancePanelComponent::CallMemberFun
 			if (m_in_nollie == true)
 			{
 				m_in_nollie = false;
-				GetObj()->BroadcastEvent(CRCD(0x3f70881a, "SkaterExitNollie"));
+				GetObject()->BroadcastEvent(CRCD(0x3f70881a, "SkaterExitNollie"));
 			}
 			break;
 
@@ -165,7 +165,7 @@ CBaseComponent::EMemberFunctionResult CSkaterStancePanelComponent::CallMemberFun
 			if (m_in_pressure == false)
 			{
 				m_in_pressure = true;
-				GetObj()->BroadcastEvent(CRCD(0x2e8de921,"SkaterEnterPressure"));
+				GetObject()->BroadcastEvent(CRCD(0x2e8de921,"SkaterEnterPressure"));
 			}
 			break;
 
@@ -174,7 +174,7 @@ CBaseComponent::EMemberFunctionResult CSkaterStancePanelComponent::CallMemberFun
 			if (m_in_pressure == true)
 			{
 				m_in_pressure = false;
-				GetObj()->BroadcastEvent(CRCD(0xfa9adb1d,"SkaterExitPressure"));
+				GetObject()->BroadcastEvent(CRCD(0xfa9adb1d,"SkaterExitPressure"));
 			}
 			break;
 			

@@ -46,9 +46,9 @@ public:
 
 	static CBaseComponent*			s_create();
 	
-	CSkater*						GetSkater() { return static_cast< CSkater* >(GetObj()); }
+	CSkater*						GetSkater() { return static_cast< CSkater* >(GetObject()); }
 	
-	void							ResetLatestMatrix (   ) { m_latest_matrix = GetObj()->GetMatrix(); }
+	void							ResetLatestMatrix (   ) { m_latest_matrix = GetObject()->GetMatrix(); }
 	
 private:
 	Mth::Matrix						m_latest_matrix;

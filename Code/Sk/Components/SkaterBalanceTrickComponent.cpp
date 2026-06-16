@@ -82,7 +82,7 @@ void CSkaterBalanceTrickComponent::RefreshFromStructure( Script::CStruct* pParam
 void CSkaterBalanceTrickComponent::Finalize (   )
 {
 	
-	mp_animation_component = GetAnimationComponentFromObject(GetObj());
+	mp_animation_component = GetAnimationComponentFromObject(GetObject());
 	
 	Dbg_Assert(mp_animation_component);
 }
@@ -310,7 +310,7 @@ CBaseComponent::EMemberFunctionResult CSkaterBalanceTrickComponent::CallMemberFu
 			
 		case CRCC(0x78e669ab, "SwitchOffBalanceMeter"):
 		{
-			CSkaterScoreComponent* p_score_component = GetSkaterScoreComponentFromObject(GetObj());
+			CSkaterScoreComponent* p_score_component = GetSkaterScoreComponentFromObject(GetObject());
 			Dbg_Assert(p_score_component);
 			
 			p_score_component->GetScore()->SetBalanceMeter(false);
@@ -522,9 +522,9 @@ void CSkaterBalanceTrickComponent::stop_balance_trick (   )
 
 void CSkaterBalanceTrickComponent::set_wobble_params ( Script::CStruct *pParams )
 {
-	if (!GetObj()->GetScript())
+	if (!GetObject()->GetScript())
 	{
-		GetObj()->SetScript(new Script::CScript);
+		GetObject()->SetScript(new Script::CScript);
 	}
 
 	Dbg_Assert(pParams);

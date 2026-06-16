@@ -60,7 +60,7 @@ public:
 	
 	void							Resync();
 	
-	CSkater*						GetSkater() { return static_cast< CSkater* >(GetObj()); }
+	CSkater*						GetSkater() { return static_cast< CSkater* >(GetObject()); }
 	
 private:
 	void							setup_brightness_and_shadow (   );

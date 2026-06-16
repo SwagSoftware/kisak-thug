@@ -3444,7 +3444,7 @@ void			Rail_DebugRender()
 		p_rail_manager_component;
 		p_rail_manager_component = static_cast< Obj::CRailManagerComponent* >(p_rail_manager_component->GetNextSameType()))
 	{
-		Obj::CCompositeObject* p_movable_object = p_rail_manager_component->GetObj();
+		Obj::CCompositeObject* p_movable_object = p_rail_manager_component->GetObject();
 
 		// form a transformation matrix
 		Mth::Matrix total_mat = p_movable_object->GetMatrix();

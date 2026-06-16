@@ -770,7 +770,7 @@ uint32 PlayStreamFromObject( Obj::CStreamComponent *pComponent, uint32 streamNam
 		return 0;
 	}
 
-	Replay::WritePositionalStream(pComponent->GetObj()->GetID(),streamNameChecksum,dropoff,volume,pitch,priority,use_pos_info);
+	Replay::WritePositionalStream(pComponent->GetObject()->GetID(),streamNameChecksum,dropoff,volume,pitch,priority,use_pos_info);
 	if (StreamsDisabled()) return 0;
 	
 	Sfx::sVolume vol;
@@ -783,7 +783,7 @@ uint32 PlayStreamFromObject( Obj::CStreamComponent *pComponent, uint32 streamNam
 	// Set up volume according to position of object to camera.
 	if ( use_pos_info != 0 )
 	{
-		Gfx::Camera *pCamera = Nx::CViewportManager::sGetClosestCamera( pComponent->GetObj()->m_pos );
+		Gfx::Camera *pCamera = Nx::CViewportManager::sGetClosestCamera( pComponent->GetObject()->m_pos );
 
 		if (pCamera)
 		{
@@ -1095,7 +1095,7 @@ bool SetStreamVolume( int objStreamIndex )
 			Sfx::CSfxManager * sfx_manager = Sfx::CSfxManager::Instance();
 			if ( pInfo->use_pos_info )
 			{
-				Gfx::Camera *pCamera = Nx::CViewportManager::sGetClosestCamera( pComp->GetObj()->m_pos );
+				Gfx::Camera *pCamera = Nx::CViewportManager::sGetClosestCamera( pComp->GetObject()->m_pos );
 
 				if (pCamera)
 				{

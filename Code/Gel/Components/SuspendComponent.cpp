@@ -180,7 +180,7 @@ void CSuspendComponent::InitFromStructure( Script::CStruct* pParams )
 void	CSuspendComponent::Finalize()
 {
 	// Might be NULL, if we don't have a model
-	mp_model_component = GetModelComponentFromObject( GetObj() );
+	mp_model_component = GetModelComponentFromObject( GetObject() );
 }
 
 /******************************************************************/
@@ -298,7 +298,7 @@ bool CSuspendComponent::should_animate( float *p_dist )
 //	if (p_camera)
 	{
 //		Mth::Vector cam_pos = p_camera->GetPos();
-//		cam_pos = cam_pos - GetObj()->GetPos();
+//		cam_pos = cam_pos - GetObject()->GetPos();
 //		float dist = cam_pos.LengthSqr();
 
 		float dist = m_camera_distance_squared;
@@ -381,7 +381,7 @@ void CSuspendComponent::CheckModelActive()
 	if ( mp_model_component && mp_model_component->GetModel() )
 	{
 		bool active = false;
-		if ( GetObj()->GetFlags() & CObject::vINVISIBLE )
+		if ( GetObject()->GetFlags() & CObject::vINVISIBLE )
 		{
 			// just leave it inactive
 		}
@@ -418,8 +418,8 @@ void CSuspendComponent::CheckModelActive()
 						Mth::Vector sphere = mp_model_component->GetModel()->GetBoundingSphere();
 						Mth::Vector position = sphere;
 						position[3] = 1.0f;
-						position *= GetObj()->GetMatrix();
-						position += GetObj()->GetPos();
+						position *= GetObject()->GetMatrix();
+						position += GetObject()->GetPos();
 						active = ( Nx::CEngine::sIsVisible( position, sphere[3]) );
 					}
 					else
@@ -452,7 +452,7 @@ float CSuspendComponent::GetDistanceSquaredToCamera()
 	Gfx::Camera * p_camera = Nx::CViewportManager::sGetActiveCamera( 0 );
 	if ( p_camera )
 	{
-		return ( p_camera->GetPos() - GetObj()->GetPos() ).LengthSqr();
+		return ( p_camera->GetPos() - GetObject()->GetPos() ).LengthSqr();
 	}
 
 	printf( "No active camera!\n" );
@@ -543,7 +543,7 @@ void Manager::s_code( const Tsk::Task< Manager >& task )
 		}
 		else
 		{
-			p_suspend_component->m_camera_distance_squared = Mth::DistanceSqr(p_suspend_component->GetObj()->GetPos(),p_info->mActiveCameraPosition);
+			p_suspend_component->m_camera_distance_squared = Mth::DistanceSqr(p_suspend_component->GetObject()->GetPos(),p_info->mActiveCameraPosition);
 		
 			if ( p_suspend_component->m_camera_distance_squared > p_suspend_component->m_suspend_distance_squared )
 			{
@@ -558,16 +558,16 @@ void Manager::s_code( const Tsk::Task< Manager >& task )
 		// based on the new state of m_skip_logic
 		if (p_suspend_component->m_skip_logic)
 		{
-			if (!p_suspend_component->GetObj()->IsSuspended())
+			if (!p_suspend_component->GetObject()->IsSuspended())
 			{
-				p_suspend_component->GetObj()->Suspend(true);
+				p_suspend_component->GetObject()->Suspend(true);
 			}
 		}
 		else
 		{
-			if (p_suspend_component->GetObj()->IsSuspended())
+			if (p_suspend_component->GetObject()->IsSuspended())
 			{
-				p_suspend_component->GetObj()->Suspend(false);
+				p_suspend_component->GetObject()->Suspend(false);
 			}
 		}
 	

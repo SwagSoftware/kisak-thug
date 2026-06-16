@@ -46,7 +46,7 @@
 
 #include <core/math/slerp.h>
 
-#define	FLAGEXCEPTION(X) GetObj()->SelfEvent(X)
+#define	FLAGEXCEPTION(X) GetObject()->SelfEvent(X)
 							
 void	TrackingLine(int type, Mth::Vector &start, Mth::Vector &end)
 {
@@ -114,7 +114,7 @@ CSkaterCorePhysicsComponent::~CSkaterCorePhysicsComponent()
 
 void CSkaterCorePhysicsComponent::InitFromStructure( Script::CStruct* pParams )
 {
-	Dbg_MsgAssert(GetObj()->GetType() == SKATE_TYPE_SKATER, ("CSkaterCorePhysicsComponent added to non-skater composite object"));
+	Dbg_MsgAssert(GetObject()->GetType() == SKATE_TYPE_SKATER, ("CSkaterCorePhysicsComponent added to non-skater composite object"));
 	
 	m_rolling_friction = GetPhysicsFloat(CRCD(0x78f80ec4, "Physics_Rolling_Friction"));
 	
@@ -146,17 +146,17 @@ void CSkaterCorePhysicsComponent::RefreshFromStructure( Script::CStruct* pParams
 
 void CSkaterCorePhysicsComponent::Finalize (   )
 {
-	mp_input_component = GetInputComponentFromObject(GetObj());
-	mp_sound_component = GetSkaterSoundComponentFromObject(GetObj());
-	mp_trigger_component = GetTriggerComponentFromObject(GetObj());
-	mp_trick_component = GetTrickComponentFromObject(GetObj());
-	mp_rotate_component = GetSkaterRotateComponentFromObject(GetObj());
-	mp_score_component = GetSkaterScoreComponentFromObject(GetObj());
-	mp_balance_trick_component = GetSkaterBalanceTrickComponentFromObject(GetObj());
-	mp_state_component = GetSkaterStateComponentFromObject(GetObj());
-	mp_movable_contact_component = GetMovableContactComponentFromObject(GetObj());
-	mp_physics_control_component = GetSkaterPhysicsControlComponentFromObject(GetObj());
-	mp_walk_component = GetWalkComponentFromObject(GetObj());
+	mp_input_component = GetInputComponentFromObject(GetObject());
+	mp_sound_component = GetSkaterSoundComponentFromObject(GetObject());
+	mp_trigger_component = GetTriggerComponentFromObject(GetObject());
+	mp_trick_component = GetTrickComponentFromObject(GetObject());
+	mp_rotate_component = GetSkaterRotateComponentFromObject(GetObject());
+	mp_score_component = GetSkaterScoreComponentFromObject(GetObject());
+	mp_balance_trick_component = GetSkaterBalanceTrickComponentFromObject(GetObject());
+	mp_state_component = GetSkaterStateComponentFromObject(GetObject());
+	mp_movable_contact_component = GetMovableContactComponentFromObject(GetObject());
+	mp_physics_control_component = GetSkaterPhysicsControlComponentFromObject(GetObject());
+	mp_walk_component = GetWalkComponentFromObject(GetObject());
 	
 	Dbg_Assert(mp_input_component);
 	Dbg_Assert(mp_sound_component);
@@ -247,7 +247,7 @@ void CSkaterCorePhysicsComponent::Update()
 	if (m_vert_air_last_frame != (GetState() == AIR && GetFlag(VERT_AIR) && !GetFlag(SPINE_PHYSICS)))
 	{
 		m_vert_air_last_frame = !m_vert_air_last_frame;
-        GetObj()->BroadcastEvent(m_vert_air_last_frame ? CRCD(0xf225fe69, "SkaterEnterVertAir") : CRCD(0x5e27200a, "SkaterExitVertAir"));
+        GetObject()->BroadcastEvent(m_vert_air_last_frame ? CRCD(0xf225fe69, "SkaterEnterVertAir") : CRCD(0x5e27200a, "SkaterExitVertAir"));
 	}
 	
 	#ifdef __USER_DAN__
@@ -974,7 +974,7 @@ CBaseComponent::EMemberFunctionResult CSkaterCorePhysicsComponent::CallMemberFun
 		// Overloading the CMotionComponent member function for skater specific logic
 		case CRCC(0x8819dd8b, "Obj_MoveToNode"):
 		{
-			CMotionComponent* p_motion_component = GetMotionComponentFromObject(GetObj());
+			CMotionComponent* p_motion_component = GetMotionComponentFromObject(GetObject());
 			Dbg_Assert(p_motion_component);
 			
 			// call the member function, which will set m_matrix and m_pos
@@ -985,7 +985,7 @@ CBaseComponent::EMemberFunctionResult CSkaterCorePhysicsComponent::CallMemberFun
 
 			// set the shadow to stick to his feet, assuming we are on the ground
 			// Note: These are used by the simple shadow, not the detailed one.
-			CShadowComponent* p_shadow_component = GetShadowComponentFromObject(GetObj());
+			CShadowComponent* p_shadow_component = GetShadowComponentFromObject(GetObject());
 			Dbg_Assert(p_shadow_component);
 			
 			p_shadow_component->SetShadowPos( GetSkater()->m_pos );
@@ -994,7 +994,7 @@ CBaseComponent::EMemberFunctionResult CSkaterCorePhysicsComponent::CallMemberFun
 			m_safe_pos = GetPos();			// needed for uberfrig
 			GetOldPos() = GetPos();			// needed for camera, so it thinks we've stopped
 			
-			GetObj()->SetTeleported();
+			GetObject()->SetTeleported();
 
 			// Force an update of the skater's camera if this is a local skater			
 			if( GetSkater()->IsLocalClient())
@@ -1019,7 +1019,7 @@ CBaseComponent::EMemberFunctionResult CSkaterCorePhysicsComponent::CallMemberFun
                 SetFlag(FLIPPED, !GetSkater()->m_isGoofy);
 				
 				// reset any flippedness of animation
-				CSkaterFlipAndRotateComponent* p_flip_and_rotate_component = GetSkaterFlipAndRotateComponentFromObject(GetObj());
+				CSkaterFlipAndRotateComponent* p_flip_and_rotate_component = GetSkaterFlipAndRotateComponentFromObject(GetObject());
 				Dbg_Assert(p_flip_and_rotate_component);
 				p_flip_and_rotate_component->ApplyFlipState();
 			}
@@ -1257,7 +1257,7 @@ void CSkaterCorePhysicsComponent::CleanUpSkateState (   )
 	if (m_vert_air_last_frame)
 	{
 		m_vert_air_last_frame = false;
-        GetObj()->BroadcastEvent(CRCD(0x5e27200a, "SkaterExitVertAir"));
+        GetObject()->BroadcastEvent(CRCD(0x5e27200a, "SkaterExitVertAir"));
 	}
 	
 	// longer rerail delay when walking
@@ -1388,7 +1388,7 @@ void CSkaterCorePhysicsComponent::ReverseFacing (   )
 	mRail_Backwards = !mRail_Backwards;
 	
 	#ifdef __NOPT_ASSERT__
-	if (DebugSkaterScripts && GetObj()->GetType() == SKATE_TYPE_SKATER)
+	if (DebugSkaterScripts && GetObject()->GetType() == SKATE_TYPE_SKATER)
 	{
 		printf("%d: Rotating skater\n", (int) Tmr::GetRenderFrame());
 	}
@@ -1593,7 +1593,7 @@ void CSkaterCorePhysicsComponent::do_on_ground_physics (  )
 		case CRCC(0x8d10119d, "Slide"):
 		{
 			#ifdef __NOPT_ASSERT__
-			CSkaterEndRunComponent* p_endrun_component = GetSkaterEndRunComponentFromObject(GetObj());
+			CSkaterEndRunComponent* p_endrun_component = GetSkaterEndRunComponentFromObject(GetObject());
 			Dbg_Assert(p_endrun_component);
             Dbg_MsgAssert(!p_endrun_component->IsEndingRun() || !p_endrun_component->RunHasEnded(), ("Grind balance trick done on ground?"));
 			#endif
@@ -1603,7 +1603,7 @@ void CSkaterCorePhysicsComponent::do_on_ground_physics (  )
 		case CRCC(0xa549b57b, "Lip"):	
 		{
 			#ifdef __NOPT_ASSERT__
-			CSkaterEndRunComponent* p_endrun_component = GetSkaterEndRunComponentFromObject(GetObj());
+			CSkaterEndRunComponent* p_endrun_component = GetSkaterEndRunComponentFromObject(GetObject());
 			Dbg_Assert(p_endrun_component);
 			Dbg_MsgAssert(!p_endrun_component->IsEndingRun() || !p_endrun_component->RunHasEnded(), ("Lip balance trick done on ground?"));
 			#endif
@@ -1631,9 +1631,9 @@ void CSkaterCorePhysicsComponent::do_on_ground_physics (  )
 	// when skitching, we get sucked into the skitch point
 	if (GetFlag(SKITCHING))
 	{
-		if (mp_movable_contact_component->GetContact() && mp_movable_contact_component->GetContact()->GetObj())
+		if (mp_movable_contact_component->GetContact() && mp_movable_contact_component->GetContact()->GetObject())
 		{
-			GetVel() = mp_movable_contact_component->GetContact()->GetObj()->GetVel() * GetPhysicsFloat(CRCD(0xdef25b34, "skitch_speed_match"));
+			GetVel() = mp_movable_contact_component->GetContact()->GetObject()->GetVel() * GetPhysicsFloat(CRCD(0xdef25b34, "skitch_speed_match"));
 			DUMP_VELOCITY;
 		}
 		m_movement.Set();
@@ -2213,13 +2213,13 @@ void CSkaterCorePhysicsComponent::move_to_skitch_point (   )
 	
 	CControlPad& control_pad = mp_input_component->GetControlPad();
 	
-	if (!mp_movable_contact_component->GetContact() || !mp_movable_contact_component->GetContact()->GetObj())
+	if (!mp_movable_contact_component->GetContact() || !mp_movable_contact_component->GetContact()->GetObject())
 	{
 		FLAGEXCEPTION(CRCD(0x47d44b84, "OffMeterBottom"));
 		return;
 	}
 
-	CCompositeObject* p_skitch_object = mp_movable_contact_component->GetContact()->GetObj();
+	CCompositeObject* p_skitch_object = mp_movable_contact_component->GetContact()->GetObject();
 	
 	CSkitchComponent* p_skitch_comp = GetSkitchComponentFromObject(p_skitch_object);
 	Dbg_Assert(p_skitch_comp);
@@ -2700,7 +2700,7 @@ void CSkaterCorePhysicsComponent::snap_to_ground (   )
 	if (!sticking)
 	{
 		SetState(AIR);
-		GetObj()->BroadcastEvent(CRCD(0xd96f01f1, "SkaterOffEdge"));
+		GetObject()->BroadcastEvent(CRCD(0xd96f01f1, "SkaterOffEdge"));
 		FLAGEXCEPTION(CRCD(0x3b1001b6, "GroundGone"));
 		
 		maybe_straight_up();
@@ -2855,7 +2855,7 @@ void CSkaterCorePhysicsComponent::check_movable_contact (   )
 	
 	if (mp_movable_contact_component->CheckForMovableContact(m_feeler))
 	{
-		GetVel() -= mp_movable_contact_component->GetContact()->GetObj()->GetVel();
+		GetVel() -= mp_movable_contact_component->GetContact()->GetObject()->GetVel();
 		DUMP_VELOCITY;
 	}
 }				
@@ -3274,15 +3274,15 @@ bool CSkaterCorePhysicsComponent::maybe_spine_transfer (   )
 	// tell the code we are doing spine physics, so we lean quicker 
 	if (!hip_transfer)
 	{
-		GetObj()->SpawnAndRunScript(CRCD(0xa5179e9e, "SkaterAwardTransfer"));	// award a trick (might want to do it as an exception later)
+		GetObject()->SpawnAndRunScript(CRCD(0xa5179e9e, "SkaterAwardTransfer"));	// award a trick (might want to do it as an exception later)
 	}
 	else
 	{
-		GetObj()->SpawnAndRunScript(CRCD(0x283bb5d6, "SkaterAwardHipTransfer"));	// award a trick (might want to do it as an exception later)
+		GetObject()->SpawnAndRunScript(CRCD(0x283bb5d6, "SkaterAwardHipTransfer"));	// award a trick (might want to do it as an exception later)
 	}
 	
 	// no late jumps during a transfer
-	GetObj()->RemoveEventHandler(CRCD(0x8ffefb28, "Ollied"));
+	GetObject()->RemoveEventHandler(CRCD(0x8ffefb28, "Ollied"));
 	
 	SetFlagTrue(SPINE_PHYSICS);	// flag in spin physics, to do the lean forward, and also allow downcoming lip tricks
 	SetFlagFalse(IN_ACID_DROP);
@@ -3532,8 +3532,8 @@ bool CSkaterCorePhysicsComponent::maybe_acid_drop ( bool skated_off_edge, const 
 		float horizontal_boost = mp_walk_component->get_run_speed();
 		if (initial_horiz_speed < horizontal_boost)
 		{
-			vel[X] = horizontal_boost * GetWalkComponentFromObject(GetObj())->m_facing[X];
-			vel[Z] = horizontal_boost * GetWalkComponentFromObject(GetObj())->m_facing[Z];
+			vel[X] = horizontal_boost * GetWalkComponentFromObject(GetObject())->m_facing[X];
+			vel[Z] = horizontal_boost * GetWalkComponentFromObject(GetObject())->m_facing[Z];
 			initial_horiz_speed = horizontal_boost;
 		}
 	}
@@ -3764,10 +3764,10 @@ void CSkaterCorePhysicsComponent::enter_acid_drop ( const SAcidDropData& acid_dr
 	// trigger the appropriate script
 	Script::CStruct* p_params = new Script::CStruct;
 	p_params->AddFloat(CRCD(0xbb00fe40, "DropHeight"), GetPos()[Y] - true_target_height);
-	GetObj()->SpawnAndRunScript(CRCD(0xc7ed5fef, "SkaterAcidDropTriggered"), -1, false, false, p_params);
+	GetObject()->SpawnAndRunScript(CRCD(0xc7ed5fef, "SkaterAcidDropTriggered"), -1, false, false, p_params);
 	
 	// no late jumps during an acid drop
-	GetObj()->RemoveEventHandler(CRCD(0x8ffefb28, "Ollied"));
+	GetObject()->RemoveEventHandler(CRCD(0x8ffefb28, "Ollied"));
 }
 
 /******************************************************************/
@@ -4194,7 +4194,7 @@ bool CSkaterCorePhysicsComponent::check_for_wallpush (   )
 	if (Tmr::ElapsedTime(m_last_wallplant_time_stamp) < Script::GetFloat(CRCD(0x17d543, "Physics_Disallow_Rewallpush_Duration"))) return false;
 	
 	// throw a wallpush event for the scripts
-	GetObj()->SelfEvent(CRCD(0x4c03635b, "WallPush"));
+	GetObject()->SelfEvent(CRCD(0x4c03635b, "WallPush"));
 	
 	// check to see if the wallpush has been canceled during the event
 	if (GetFlag(CANCEL_WALL_PUSH))
@@ -4358,7 +4358,7 @@ bool CSkaterCorePhysicsComponent::check_for_wallplant (   )
 	if (m_feeler.IsMovableCollision())
 	{
 		// if the wall is moving, we are now in contact with it
-		if (!mp_movable_contact_component->HaveContact() || m_feeler.GetMovingObject() != mp_movable_contact_component->GetContact()->GetObj())
+		if (!mp_movable_contact_component->HaveContact() || m_feeler.GetMovingObject() != mp_movable_contact_component->GetContact()->GetObject())
 		{
 			mp_movable_contact_component->LoseAnyContact();
 			mp_movable_contact_component->ObtainContact(m_feeler.GetMovingObject());
@@ -4392,7 +4392,7 @@ bool CSkaterCorePhysicsComponent::check_for_wallplant (   )
 	m_last_wallplant_time_stamp = Tmr::GetTime();
 	
 	// throw a wallplant event for the scripts
-	GetObj()->SelfEvent(CRCD(0xcf74f6b7, "WallPlant"));
+	GetObject()->SelfEvent(CRCD(0xcf74f6b7, "WallPlant"));
 	
 	// trick off the object
 	mp_trick_component->TrickOffObject(m_feeler.GetNodeChecksum());
@@ -4689,7 +4689,7 @@ void CSkaterCorePhysicsComponent::flip_if_skating_backwards (   )
 
 		// Dan: we can no longer flip mid animation
 		/*
-		CSkaterFlipAndRotateComponent* p_flip_and_rotate_component = GetSkaterFlipAndRotateComponentFromObject(GetObj());
+		CSkaterFlipAndRotateComponent* p_flip_and_rotate_component = GetSkaterFlipAndRotateComponentFromObject(GetObject());
 		Dbg_Assert(p_flip_and_rotate_component);
 		p_flip_and_rotate_component->ToggleFlipState();
 		*/
@@ -4754,8 +4754,8 @@ void CSkaterCorePhysicsComponent::maybe_skitch (   )
 	{
 		if (!p_skitch_comp->CanSkitch()) continue;
 		
-		CCompositeObject* p_composite_object = p_skitch_comp->GetObj();
-		if (p_composite_object == GetObj()) continue;
+		CCompositeObject* p_composite_object = p_skitch_comp->GetObject();
+		if (p_composite_object == GetObject()) continue;
 		
 		Mth::Vector	skitch_point(0.0f, 0.0f, 0.0f);
 		int skitch_index = p_skitch_comp->GetNearestSkitchPoint(&skitch_point, GetPos());
@@ -5206,7 +5206,7 @@ void CSkaterCorePhysicsComponent::do_in_air_physics (   )
 
 				set_terrain(m_feeler.GetTerrain());
 				
-				mp_sound_component->PlayLandSound(GetObj()->GetVel().Length() / GetSkater()->GetScriptedStat(CRCD(0xcc5f87aa, "Skater_Max_Max_Speed_Stat")), mp_state_component->m_terrain);
+				mp_sound_component->PlayLandSound(GetObject()->GetVel().Length() / GetSkater()->GetScriptedStat(CRCD(0xcc5f87aa, "Skater_Max_Max_Speed_Stat")), mp_state_component->m_terrain);
 
 				if (!mp_trick_component->GraffitiTrickStarted())
 				{
@@ -5954,7 +5954,7 @@ bool CSkaterCorePhysicsComponent::handle_forward_collision_in_air ( const Mth::V
 			// only play bonk sound for things that are near vert 												  
 			if (m_feeler.GetNormal().GetY() < 0.05f)
 			{
-				mp_sound_component->PlayBonkSound(GetObj()->GetVel().Length() / GetSkater()->GetScriptedStat(CRCD(0xcc5f87aa, "Skater_Max_Max_Speed_Stat")), m_feeler.GetTerrain());
+				mp_sound_component->PlayBonkSound(GetObject()->GetVel().Length() / GetSkater()->GetScriptedStat(CRCD(0xcc5f87aa, "Skater_Max_Max_Speed_Stat")), m_feeler.GetTerrain());
 			}
 
 			// it's a wall, bounce off it
@@ -6358,7 +6358,7 @@ void CSkaterCorePhysicsComponent::do_wallride_physics (   )
 				
 				ResetLerpingMatrix();
 				
-				GetSkaterMatrixQueriesComponentFromObject(GetObj())->ResetLatestMatrix();
+				GetSkaterMatrixQueriesComponentFromObject(GetObject())->ResetLatestMatrix();
 				
 				m_last_display_normal = GetMatrix()[Y];
 				m_display_normal = GetMatrix()[Y];
@@ -6381,7 +6381,7 @@ void CSkaterCorePhysicsComponent::do_wallride_physics (   )
 				DUMP_POSITION;
 			
 				SetState(AIR);
-				GetObj()->BroadcastEvent(CRCD(0xd96f01f1, "SkaterOffEdge"));
+				GetObject()->BroadcastEvent(CRCD(0xd96f01f1, "SkaterOffEdge"));
 				FLAGEXCEPTION(CRCD(0x3b1001b6, "GroundGone"));
 
 
@@ -6405,7 +6405,7 @@ void CSkaterCorePhysicsComponent::do_wallride_physics (   )
 		DUMP_POSITION;
 
 		SetState(AIR);
-		GetObj()->BroadcastEvent(CRCD(0xd96f01f1, "SkaterOffEdge"));
+		GetObject()->BroadcastEvent(CRCD(0xd96f01f1, "SkaterOffEdge"));
 		FLAGEXCEPTION(CRCD(0x3b1001b6, "GroundGone"));
 	}
 
@@ -6444,7 +6444,7 @@ void CSkaterCorePhysicsComponent::do_wallride_physics (   )
             ResetLerpingMatrix();
 			SetState(AIR);
 			
-			GetObj()->BroadcastEvent(CRCD(0xd96f01f1, "SkaterOffEdge"));
+			GetObject()->BroadcastEvent(CRCD(0xd96f01f1, "SkaterOffEdge"));
 			FLAGEXCEPTION(CRCD(0x3b1001b6, "GroundGone"));
 			mp_trigger_component->CheckFeelerForTrigger(TRIGGER_SKATE_OFF_EDGE, m_last_ground_feeler);
 			
@@ -6476,7 +6476,7 @@ void CSkaterCorePhysicsComponent::do_wallride_physics (   )
 		GetPos() += 18.0f * mWallNormal;
 		DUMP_POSITION;
 		SetState(AIR);
-		GetObj()->BroadcastEvent(CRCD(0xd96f01f1, "SkaterOffEdge"));
+		GetObject()->BroadcastEvent(CRCD(0xd96f01f1, "SkaterOffEdge"));
 		FLAGEXCEPTION(CRCD(0x3b1001b6, "GroundGone"));
 		mp_trigger_component->CheckFeelerForTrigger(TRIGGER_SKATE_OFF_EDGE, m_last_ground_feeler);
 		if (mp_physics_control_component->HaveBeenReset()) return;
@@ -6641,9 +6641,9 @@ void CSkaterCorePhysicsComponent::maybe_stick_to_rail ( bool override_air )
 			if (will_take_rail(pNode, p_rail_man))
 			{
 				got_rail(rail_pos, pNode, p_rail_man); 
-				mp_movable_contact_component->ObtainContact(p_railmanager_component->GetObj());
+				mp_movable_contact_component->ObtainContact(p_railmanager_component->GetObject());
 				
-				GetVel() -= mp_movable_contact_component->GetContact()->GetObj()->GetVel();
+				GetVel() -= mp_movable_contact_component->GetContact()->GetObject()->GetVel();
 			}
 			return;
 		}
@@ -6716,7 +6716,7 @@ void CSkaterCorePhysicsComponent::got_rail ( const Mth::Vector& rail_pos, const 
 	
 	CControlPad& control_pad = mp_input_component->GetControlPad();
 	
-	CSkaterFlipAndRotateComponent* p_flip_and_rotate_component = GetSkaterFlipAndRotateComponentFromObject(GetObj());
+	CSkaterFlipAndRotateComponent* p_flip_and_rotate_component = GetSkaterFlipAndRotateComponentFromObject(GetObject());
 	Dbg_Assert(p_flip_and_rotate_component);
 	p_flip_and_rotate_component->DoAnyFlipRotateOrBoardRotateAfters();
 
@@ -6794,7 +6794,7 @@ void CSkaterCorePhysicsComponent::got_rail ( const Mth::Vector& rail_pos, const 
 				TRIGGER_LAND_ON,
 				m_last_rail_node_name,
 				pNodeArray == Script::GetArray(CRCD(0xc472ecc5, "NodeArray")) ? NULL : pNodeArray,
-				mp_movable_contact_component->HaveContact() ? mp_movable_contact_component->GetContact()->GetObj() : NULL
+				mp_movable_contact_component->HaveContact() ? mp_movable_contact_component->GetContact()->GetObject() : NULL
 			);
 		}
 
@@ -6818,7 +6818,7 @@ void CSkaterCorePhysicsComponent::got_rail ( const Mth::Vector& rail_pos, const 
 		SetState(RAIL);
 
 		set_terrain(mp_rail_node->GetTerrain());
-		mp_sound_component->PlayLandSound(GetObj()->GetVel().Length() / GetSkater()->GetScriptedStat(CRCD(0xcc5f87aa, "Skater_Max_Max_Speed_Stat")), mp_state_component->m_terrain);
+		mp_sound_component->PlayLandSound(GetObject()->GetVel().Length() / GetSkater()->GetScriptedStat(CRCD(0xcc5f87aa, "Skater_Max_Max_Speed_Stat")), mp_state_component->m_terrain);
 		
 		float old_y = GetVel()[Y];
 		GetVel().ProjectToNormal(dir);	   							// kill perp velocity
@@ -6869,7 +6869,7 @@ void CSkaterCorePhysicsComponent::got_rail ( const Mth::Vector& rail_pos, const 
 				TRIGGER_SKATE_OFF,
 				m_last_rail_node_name,
 				pNodeArray == Script::GetArray(CRCD(0xc472ecc5, "NodeArray")) ? NULL : pNodeArray,
-				mp_movable_contact_component->HaveContact() ? mp_movable_contact_component->GetContact()->GetObj() : NULL
+				mp_movable_contact_component->HaveContact() ? mp_movable_contact_component->GetContact()->GetObject() : NULL
 			);
 		}
 			
@@ -6881,7 +6881,7 @@ void CSkaterCorePhysicsComponent::got_rail ( const Mth::Vector& rail_pos, const 
 		// Do extra point rail logic
 
 		// trigger the appropriate script
-		GetObj()->SelfEvent(CRCD(0xb8048f1d, "PointRail"));
+		GetObject()->SelfEvent(CRCD(0xb8048f1d, "PointRail"));
 		
 		return;
 	}
@@ -6951,7 +6951,7 @@ void CSkaterCorePhysicsComponent::got_rail ( const Mth::Vector& rail_pos, const 
 		ResetLerpingMatrix();
 		
 		// Update the "Require_Lip" flag so lip only gaps don't need to wait on frame
-		GetSkaterGapComponentFromObject(GetObj())->UpdateCancelRequire(0,REQUIRE_LIP);
+		GetSkaterGapComponentFromObject(GetObject())->UpdateCancelRequire(0,REQUIRE_LIP);
 		
 		
 		// Trigger the lip on event.
@@ -6959,14 +6959,14 @@ void CSkaterCorePhysicsComponent::got_rail ( const Mth::Vector& rail_pos, const 
 
 		mp_trick_component->mUseSpecialTrickText = false;
 		
-		if (!GetObj()->GetScript())
+		if (!GetObject()->GetScript())
 		{
-			GetObj()->SetScript(new Script::CScript);
+			GetObject()->SetScript(new Script::CScript);
 		}
 
 		// Run the lip script.
-		GetObj()->GetScript()->SetScript(CRCD(0x1647cf96, "LipTrick"), NULL, GetObj());
-		GetObj()->GetScript()->Update();
+		GetObject()->GetScript()->SetScript(CRCD(0x1647cf96, "LipTrick"), NULL, GetObject());
+		GetObject()->GetScript()->Update();
 	
 		// Set the mDoingTrick flag so that the camera can detect that a trick is being done.
 		mp_state_component->SetDoingTrick(true);
@@ -7098,7 +7098,7 @@ void CSkaterCorePhysicsComponent::got_rail ( const Mth::Vector& rail_pos, const 
 	if (Tmr::ElapsedTime(mp_physics_control_component->GetStateSwitchTime()) != 0)
 	{
 		// play sound based on pre-rail velocity
-		mp_sound_component->PlayLandSound(GetObj()->GetVel().Length() / GetSkater()->GetScriptedStat(CRCD(0xcc5f87aa, "Skater_Max_Max_Speed_Stat")), mp_state_component->m_terrain);
+		mp_sound_component->PlayLandSound(GetObject()->GetVel().Length() / GetSkater()->GetScriptedStat(CRCD(0xcc5f87aa, "Skater_Max_Max_Speed_Stat")), mp_state_component->m_terrain);
 	}
 
 	float old_y = GetVel()[Y];
@@ -7322,7 +7322,7 @@ void CSkaterCorePhysicsComponent::do_rail_physics (   )
 	{
 		// need to update the transform of the rail manager
 		// no need to do this														
-		CRailManagerComponent* p_rail_manager_component = GetRailManagerComponentFromObject(mp_movable_contact_component->GetContact()->GetObj());
+		CRailManagerComponent* p_rail_manager_component = GetRailManagerComponentFromObject(mp_movable_contact_component->GetContact()->GetObject());
 		Dbg_Assert(p_rail_manager_component);
 		
 		p_rail_manager_component->UpdateRailManager();
@@ -7988,7 +7988,7 @@ void CSkaterCorePhysicsComponent::maybe_trip_rail_trigger ( uint32 type )
 			type,
 			m_last_rail_node_name,
 			pNodeArray,
-			mp_movable_contact_component->HaveContact() ? mp_movable_contact_component->GetContact()->GetObj() : NULL
+			mp_movable_contact_component->HaveContact() ? mp_movable_contact_component->GetContact()->GetObject() : NULL
 		);
 	}
 }		
@@ -8115,7 +8115,7 @@ void CSkaterCorePhysicsComponent::do_jump ( Script::CStruct *pParams )
 			
 			if (play_sound)
 			{
-				mp_sound_component->PlayJumpSound(GetObj()->GetVel().Length() / GetSkater()->GetScriptedStat(CRCD(0xcc5f87aa, "Skater_Max_Max_Speed_Stat")), m_last_ground_feeler.GetTerrain());
+				mp_sound_component->PlayJumpSound(GetObject()->GetVel().Length() / GetSkater()->GetScriptedStat(CRCD(0xcc5f87aa, "Skater_Max_Max_Speed_Stat")), m_last_ground_feeler.GetTerrain());
 			}	
 			
 			maybe_straight_up();
@@ -8125,7 +8125,7 @@ void CSkaterCorePhysicsComponent::do_jump ( Script::CStruct *pParams )
 		case AIR:
 			if (play_sound)
 			{
-				mp_sound_component->PlayJumpSound(GetObj()->GetVel().Length() / GetSkater()->GetScriptedStat(CRCD(0xcc5f87aa, "Skater_Max_Max_Speed_Stat")), m_last_ground_feeler.GetTerrain());
+				mp_sound_component->PlayJumpSound(GetObject()->GetVel().Length() / GetSkater()->GetScriptedStat(CRCD(0xcc5f87aa, "Skater_Max_Max_Speed_Stat")), m_last_ground_feeler.GetTerrain());
 			}	
 			break;
 
@@ -8133,7 +8133,7 @@ void CSkaterCorePhysicsComponent::do_jump ( Script::CStruct *pParams )
 			if (play_sound)
 			{
 				Dbg_Assert(mp_rail_node);
-				mp_sound_component->PlayJumpSound(GetObj()->GetVel().Length() / GetSkater()->GetScriptedStat(CRCD(0xcc5f87aa, "Skater_Max_Max_Speed_Stat")), mp_state_component->m_terrain);
+				mp_sound_component->PlayJumpSound(GetObject()->GetVel().Length() / GetSkater()->GetScriptedStat(CRCD(0xcc5f87aa, "Skater_Max_Max_Speed_Stat")), mp_state_component->m_terrain);
 			}	
 			break;
 			
@@ -8235,7 +8235,7 @@ void CSkaterCorePhysicsComponent::do_jump ( Script::CStruct *pParams )
 	
 	m_last_jump_time_stamp = Tmr::GetTime();
 	
-	GetObj()->BroadcastEvent(CRCD(0x8687163a, "SkaterJump"));
+	GetObject()->BroadcastEvent(CRCD(0x8687163a, "SkaterJump"));
 }			
 
 /******************************************************************/
@@ -8322,17 +8322,17 @@ void CSkaterCorePhysicsComponent::do_grind_trick ( uint Direction, bool Right, b
 	// Initialise mGrindTweak, which should get set by a SetGrindTweak command in the script that is about to be run.
 	ResetGrindTweak();
 		
-	CSkaterFlipAndRotateComponent* p_flip_and_rotate_component = GetSkaterFlipAndRotateComponentFromObject(GetObj());
+	CSkaterFlipAndRotateComponent* p_flip_and_rotate_component = GetSkaterFlipAndRotateComponentFromObject(GetObject());
 	Dbg_Assert(p_flip_and_rotate_component);
 	p_flip_and_rotate_component->DoAnyFlipRotateOrBoardRotateAfters();
 	
-	if (!GetObj()->GetScript())
+	if (!GetObject()->GetScript())
 	{
-		GetObj()->SetScript(new Script::CScript);
+		GetObject()->SetScript(new Script::CScript);
 	}
 	
-	GetObj()->GetScript()->SetScript(pSubArray->GetNameChecksum(Index), NULL, GetObj());
-	GetObj()->GetScript()->Update();
+	GetObject()->GetScript()->SetScript(pSubArray->GetNameChecksum(Index), NULL, GetObject());
+	GetObject()->GetScript()->Update();
 	
 	// Set the mDoingTrick flag so that the camera can detect that a trick is being done.
 	mp_state_component->SetDoingTrick(true);

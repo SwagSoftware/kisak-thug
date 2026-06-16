@@ -1956,7 +1956,7 @@ void CGoalEditorComponent::Hide( bool shouldHide )
 
 Obj::CCompositeObject *CGoalEditorComponent::get_cursor()
 {
-	return (Obj::CCompositeObject*)Obj::CTracker::Instance()->GetObj(CRCD(0x9211b125,"GoalEditorCursor"));
+	return (Obj::CCompositeObject*)Obj::CTracker::Instance()->GetObject(CRCD(0x9211b125,"GoalEditorCursor"));
 }
 
 void CGoalEditorComponent::refresh_cursor_object()
@@ -1991,7 +1991,7 @@ void CGoalEditorComponent::refresh_cursor_object()
 		params.AddString(CRCD(0x286a8d26,"Model"),p_model_filename);
 	}
 	
-	Script::RunScript(CRCD(0x36791e3c,"goal_editor_create_cursor"),&params,GetObj());
+	Script::RunScript(CRCD(0x36791e3c,"goal_editor_create_cursor"),&params,GetObject());
 	
 	// Choose whether the cursor should be allowed to be moved over kill polys.
 	// Only the restart position is not allowed to, to allow letters to be placed over kill polys.
@@ -2222,11 +2222,11 @@ void CGoalEditorComponent::Finalize()
 	// Get the pointers to the other required components.
 	
 	Dbg_MsgAssert(mp_input_component==NULL,("mp_input_component not NULL ?"));
-	mp_input_component = GetInputComponentFromObject(GetObj());
+	mp_input_component = GetInputComponentFromObject(GetObject());
 	Dbg_MsgAssert(mp_input_component,("CGoalEditorComponent requires parent object to have an input component!"));
 
 	Dbg_MsgAssert(mp_editor_camera_component==NULL,("mp_editor_camera_component not NULL ?"));
-	mp_editor_camera_component = GetEditorCameraComponentFromObject(GetObj());
+	mp_editor_camera_component = GetEditorCameraComponentFromObject(GetObject());
 	Dbg_MsgAssert(mp_editor_camera_component,("CGoalEditorComponent requires parent object to have an EditorCamera component!"));
 }
 	
@@ -2260,26 +2260,26 @@ void CGoalEditorComponent::Update()
 			{
 				// Can't place restart positions too close to another goal's ped position, or
 				// ped positions too close to another goal's restart position.
-				Script::RunScript(CRCD(0xaebc7020,"goal_editor_play_placement_fail_sound"),NULL,GetObj());
+				Script::RunScript(CRCD(0xaebc7020,"goal_editor_play_placement_fail_sound"),NULL,GetObject());
 			}
 			else
 			{
 				if (mp_current_goal->SetPosition(cursor_pos,cursor_height,cursor_angle))
 				{
-					Script::RunScript(CRCD(0x718b071b,"goal_editor_play_placement_success_sound"),NULL,GetObj());
+					Script::RunScript(CRCD(0x718b071b,"goal_editor_play_placement_success_sound"),NULL,GetObject());
 					// Once a position is set, the cursor model will need to change for the next position.
 					refresh_cursor_object();
 					update_camera_pos();
 				}
 				else
 				{
-					Script::RunScript(CRCD(0xaebc7020,"goal_editor_play_placement_fail_sound"),NULL,GetObj());
+					Script::RunScript(CRCD(0xaebc7020,"goal_editor_play_placement_fail_sound"),NULL,GetObject());
 				}
 			}	
 			
 			if (mp_current_goal->PlacedLastPosition())
 			{
-				Script::RunScript(CRCD(0x89119628,"goal_editor_finished_placing_letters"),NULL,GetObj());
+				Script::RunScript(CRCD(0x89119628,"goal_editor_finished_placing_letters"),NULL,GetObject());
 			}
 		}	
 	
@@ -2300,19 +2300,19 @@ void CGoalEditorComponent::Update()
 			{
 				// Can't place restart positions too close to another goal's ped position, or
 				// ped positions too close to another goal's restart position.
-				Script::RunScript(CRCD(0xade100d6,"goal_editor_play_backup_fail_sound"),NULL,GetObj());
+				Script::RunScript(CRCD(0xade100d6,"goal_editor_play_backup_fail_sound"),NULL,GetObject());
 			}
 			else
 			{
 				if (mp_current_goal->BackUp(cursor_pos,cursor_height,cursor_angle))
 				{
-					Script::RunScript(CRCD(0xfa275cc5,"goal_editor_play_backup_success_sound"),NULL,GetObj());
+					Script::RunScript(CRCD(0xfa275cc5,"goal_editor_play_backup_success_sound"),NULL,GetObject());
 					refresh_cursor_object();
 					update_camera_pos();
 				}	
 				else
 				{
-					Script::RunScript(CRCD(0xade100d6,"goal_editor_play_backup_fail_sound"),NULL,GetObj());
+					Script::RunScript(CRCD(0xade100d6,"goal_editor_play_backup_fail_sound"),NULL,GetObject());
 				}			
 			}	
 		}	

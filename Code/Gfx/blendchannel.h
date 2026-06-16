@@ -91,7 +91,7 @@ protected:
 
 public:
 	void						SetStatus(EAnimStatus status);
-	Obj::CCompositeObject*		GetObj();
+	Obj::CCompositeObject*		GetObject();
 
 protected:
 	EAnimStatus					m_status;

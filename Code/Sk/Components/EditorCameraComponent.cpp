@@ -414,7 +414,7 @@ void CEditorCameraComponent::Finalize()
 {
 	// Get the pointers to the other required components.
 	Dbg_MsgAssert(mp_input_component==NULL,("mp_input_component not NULL ?"));
-	mp_input_component = GetInputComponentFromObject(GetObj());
+	mp_input_component = GetInputComponentFromObject(GetObject());
 	Dbg_MsgAssert(mp_input_component,("CEditorCameraComponent requires parent object to have an input component!"));
 }
 
@@ -751,7 +751,7 @@ void CEditorCameraComponent::Update()
 	mat[Y][W]=0.0f;
 	mat[Z][W]=0.0f;
 	mat[W].Set();
-	GetObj()->SetMatrix(mat);
+	GetObject()->SetMatrix(mat);
 	
 	Mth::Vector start=m_camera_focus_pos;
 	/*
@@ -788,7 +788,7 @@ void CEditorCameraComponent::Update()
 	m_cam_pos=start + tilted_v*m_radius;
 
 	m_cam_pos[W]=1.0f;
-	GetObj()->SetPos(m_cam_pos);
+	GetObject()->SetPos(m_cam_pos);
 	
 	
 	update_shadow();

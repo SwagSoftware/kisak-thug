@@ -5371,7 +5371,7 @@ void CCutsceneDetails::hide_moving_objects()
 	{
 		Obj::CModelComponent* pModelComponent = ((Obj::CModelComponent*)p_component);
 		Nx::CModel* pModel = pModelComponent->GetModel();
-		if ( p_component->GetObj()->GetID() == 0 )
+		if ( p_component->GetObject()->GetID() == 0 )
 		{
 			// skip the skater...
 		}
@@ -5396,7 +5396,7 @@ void CCutsceneDetails::hide_moving_objects()
 	{
 		Obj::CModelComponent* pModelComponent = ((Obj::CModelComponent*)p_component);
 		Nx::CModel* pModel = pModelComponent->GetModel();
-		if ( p_component->GetObj()->GetID() == 0 )
+		if ( p_component->GetObject()->GetID() == 0 )
 		{
 			// skip the skater...
 		}
@@ -5406,8 +5406,8 @@ void CCutsceneDetails::hide_moving_objects()
 			// number we need a few moments ago...
 			Dbg_MsgAssert( m_numHiddenObjects < numObjects, ( "Too many objects in scene to hide?" ) );
 
-//			printf( "Found model to hide (%s)\n", Script::FindChecksumName(p_component->GetObj()->GetID()) );
-			mp_hiddenObjects[m_numHiddenObjects] = p_component->GetObj()->GetID();
+//			printf( "Found model to hide (%s)\n", Script::FindChecksumName(p_component->GetObject()->GetID()) );
+			mp_hiddenObjects[m_numHiddenObjects] = p_component->GetObject()->GetID();
 			pModel->Hide( true );
 			m_numHiddenObjects++;
 		}

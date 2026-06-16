@@ -70,7 +70,7 @@ void CSetDisplayMatrixComponent::RefreshFromStructure( Script::CStruct* pParams 
 
 void CSetDisplayMatrixComponent::Update()
 {
-	GetObj()->SetDisplayMatrix(GetObj()->GetMatrix());
+	GetObject()->SetDisplayMatrix(GetObject()->GetMatrix());
 }
 
 /******************************************************************/

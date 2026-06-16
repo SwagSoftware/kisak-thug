@@ -80,7 +80,7 @@ CShadowComponent::~CShadowComponent()
 
 void CShadowComponent::Finalize()
 {
-	mp_model_component = GetModelComponentFromObject( GetObj() );
+	mp_model_component = GetModelComponentFromObject( GetObject() );
 }
 
 /******************************************************************/
@@ -94,7 +94,7 @@ void CShadowComponent::Teleport()
 	// function doesn't really require finalization
 	// right now, but having this assert in here
 	// might help catch future errors
-	Dbg_MsgAssert( GetObj()->IsFinalized(), ( "Has not been finalized!  Tell Gary!" ) );
+	Dbg_MsgAssert( GetObject()->IsFinalized(), ( "Has not been finalized!  Tell Gary!" ) );
 
 	Update();
 }
@@ -147,7 +147,7 @@ void CShadowComponent::InitFromStructure( Script::CStruct* pParams )
 				// GJ:  need to immediately change the shadow's position if Obj_ShadowOn gets called
 				// this is because sometimes the shadow component will be suspended, and so
 				// update_shadow() won't get called (fixes shadow appearing at the origin in SC2)
-				pSimpleShadow->UpdatePosition( m_shadowPos, GetObj()->m_matrix, m_shadowNormal );
+				pSimpleShadow->UpdatePosition( m_shadowPos, GetObject()->m_matrix, m_shadowNormal );
 			}
 			break;
 
@@ -202,7 +202,7 @@ void CShadowComponent::update_shadow()
 					case Gfx::vDETAILED_SHADOW:
 					{
 		//				Mth::Vector shadow_target_pos = pos + ( matrix.GetUp() * 36.0f );
-						Mth::Vector shadow_target_pos = GetObj()->m_pos + ( GetObj()->m_matrix.GetUp() * 36.0f );
+						Mth::Vector shadow_target_pos = GetObject()->m_pos + ( GetObject()->m_matrix.GetUp() * 36.0f );
 
 		#ifdef __PLAT_XBOX__
 						// K: Moved this in here cos it was giving an unused-variable compile error on PS2
@@ -235,17 +235,17 @@ void CShadowComponent::update_shadow()
 						references m_jump_start_pos, which isn't accessible
 						from the shadow code yet...
 
-						if ( GetMotionComponentFromObject( GetObj() )->m_movingobj_status & MOVINGOBJ_STATUS_JUMPING )
+						if ( GetMotionComponentFromObject( GetObject() )->m_movingobj_status & MOVINGOBJ_STATUS_JUMPING )
 						{
 							// If jumping, use the jump's start-y so that the shadow stays on the ground.	
-							Mth::Vector p=GetObj()->m_pos;
+							Mth::Vector p=GetObject()->m_pos;
 							p[Y]=m_jump_start_pos[Y];
-							mp_shadow->UpdatePosition(p,GetObj()->m_matrix,m_shadowNormal);
+							mp_shadow->UpdatePosition(p,GetObject()->m_matrix,m_shadowNormal);
 						}
 						else
 						*/
 						{
-							mp_shadow->UpdatePosition( m_shadowPos, GetObj()->m_matrix, m_shadowNormal );
+							mp_shadow->UpdatePosition( m_shadowPos, GetObject()->m_matrix, m_shadowNormal );
 						}
 					}
 					break;
@@ -299,16 +299,16 @@ void CShadowComponent::Update()
 	}
 	*/
 
-	if ( GetObj()->GetID() >= 0 && GetObj()->GetID() < Mdl::Skate::vMAX_SKATERS )
+	if ( GetObject()->GetID() >= 0 && GetObject()->GetID() < Mdl::Skate::vMAX_SKATERS )
 	{
 		// the skater shadows are handled elsewhere by other components
 		// (CSkaterAdjustPhysicsComponent or CWalkComponent)
-//		SetShadowPos( GetObj()->GetPos() );
+//		SetShadowPos( GetObject()->GetPos() );
 	}
 	else
 	{
 		// the ped shadow is handled here...
-		SetShadowPos( GetObj()->GetPos() );
+		SetShadowPos( GetObject()->GetPos() );
 	}
 
 	update_shadow();
@@ -384,7 +384,7 @@ void CShadowComponent::SwitchOnShadow( Gfx::EShadowType mode )
 
 // Note we can't use mp_model_component here, as SwitchOnShaodow is called
 // from InitFromStructure, which is obviously called before Finalize(); 
-	CModelComponent* pModelComponent = GetModelComponentFromObject( GetObj() );
+	CModelComponent* pModelComponent = GetModelComponentFromObject( GetObject() );
 	Nx::CModel* pModel = NULL;
 	if ( pModelComponent )
 	{
@@ -412,7 +412,7 @@ void CShadowComponent::SwitchOnShadow( Gfx::EShadowType mode )
 			pSimpleShadow->SetModel( "Ped_Shadow" );
 			
 			mp_shadow = pSimpleShadow;
-			mp_shadow->UpdatePosition( m_shadowPos, GetObj()->m_matrix, m_shadowNormal );
+			mp_shadow->UpdatePosition( m_shadowPos, GetObject()->m_matrix, m_shadowNormal );
 		}	
 		break;
 		
@@ -519,9 +519,9 @@ void CShadowComponent::SwitchOnSkaterShadow()
 	// NOTE: skater specific and should not be here; migrate to somewhere like Mdl::Skate
 	
 	// only call on shadows attached to skaters
-	Dbg_MsgAssert(GetObj()->GetType() == SKATE_TYPE_SKATER, ("CShadowComponent::SwitchOnSkaterShadow called on shadow not attached to skater object"));
+	Dbg_MsgAssert(GetObject()->GetType() == SKATE_TYPE_SKATER, ("CShadowComponent::SwitchOnSkaterShadow called on shadow not attached to skater object"));
 	
-	CSkater* pSkater = static_cast< CSkater* >(GetObj());
+	CSkater* pSkater = static_cast< CSkater* >(GetObject());
 	
 	Gfx::EShadowType mode = Gfx::vDETAILED_SHADOW;
 	

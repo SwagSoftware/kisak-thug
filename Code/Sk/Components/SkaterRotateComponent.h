@@ -59,7 +59,7 @@ public:
 	bool							IsApplyingRotation ( unsigned axis );
 	void							StopAllRotation (   );
 	
-	CSkater*						GetSkater() { return static_cast< CSkater* >(GetObj()); }
+	CSkater*						GetSkater() { return static_cast< CSkater* >(GetObject()); }
 	
 private:
 	SRotation						mp_rotations[3];

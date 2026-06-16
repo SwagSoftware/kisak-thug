@@ -466,11 +466,11 @@ inline const Mth::Vector& CRiderComponent::GetEffectivePos (   )
 {
     if (m_state != WALKING_ANIMWAIT)
     {
-        return GetObj()->GetPos();
+        return GetObject()->GetPos();
     }
     else
     {
-        return GetObj()->GetPos();
+        return GetObject()->GetPos();
     }
 }
 

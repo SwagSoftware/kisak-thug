@@ -47,7 +47,7 @@ public:
 
 	static CBaseComponent*			s_create();
 	
-	CSkater*						GetSkater() { return static_cast< CSkater* >(GetObj()); }
+	CSkater*						GetSkater() { return static_cast< CSkater* >(GetObject()); }
 	
 private:
 	CSkaterCorePhysicsComponent* 	mp_core_physics_component;
