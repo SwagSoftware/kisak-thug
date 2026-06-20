@@ -121,6 +121,7 @@ public:
 private:
 	void							do_on_ground_physics (   );
 	void							do_in_air_physics (   );
+	void							maybe_award_buttslap (   ); // blops: add for buttslap detection
 	void							do_wallride_physics (   );
 	void							do_wallplant_physics (   );
 	void							do_lip_physics (   );
@@ -307,7 +308,12 @@ protected:
 
 	bool							mLandedFromSpine;				// True if landed from a transfer.
 	bool							mLandedFromVert;				// True if landed from vert. Can be set & reset by script commands.
-	
+
+	bool							m_bonk_detected;				// blops: bonk detection Script: CheckForBonk / ResetBonk.
+	bool							m_buttslap_detected;			// blops: buttslap detection: Script: CheckForButtslap / ResetButtslap.
+	bool							m_buttslap_awarded;				// 
+	int								m_air_jumps_since_airborne;		// blops: number of buttslaps
+
 	bool							m_true_landed_from_vert;		// This is the 'true' landed from vert flag, which only gets set by the C-code on landing. Scripts
 																	// cannot change its value.
 																	// Used by the Clearpanel_Landed C-code to determine whether or not to count an ollie as a trick.

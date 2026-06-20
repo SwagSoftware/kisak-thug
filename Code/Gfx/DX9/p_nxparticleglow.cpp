@@ -2,6 +2,9 @@
 #include "gfx/DX9/nx/render.h"
 
 #include "gfx/DX9/p_nxparticleGlow.h"
+#include "NX/nx_init.h"
+
+#include <math.h>
 
 extern IDirect3DPixelShader9* PixelShader1;
 
@@ -134,18 +137,52 @@ void CXboxParticleGlow::plat_set_eb( int entry, uint8 value ) { m_end_color[entr
 void CXboxParticleGlow::plat_set_ea( int entry, uint8 value ) { m_end_color[entry].a = value; }
 
 
-		
-/******************************************************************/
-/*                                                                */
-/*                                                                */
-/******************************************************************/
+static int LockVertexBuffer(int size, int n, IDirect3DVertexBuffer9** outVertexBuffer, int* outResult, unsigned int* outResult2)
+{
+	unsigned int v5; // eax
+	int v6; // edx
+	unsigned int v7; // esi
+
+	v5 = (NxXbox::EngineGlobals.dword_7CEC7C + n - 1) / n;
+	*outVertexBuffer = NxXbox::EngineGlobals.p_vertex_buffer;
+	v6 = NxXbox::EngineGlobals.vertex_buffer_length;
+	v7 = n * v5;
+	if (n * v5 + n * size > NxXbox::EngineGlobals.vertex_buffer_length)
+	{
+		NxXbox::EngineGlobals.p_vertex_buffer->Lock(0, 0, (void**)&NxXbox::EngineGlobals.dword_7CEC78, D3DLOCK_DISCARD);
+		NxXbox::EngineGlobals.dword_7CEC7C = 0;
+		if (outResult2)
+			*outResult2 = NxXbox::EngineGlobals.vertex_buffer_length / n;
+		*outResult = 0;
+		return NxXbox::EngineGlobals.dword_7CEC78;
+	}
+	else
+	{
+		*outResult = v5;
+		NxXbox::EngineGlobals.dword_7CEC7C = n * v5;
+		if (outResult2)
+			*outResult2 = (v6 - v7) / n;
+		NxXbox::EngineGlobals.p_vertex_buffer->Lock(0, 0, (void**)&NxXbox::EngineGlobals.dword_7CEC78, D3DLOCK_NOOVERWRITE);
+		return NxXbox::EngineGlobals.dword_7CEC78 + v7;
+	}
+}
+
+static int UnlockVertexBuffer(int size, int n)
+{
+	int result; // eax
+
+	NxXbox::EngineGlobals.p_vertex_buffer->Unlock();
+	result = n * size;
+	NxXbox::EngineGlobals.dword_7CEC78 = 0;
+	NxXbox::EngineGlobals.dword_7CEC7C = (n * size + NxXbox::EngineGlobals.dword_7CEC7C + 31) & 0xFFFFFFE0;
+	return result;
+}
+
+
+
 void CXboxParticleGlow::plat_render( void )
 {
-	// KISAKTODO: Finish Particle Rendering
-	return;
-#if 0
-	// Draw the particles.
-	if( m_num_particles > 0 )
+	if( m_num_particles > 0 && !NxXbox::g_disableRendering )
 	{
 		// Used to figure the right and up vectors for creating screen-aligned particle quads.
 		D3DXMATRIX *p_matrix = (D3DXMATRIX*)&NxXbox::EngineGlobals.view_matrix;
@@ -160,217 +197,135 @@ void CXboxParticleGlow::plat_render( void )
 
 		screen_right.Normalize();
 		screen_up.Normalize();
-	
-		int				lp;
-		CParticleEntry	*p_particle;
-		float			*p_v;
-
-//		Mth::Vector		min, max;	// For dynamic bounding box calculation.
-
-		// Obtain push buffer lock.
-		DWORD *p_push; 
-		DWORD dwords_per_particle	= 36 * m_num_segments;
-		DWORD dword_count			= dwords_per_particle * m_num_particles;
 
 		// Submit particle material.
 		mp_engine_particle->mp_material->Submit();
-		
+
 		// Set up correct vertex and pixel shader.
 		NxXbox::set_vertex_shader( D3DFVF_XYZ | D3DFVF_DIFFUSE );
 		NxXbox::set_pixel_shader( PixelShader1 );
-		
-		// The additional number (+5 is minimum) is to reserve enough overhead for the encoding parameters. It can safely be more, but no less.
-		p_push = D3DDevice_BeginPush( dword_count + ( dword_count / 2047 ) + 16 );
 
-		// Note that p_push is returned as a pointer to write-combined memory. Writes to write-combined memory should be
-		// consecutive and in increasing order. Reads should be avoided. Additionally, any CPU reads from memory or the
-		// L2 cache can force expensive partial flushes of the 32-byte write-combine cache.
-		p_push[0]	= D3DPUSH_ENCODE( D3DPUSH_SET_BEGIN_END, 1 );
-		p_push[1]	= D3DPT_TRIANGLELIST;
-		p_push		+= 2;
+		struct sGlowVert { float x, y, z; DWORD color; };
 
-		// Set up loop variables here, since we be potentially enetering the loop more than once.
-		lp			= 0;
-		p_particle	= mp_particle_array;
-		p_v			= mp_vertices;
+		// One segment = 3 triangles = 9 vertices. A particle has m_num_segments segments.
+		// Build into a heap buffer sized for one full particle and draw per particle.
+		int verts_per_particle	= m_num_segments * 9;
+		sGlowVert* p_verts		= new sGlowVert[verts_per_particle];
 
-		while( dword_count > 0 )
+		CParticleEntry	*p_particle	= mp_particle_array;
+		float			*p_v		= mp_vertices;
+
+		for( int lp = 0; lp < m_num_particles; lp++, p_particle++, p_v += 3 )
 		{
-			int dwords_written = 0;
+			float terp	= p_particle->m_time / p_particle->m_life;
+			float w		= p_particle->m_sw + ( ( p_particle->m_ew - p_particle->m_sw ) * terp );
+			float h		= p_particle->m_sh + ( ( p_particle->m_eh - p_particle->m_sh ) * terp );
 
-			// NOTE: A maximum of 2047 DWORDs can be specified to D3DPUSH_ENCODE. If there is more than 2047 DWORDs of vertex
-			// data, simply split the data into multiple D3DPUSH_ENCODE( D3DPUSH_INLINE_ARRAY ) sections.
-			p_push[0] = D3DPUSH_ENCODE( D3DPUSH_NOINCREMENT_FLAG | D3DPUSH_INLINE_ARRAY, ( dword_count > 2047 ) ? ((int)( 2047 / dwords_per_particle )) * dwords_per_particle: dword_count );
-			++p_push;
-		
-			for( ; lp < m_num_particles; lp++, p_particle++, p_v += 3 )
+			Mth::Vector	pos( p_v[0] + m_pos[X], p_v[1] + m_pos[Y], p_v[2] + m_pos[Z] );
+			Mth::Vector	ss_right, ss_up;
+			Mth::Vector tmp0, tmp1, tmp2, tmp3;
+
+			ss_right	= screen_right * w;
+			ss_up		= screen_up * h;
+
+			Image::RGBA color[3];
+			Image::RGBA *p_col0;
+			Image::RGBA *p_col1;
+
+			// Local copy of terp so the per-particle base value is not clobbered.
+			float col_terp = terp;
+
+			if ( m_mid_time >= 0.0f )
 			{
-				// Check to see if writing another particle will take us over the edge.
-				if(( dwords_written + dwords_per_particle ) > 2047 )
+				if ( terp < m_mid_time )
 				{
-					break;
-				}
+					p_col0 = m_start_color;
+					p_col1 = m_mid_color;
 
-				float terp	= p_particle->m_time / p_particle->m_life;
-				float w		= p_particle->m_sw + ( ( p_particle->m_ew - p_particle->m_sw ) * terp );
-				float h		= p_particle->m_sh + ( ( p_particle->m_eh - p_particle->m_sh ) * terp );
-
-				Mth::Vector	pos( p_v[0] + m_pos[X], p_v[1] + m_pos[Y], p_v[2] + m_pos[Z] );
-				Mth::Vector	ss_right, ss_up;
-				Mth::Vector tmp0, tmp1, tmp2, tmp3;
-	
-				// Dynamic bounding box calculation.
-//				if( lp == 0 )
-//				{
-//					min = pos;
-//					max = pos;
-//				}
-//				else
-//				{
-//					if( pos[X] < min[X] ) min[X] = pos[X]; else if( pos[X] > max[X] ) max[X] = pos[X];
-//					if( pos[Y] < min[Y] ) min[Y] = pos[Y]; else if( pos[Y] > max[Y] ) max[Y] = pos[Y];
-//					if( pos[Z] < min[Z] ) min[Z] = pos[Z]; else if( pos[Z] > max[Z] ) max[Z] = pos[Z];
-//				}
-
-				ss_right	= screen_right * w;
-				ss_up		= screen_up * h;
-	
-				Image::RGBA color[3];
-				Image::RGBA *p_col0;
-				Image::RGBA *p_col1;
-
-				if ( m_mid_time >= 0.0f )
-				{
-					if ( terp < m_mid_time )
-					{
-						p_col0 = m_start_color;
-						p_col1 = m_mid_color;
-
-						// Adjust interpolation for this half of the color blend.
-						terp = terp / m_mid_time;
-					}
-					else
-					{
-						p_col0 = m_mid_color;
-						p_col1 = m_end_color;
-
-						// Adjust interpolation for this half of the color blend.
-						terp = ( terp - m_mid_time ) / ( 1.0f - m_mid_time );
-					}
+					// Adjust interpolation for this half of the color blend.
+					col_terp = terp / m_mid_time;
 				}
 				else
 				{
-					// No mid color specified.
-					p_col0 = m_start_color;
+					p_col0 = m_mid_color;
 					p_col1 = m_end_color;
+
+					// Adjust interpolation for this half of the color blend.
+					col_terp = ( terp - m_mid_time ) / ( 1.0f - m_mid_time );
 				}
-
-				// Swap red and blue here.
-				for( int c = 0; c < 3; c++ )
-				{
-					Image::RGBA start	= *p_col0++;
-					Image::RGBA end		= *p_col1++;
-
-					color[c].b = start.r + (uint8)(( ((float)( end.r - start.r )) * terp ));
-					color[c].g = start.g + (uint8)(( ((float)( end.g - start.g )) * terp ));
-					color[c].r = start.b + (uint8)(( ((float)( end.b - start.b )) * terp ));
-					color[c].a = start.a + (uint8)(( ((float)( end.a - start.a )) * terp ));
-				}
-
-				tmp0  = pos;
-				tmp0 += ss_right * sinf( 0.0f ) * m_split;
-				tmp0 += ss_up    * cosf( 0.0f ) * m_split;
-
-				tmp2  = pos;
-				tmp2 += ss_right * sinf( 0.0f );
-				tmp2 += ss_up    * cosf( 0.0f );
-
-				float radians_per_segment	= ( 2.0f * Mth::PI ) / (float)m_num_segments;
-
-				for( int lp2 = 0; lp2 < m_num_segments; lp2++ )
-				{
-					tmp1  = pos;
-					tmp1 += ss_right * sinf( radians_per_segment * ( lp2 + 1 )) * m_split;
-					tmp1 += ss_up    * cosf( radians_per_segment * ( lp2 + 1 )) * m_split;
-
-					tmp3  = pos;
-					tmp3 += ss_right * sinf( radians_per_segment * ( lp2 + 1 ));
-					tmp3 += ss_up    * cosf( radians_per_segment * ( lp2 + 1 ));
-
-					// Triangle zero.
-					p_push[0]	= *((DWORD*)&pos[X] );
-					p_push[1]	= *((DWORD*)&pos[Y] );
-					p_push[2]	= *((DWORD*)&pos[Z] );
-					p_push[3]	= *((DWORD*)&color[0] );
-
-					p_push[4]	= *((DWORD*)&tmp0[X] );
-					p_push[5]	= *((DWORD*)&tmp0[Y] );
-					p_push[6]	= *((DWORD*)&tmp0[Z] );
-					p_push[7]	= *((DWORD*)&color[1] );
-					
-					p_push[8]	= *((DWORD*)&tmp1[X] );
-					p_push[9]	= *((DWORD*)&tmp1[Y] );
-					p_push[10]	= *((DWORD*)&tmp1[Z] );
-					p_push[11]	= *((DWORD*)&color[1] );
-				
-					// Triangle one.
-					p_push[12]	= *((DWORD*)&tmp0[X] );
-					p_push[13]	= *((DWORD*)&tmp0[Y] );
-					p_push[14]	= *((DWORD*)&tmp0[Z] );
-					p_push[15]	= *((DWORD*)&color[1] );
-					
-					p_push[16]	= *((DWORD*)&tmp1[X] );
-					p_push[17]	= *((DWORD*)&tmp1[Y] );
-					p_push[18]	= *((DWORD*)&tmp1[Z] );
-					p_push[19]	= *((DWORD*)&color[1] );
-
-					p_push[20]	= *((DWORD*)&tmp2[X] );
-					p_push[21]	= *((DWORD*)&tmp2[Y] );
-					p_push[22]	= *((DWORD*)&tmp2[Z] );
-					p_push[23]	= *((DWORD*)&color[2] );
-					
-					// Triangle two.
-					p_push[24]	= *((DWORD*)&tmp1[X] );
-					p_push[25]	= *((DWORD*)&tmp1[Y] );
-					p_push[26]	= *((DWORD*)&tmp1[Z] );
-					p_push[27]	= *((DWORD*)&color[1] );
-					
-					p_push[28]	= *((DWORD*)&tmp2[X] );
-					p_push[29]	= *((DWORD*)&tmp2[Y] );
-					p_push[30]	= *((DWORD*)&tmp2[Z] );
-					p_push[31]	= *((DWORD*)&color[2] );
-
-					p_push[32]	= *((DWORD*)&tmp3[X] );
-					p_push[33]	= *((DWORD*)&tmp3[Y] );
-					p_push[34]	= *((DWORD*)&tmp3[Z] );
-					p_push[35]	= *((DWORD*)&color[2] );
-					p_push		+= 36;
-					
-					tmp0 = tmp1;
-					tmp2 = tmp3;
-				}
-
-				dwords_written	+= dwords_per_particle;
-				dword_count		-= dwords_per_particle;
 			}
+			else
+			{
+				// No mid color specified.
+				p_col0 = m_start_color;
+				p_col1 = m_end_color;
+			}
+
+			// Swap red and blue here (write straight to D3DCOLOR/ARGB ordered Image::RGBA).
+			for( int c = 0; c < 3; c++ )
+			{
+				Image::RGBA start	= *p_col0++;
+				Image::RGBA end		= *p_col1++;
+
+				color[c].b = (uint8)( start.r + (uint8)(( ((float)( (int)end.r - (int)start.r )) * col_terp )) );
+				color[c].g = (uint8)( start.g + (uint8)(( ((float)( (int)end.g - (int)start.g )) * col_terp )) );
+				color[c].r = (uint8)( start.b + (uint8)(( ((float)( (int)end.b - (int)start.b )) * col_terp )) );
+				color[c].a = (uint8)( start.a + (uint8)(( ((float)( (int)end.a - (int)start.a )) * col_terp )) );
+			}
+
+			DWORD dw_color0 = *((DWORD*)&color[0] );
+			DWORD dw_color1 = *((DWORD*)&color[1] );
+			DWORD dw_color2 = *((DWORD*)&color[2] );
+
+			tmp0  = pos;
+			tmp0 += ss_right * sinf( 0.0f ) * m_split;
+			tmp0 += ss_up    * cosf( 0.0f ) * m_split;
+
+			tmp2  = pos;
+			tmp2 += ss_right * sinf( 0.0f );
+			tmp2 += ss_up    * cosf( 0.0f );
+
+			float radians_per_segment	= ( 2.0f * Mth::PI ) / (float)m_num_segments;
+
+			sGlowVert* p_dst = p_verts;
+
+			for( int lp2 = 0; lp2 < m_num_segments; lp2++ )
+			{
+				tmp1  = pos;
+				tmp1 += ss_right * sinf( radians_per_segment * ( lp2 + 1 )) * m_split;
+				tmp1 += ss_up    * cosf( radians_per_segment * ( lp2 + 1 )) * m_split;
+
+				tmp3  = pos;
+				tmp3 += ss_right * sinf( radians_per_segment * ( lp2 + 1 ));
+				tmp3 += ss_up    * cosf( radians_per_segment * ( lp2 + 1 ));
+
+				// Triangle zero.
+				p_dst[0].x = pos[X];  p_dst[0].y = pos[Y];  p_dst[0].z = pos[Z];  p_dst[0].color = dw_color0;
+				p_dst[1].x = tmp0[X]; p_dst[1].y = tmp0[Y]; p_dst[1].z = tmp0[Z]; p_dst[1].color = dw_color1;
+				p_dst[2].x = tmp1[X]; p_dst[2].y = tmp1[Y]; p_dst[2].z = tmp1[Z]; p_dst[2].color = dw_color1;
+
+				// Triangle one.
+				p_dst[3].x = tmp0[X]; p_dst[3].y = tmp0[Y]; p_dst[3].z = tmp0[Z]; p_dst[3].color = dw_color1;
+				p_dst[4].x = tmp1[X]; p_dst[4].y = tmp1[Y]; p_dst[4].z = tmp1[Z]; p_dst[4].color = dw_color1;
+				p_dst[5].x = tmp2[X]; p_dst[5].y = tmp2[Y]; p_dst[5].z = tmp2[Z]; p_dst[5].color = dw_color2;
+
+				// Triangle two.
+				p_dst[6].x = tmp1[X]; p_dst[6].y = tmp1[Y]; p_dst[6].z = tmp1[Z]; p_dst[6].color = dw_color1;
+				p_dst[7].x = tmp2[X]; p_dst[7].y = tmp2[Y]; p_dst[7].z = tmp2[Z]; p_dst[7].color = dw_color2;
+				p_dst[8].x = tmp3[X]; p_dst[8].y = tmp3[Y]; p_dst[8].z = tmp3[Z]; p_dst[8].color = dw_color2;
+
+				p_dst += 9;
+
+				tmp0 = tmp1;
+				tmp2 = tmp3;
+			}
+
+			// 3 triangles per segment.
+			NxXbox::EngineGlobals.p_Device->DrawPrimitiveUP( D3DPT_TRIANGLELIST, m_num_segments * 3, p_verts, (UINT)sizeof( sGlowVert ) );
 		}
 
-		p_push[0] = D3DPUSH_ENCODE( D3DPUSH_SET_BEGIN_END, 1 );
-		p_push[1] = 0;
-		p_push += 2;
-		D3DDevice_EndPush( p_push );
-
-		// Set the mesh bounding box and sphere.
-//		mp_engine_particle->mp_scene->m_semitransparent_meshes[0]->m_bbox.SetMin( min );
-//		mp_engine_particle->mp_scene->m_semitransparent_meshes[0]->m_bbox.SetMax( max );
-//		mp_engine_particle->mp_scene->m_semitransparent_meshes[0]->m_sphere_center = D3DXVECTOR3( min[X] + (( max[X] - min[X] ) * 0.5f ), min[Y] + (( max[Y] - min[Y] ) * 0.5f ), min[Z] + (( max[Z] - min[Z] ) * 0.5f ));
-//		mp_engine_particle->mp_scene->m_semitransparent_meshes[0]->m_sphere_radius = 360.0f;
-
-		// And the scene bounding sphere.
-//		mp_engine_particle->mp_scene->m_sphere_center = mp_engine_particle->mp_scene->m_semitransparent_meshes[0]->m_sphere_center;
-//		mp_engine_particle->mp_scene->m_sphere_radius = mp_engine_particle->mp_scene->m_semitransparent_meshes[0]->m_sphere_radius;
+		delete [] p_verts;
 	}
-#endif
 }
 } // Nx
 

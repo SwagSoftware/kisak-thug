@@ -170,6 +170,11 @@ CBaseComponent::EMemberFunctionResult CSkaterBalanceTrickComponent::CallMemberFu
 			// Do nothing if already doing the same type of balance trick.  This is so that the meter does not glitch when switching to
 			// a balance trick from another balance trick where there is no StopBalanceTrick script command in between.
 			if (mBalanceTrickType == NewBalanceTrickType) break;
+
+			// blops: fix for the balance meter reset on double tap tricks (doesn't break retail scripts)
+			uint32 OldBalanceTrickType = mBalanceTrickType;
+			bool keep_balance = (Script::GetInteger(CRCD(0x497086a9, "tweak_keep_balance")) != 0);
+
 			mBalanceTrickType = NewBalanceTrickType;
 			
 			bool DoFlipCheck = pParams->ContainsFlag(CRCD(0x1304e677, "DoFlipCheck"));
@@ -190,23 +195,46 @@ CBaseComponent::EMemberFunctionResult CSkaterBalanceTrickComponent::CallMemberFu
 					
 				case CRCC(0xac90769, "NoseManual"):
 				case CRCC(0xef24413b, "Manual"):
+				{
+					
+					bool keep = keep_balance &&
+						(OldBalanceTrickType == 0xac90769 || OldBalanceTrickType == 0xef24413b);
+					float saved_lean		= mManual.mManualLean;
+					float saved_lean_dir	= mManual.mManualLeanDir;
 					if (clear_cheese)
 					{
 						mManual.Reset();
-					}	
+					}
 					mManual.UpdateRecord();
 					mManual.SetUp(ButtonA, ButtonB, Tweak, DoFlipCheck, PlayRangeAnimBackwards);
+					if (keep)
+					{
+						mManual.mManualLean	= saved_lean;
+						mManual.mManualLeanDir	= saved_lean_dir;
+					}
 					break;
+				}
 					
 				case CRCC(0x255ed86f, "Grind"):
 				case CRCC(0x8d10119d, "Slide"):
+				{
+					bool keep = keep_balance &&
+						(OldBalanceTrickType == 0x255ed86f || OldBalanceTrickType == 0x8d10119d);
+					float saved_lean		= mGrind.mManualLean;
+					float saved_lean_dir	= mGrind.mManualLeanDir;
 					if (clear_cheese)
 					{
 						mGrind.Reset();
-					}	
+					}
 					mGrind.UpdateRecord();
 					mGrind.SetUp(ButtonA, ButtonB, Tweak, DoFlipCheck, PlayRangeAnimBackwards);
+					if (keep)
+					{
+						mGrind.mManualLean	= saved_lean;
+						mGrind.mManualLeanDir	= saved_lean_dir;
+					}
 					break;
+				}
 					
 				case CRCC(0xa549b57b, "Lip"):
 					if (clear_cheese)

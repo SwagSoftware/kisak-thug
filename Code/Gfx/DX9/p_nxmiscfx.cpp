@@ -892,9 +892,24 @@ void plat_texture_splat_render( void )
 	D3DDevice_GetSamplerState(0, D3DSAMP_MINFILTER, &stage_zero_minfilter);
 	D3DDevice_SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
 
+	// The splat draws through the fixed-function pixel pipeline (set_pixel_shader(0) above).
+	// Retail's whole pipeline was fixed-function, so the stage-0 combiner was always left in a
+	// usable "modulate texture x diffuse" state; this port drives materials with generated HLSL
+	// pixel shaders and never maintains the fixed-function stage ops, so the splat inherited
+	// whatever a prior shadow/projection pass left behind and rendered as nothing. Set the
+	// combiner explicitly so the fixed-function draw is self-sufficient.
+	D3DDevice_SetTextureStageState( 0, D3DTSS_COLOROP,   D3DTOP_MODULATE );
+	D3DDevice_SetTextureStageState( 0, D3DTSS_COLORARG1, D3DTA_TEXTURE );
+	D3DDevice_SetTextureStageState( 0, D3DTSS_COLORARG2, D3DTA_DIFFUSE );
+	D3DDevice_SetTextureStageState( 0, D3DTSS_ALPHAOP,   D3DTOP_MODULATE );
+	D3DDevice_SetTextureStageState( 0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE );
+	D3DDevice_SetTextureStageState( 0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE );
+	D3DDevice_SetTextureStageState( 1, D3DTSS_COLOROP,   D3DTOP_DISABLE );
+	D3DDevice_SetTextureStageState( 1, D3DTSS_ALPHAOP,   D3DTOP_DISABLE );
+
 	p_splat_details_table->IterateStart();
 	sSplatInstanceDetails *p_details = p_splat_details_table->IterateNext();
-	
+
 	while( p_details )
 	{
 		p_xbox_details = static_cast<sXboxSplatInstanceDetails*>( p_details );
@@ -904,7 +919,7 @@ void plat_texture_splat_render( void )
 			p_xbox_details->mp_material->Submit();
 			D3DDevice_DrawPrimitiveUP(D3DPT_TRIANGLELIST, p_xbox_details->m_highest_active_splat + 1, p_xbox_details->m_verts, sizeof(sXboxSplatVert));
 		}
-		
+
 		p_details = p_splat_details_table->IterateNext();
 	}
 

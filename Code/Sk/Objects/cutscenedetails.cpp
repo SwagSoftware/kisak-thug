@@ -4239,8 +4239,19 @@ bool CCutsceneData::Load( const char* p_fileName, bool assertOnFail, bool async_
 #endif
 
 	//Mem::Manager::sHandle().InitCutsceneHeap(512 * 1024);
-	Mem::Manager::sHandle().InitCutsceneHeap(1024 * 1024); // lwss: increase
-	Mem::Manager::sHandle().PopContext(); 
+#if defined( __PLAT_XBOX__ ) || defined( __PLAT_WN32__ )
+	// Size the cutscene heap from the actual free top-down memory minus a 512K reserve, exactly as
+	// retail (CCutsceneData::Load @0x509100: InitCutsceneHeap(Available() - 0x80000)). The hardcoded
+	// 1MB was too small for larger career cutscenes whose peak need is (full_lib + largest_subfile),
+	// overflowing the region in CFileLibrary::PostLoad. mem_available was already computed above as
+	// Available() on the top-down heap (pushed at the top of this block), matching retail's setup.
+	// Scoped to Xbox/Win32: on NGC mem_available is reduced to as little as 150K above, so the -512K
+	// reserve would underflow there.
+	Mem::Manager::sHandle().InitCutsceneHeap( mem_available - (512 * 1024) );
+#else
+	Mem::Manager::sHandle().InitCutsceneHeap( 1024 * 1024 ); // lwss: increase
+#endif
+	Mem::Manager::sHandle().PopContext();
 	//-------------------------------------------------------------
 #	if defined( __PLAT_NGC__ )
 	g_in_cutscene = true;

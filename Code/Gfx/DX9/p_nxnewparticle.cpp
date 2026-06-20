@@ -26,6 +26,12 @@
 #include <gfx/DX9/nx/nx_init.h>
 #include <gfx/DX9/nx/render.h>
 
+namespace NxXbox
+{
+	// Defined inside namespace NxXbox in render.cpp; render.h declares it global.
+	extern IDirect3DPixelShader9* pixel_shader_buffer_aPs11TexT0MulR0;
+}
+
 
 /*****************************************************************************
 **								DBG Information								**
@@ -127,28 +133,67 @@ inline DWORD FtoDW( FLOAT f ) { return *((DWORD*)&f); }
 /*                                                                */
 /*                                                                */
 /******************************************************************/
+static int LockVertexBuffer(int size, int n, IDirect3DVertexBuffer9** outVertexBuffer, int* outResult, unsigned int* outResult2)
+{
+	unsigned int v5;
+	int v6;
+	unsigned int v7;
+
+	v5 = (NxXbox::EngineGlobals.dword_7CEC7C + n - 1) / n;
+	*outVertexBuffer = NxXbox::EngineGlobals.p_vertex_buffer;
+	v6 = NxXbox::EngineGlobals.vertex_buffer_length;
+	v7 = n * v5;
+	if (n * v5 + n * size > NxXbox::EngineGlobals.vertex_buffer_length)
+	{
+		NxXbox::EngineGlobals.p_vertex_buffer->Lock(0, 0, (void**)&NxXbox::EngineGlobals.dword_7CEC78, D3DLOCK_DISCARD);
+		NxXbox::EngineGlobals.dword_7CEC7C = 0;
+		if (outResult2)
+			*outResult2 = NxXbox::EngineGlobals.vertex_buffer_length / n;
+		*outResult = 0;
+		return NxXbox::EngineGlobals.dword_7CEC78;
+	}
+	else
+	{
+		*outResult = v5;
+		NxXbox::EngineGlobals.dword_7CEC7C = n * v5;
+		if (outResult2)
+			*outResult2 = (v6 - v7) / n;
+		NxXbox::EngineGlobals.p_vertex_buffer->Lock(0, 0, (void**)&NxXbox::EngineGlobals.dword_7CEC78, D3DLOCK_NOOVERWRITE);
+		return NxXbox::EngineGlobals.dword_7CEC78 + v7;
+	}
+}
+
+static int UnlockVertexBuffer(int size, int n)
+{
+	int result;
+	NxXbox::EngineGlobals.p_vertex_buffer->Unlock();
+	result = n * size;
+	NxXbox::EngineGlobals.dword_7CEC78 = 0;
+	NxXbox::EngineGlobals.dword_7CEC7C = (n * size + NxXbox::EngineGlobals.dword_7CEC7C + 31) & 0xFFFFFFE0;
+	return result;
+}
+
+/******************************************************************/
+/*                                                                */
+/*                                                                */
+/******************************************************************/
+// blops: Ported to DX9 from retail THUG.exe
+
 void CXboxNewParticle::plat_render( void )
 {
-	// KISAKTODO: Finish Particle Rendering
-	return;
-#if 0
-	CParticleStream* p_stream;
-	int i;
+	CParticleStream*	p_stream;
+	int					i;
 
 	// Process the streams.
 	if( m_params.m_EmitRate && ( !m_emitting || ( m_params.m_EmitRate != mp_newest_stream->m_rate )))
-	{	
+	{
 		if( m_num_streams < m_max_streams )
 		{
-			// Add new stream to cyclic buffer
 			m_num_streams++;
 			mp_newest_stream++;
 			if( mp_newest_stream == mp_stream + m_max_streams )
-			{
 				mp_newest_stream = mp_stream;
-			}
 
-			// Initialise new stream.
 			mp_newest_stream->m_rate			= m_params.m_EmitRate;
 			mp_newest_stream->m_interval		= 1.0f / m_params.m_EmitRate;
 			mp_newest_stream->m_oldest_age		= 0.0f;
@@ -174,67 +219,46 @@ void CXboxNewParticle::plat_render( void )
 	// Age all streams.
 	for( i = 0, p_stream = mp_oldest_stream; i < m_num_streams; ++i )
 	{
-		// Increase age of oldest particle.
 		p_stream->m_oldest_age += 1.0f / 60.0f;
-
-		// Step pointer within cyclic buffer.
 		p_stream++;
 		if( p_stream == mp_stream + m_max_streams )
-		{
 			p_stream = mp_stream;
-		}
 	}
 
 	// Births into newest stream.
 	if( m_emitting )
-	{
-		// How many particles so far emitted?
 		mp_newest_stream->m_num_particles = (int)( mp_newest_stream->m_oldest_age * mp_newest_stream->m_rate + 1.0f );
-	}
 
 	// Deaths from oldest stream.
 	if( mp_oldest_stream->m_oldest_age > m_params.m_Lifetime )
 	{
-		// Work out number dead.
 		int particles_dead = (int)(( mp_oldest_stream->m_oldest_age - m_params.m_Lifetime ) * mp_oldest_stream->m_rate + 1.0f );
-
-		// Remove dead particles.
 		mp_oldest_stream->m_num_particles -= particles_dead;
-
-		// Should we keep processing the oldest stream?
 		if( mp_oldest_stream->m_num_particles > 0 || ( m_num_streams == 1 && m_emitting ))
 		{
-			// Adjust age of oldest particle.
 			mp_oldest_stream->m_oldest_age -= (float)particles_dead * mp_oldest_stream->m_interval;
-
-			// Advance seed.
 			mp_oldest_stream->AdvanceSeed( particles_dead );
 		}
 		else
 		{
-			// Remove oldest stream and wrap in cyclic buffer if necessary.
 			m_num_streams--;
 			mp_oldest_stream++;
 			if( mp_oldest_stream == mp_stream + m_max_streams )
-			{
 				mp_oldest_stream = mp_stream;
-			}
 			if( !m_num_streams )
 				return;
 		}
 	}
 
-	// Now render the streams. after checking the bounding sphere is visible (for no dynamic systems).
+	// Cull against the frustum for non-dynamic systems.
 	if( !m_params.m_LocalCoord )
 	{
-		D3DXVECTOR3	center( m_bsphere[X], m_bsphere[Y], m_bsphere[Z] );
+		D3DXVECTOR3 center( m_bsphere[X], m_bsphere[Y], m_bsphere[Z] );
 		if( !NxXbox::frustum_check_sphere( &center, m_bsphere[W] ))
-		{
 			return;
-		}
 	}
 
-	// Swap the r and b color components in the params.
+	// Swap the r and b color components in the params (so they pack as D3DCOLOR ARGB).
 	for( i = 0; i < vNUM_BOXES; ++i )
 	{
 		uint8 swap = m_params.m_Color[i].r;
@@ -242,401 +266,124 @@ void CXboxNewParticle::plat_render( void )
 		m_params.m_Color[i].b	= swap;
 	}
 
-	// Figure the distance from the camera to the system, and use a different technique accordingly.
-	// Need to do this because point sprites are limited to 64 pixels in each dimension, and sometimes
-	// you can get close enough to a system that a single particle will occupy more than this.
-	// A more sophisticated approach would be to figure what the max particle size could be at a given distance,
-	// rather than using the current hardcoded distance value of 20 feet.
-	float dist_squared = Mth::DistanceSqr( Mth::Vector( m_bsphere[X], m_bsphere[Y], m_bsphere[Z], 0.0f ),
-										   Mth::Vector( NxXbox::EngineGlobals.cam_position.x, NxXbox::EngineGlobals.cam_position.y, NxXbox::EngineGlobals.cam_position.z, 0.0f ));
-	if( dist_squared < 57600.0f )
+	// Screen-aligned right/up vectors.
+	D3DXMATRIX *p_matrix = (D3DXMATRIX*)&NxXbox::EngineGlobals.view_matrix;
+	Mth::Vector up( 0.0f, 1.0f, 0.0f );
+	Mth::Vector at( p_matrix->m[0][2], p_matrix->m[1][2], p_matrix->m[2][2] );
+	Mth::Vector screen_right	= Mth::CrossProduct( at, up );
+	Mth::Vector screen_up		= Mth::CrossProduct( screen_right, at );
+	screen_right.Normalize();
+	screen_up.Normalize();
+
+	mp_material->Submit();
+	NxXbox::set_vertex_shader( D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1 );
+	NxXbox::set_pixel_shader( NxXbox::pixel_shader_buffer_aPs11TexT0MulR0 );
+
+	float midpoint_time = m_params.m_Lifetime * ( m_params.m_ColorMidpointPct * 0.01f );
+
+	struct sNewVert { float x, y, z; DWORD color; float u, v; };
+
+	// Render each stream's particles as CPU-generated screen-aligned quads.
+	for( i = 0, p_stream = mp_oldest_stream; i < m_num_streams; i++, p_stream++ )
 	{
-		// Used to figure the right and up vectors for creating screen-aligned particle quads.
-		D3DXMATRIX *p_matrix = (D3DXMATRIX*)&NxXbox::EngineGlobals.view_matrix;
+		if( p_stream == mp_stream + m_max_streams )
+			p_stream = mp_stream;
 
-		// Concatenate p_matrix with the emmission angle to create the direction.
-		Mth::Vector up( 0.0f, 1.0f, 0.0f );
+		int num = p_stream->m_num_particles;
+		if( num <= 0 )
+			continue;
 
-		// Get the 'right' vector as the cross product of camera 'at and world 'up'.
-		Mth::Vector at( p_matrix->m[0][2], p_matrix->m[1][2], p_matrix->m[2][2] );
-		Mth::Vector screen_right	= Mth::CrossProduct( at, up );
-		Mth::Vector screen_up		= Mth::CrossProduct( screen_right, at );
+		// Seed the random number generator for this stream.
+		seed_particle_rnd( p_stream->m_rand_seed, p_stream->m_rand_a, p_stream->m_rand_b );
 
-		screen_right.Normalize();
-		screen_up.Normalize();
-
-		// Submit particle material.
-		mp_material->Submit();
-
-		// Set up correct vertex and pixel shader.
-		NxXbox::set_vertex_shader( ParticleNewFlatVS );
-		NxXbox::set_pixel_shader( PixelShader0 );
-
-		// Load up the combined world->view_projection matrix.
-		XGMATRIX	dest_matrix;
-		XGMATRIX	projMatrix;
-		XGMATRIX	viewMatrix;
-			
-		// Projection matrix.
-		XGMatrixTranspose( &projMatrix, &NxXbox::EngineGlobals.projection_matrix );
-		
-		// View matrix.
-		XGMatrixTranspose( &viewMatrix, &NxXbox::EngineGlobals.view_matrix );
-		viewMatrix.m[3][0] = 0.0f;
-		viewMatrix.m[3][1] = 0.0f;
-		viewMatrix.m[3][2] = 0.0f;
-		viewMatrix.m[3][3] = 1.0f;
-
-		// Calculate composite world->view->projection matrix (simplified since world transform will be indentity).
-		XGMatrixMultiply( &dest_matrix, &projMatrix, &viewMatrix );
-
-		// Load up the combined world, camera & projection matrix.
-		D3DDevice_SetVertexShaderConstantFast( 0, (void*)&dest_matrix, 4 );
-
-		float vector_upload[8];
-		vector_upload[0]	= screen_right[X];
-		vector_upload[1]	= screen_right[Y];
-		vector_upload[2]	= screen_right[Z];
-		vector_upload[4]	= screen_up[X];
-		vector_upload[5]	= screen_up[Y];
-		vector_upload[6]	= screen_up[Z];
-		D3DDevice_SetVertexShaderConstantFast( 4, (void*)( &vector_upload[0] ), 2 );
-
-		static float vconstants[32]	= {	0.0f,  0.0f, 1.0f, 1.0f,		// Vert tex coords in C8 through C11
-										1.0f,  0.0f, 1.0f, 1.0f,
-										1.0f,  1.0f, 1.0f, 1.0f,
-										0.0f,  1.0f, 1.0f, 1.0f,
-									-1.0f,  1.0f, 1.0f, 1.0f,		// Vert w/h multipliers in C12 through C15
-										1.0f,  1.0f, 1.0f, 1.0f,
-										1.0f, -1.0f, 1.0f, 1.0f,
-									-1.0f, -1.0f, 1.0f, 1.0f };
-		D3DDevice_SetVertexShaderConstantFast( 8, (void*)( &vconstants[0] ), 8 );
-
-		float stream_params[24];
-		stream_params[0]	= m_s0[X];
-		stream_params[1]	= m_s0[Y];
-		stream_params[2]	= m_s0[Z];
-		stream_params[3]	= m_s0[W];
-
-		stream_params[4]	= m_s1[X];
-		stream_params[5]	= m_s1[Y];
-		stream_params[6]	= m_s1[Z];
-		stream_params[7]	= m_s1[W];
-
-		stream_params[8]	= m_s2[X];
-		stream_params[9]	= m_s2[Y];
-		stream_params[10]	= m_s2[Z];
-		stream_params[11]	= m_s2[W];
-
-		stream_params[12]	= m_p0[X];
-		stream_params[13]	= m_p0[Y];
-		stream_params[14]	= m_p0[Z];
-		stream_params[15]	= m_p0[W];
-
-		stream_params[16]	= m_p1[X];
-		stream_params[17]	= m_p1[Y];
-		stream_params[18]	= m_p1[Z];
-		stream_params[19]	= m_p1[W];
-
-		stream_params[20]	= m_p2[X];
-		stream_params[21]	= m_p2[Y];
-		stream_params[22]	= m_p2[Z];
-		stream_params[23]	= m_p2[W];
-		D3DDevice_SetVertexShaderConstantFast( 18, (void*)( &stream_params[0] ), 6 );
-
-		// Construct a packet with data for each stream.
-		for( i = 0, p_stream = mp_oldest_stream; i < m_num_streams; i++, p_stream++ )
+		int done = 0;
+		while( done < num )
 		{
-			Dbg_MsgAssert( p_stream->m_num_particles < 65536, ( "particle limit reached" ));
+			IDirect3DVertexBuffer9*	p_vb		= NULL;
+			int						base_vertex	= 0;
+			unsigned int			avail_verts	= 0;
+			sNewVert*				p_dst		= (sNewVert*)LockVertexBuffer( 4 * ( num - done ), (int)sizeof( sNewVert ), &p_vb, &base_vertex, &avail_verts );
 
-			// Wrap at end of cyclic buffer.
-			if( p_stream == mp_stream + m_max_streams )
+			int count = 0;
+			while( done < num )
 			{
-				p_stream = mp_stream;
-			}
+				if( ( count + 1 ) * 4 > (int)avail_verts )
+					break;
 
-			// Calculate space needed.
-			DWORD dwords_per_particle	= 28;
-			DWORD dword_count			= dwords_per_particle * p_stream->m_num_particles;
+				// Age of this particle (oldest first), then 4 random spread values in [1,2).
+				float t  = p_stream->m_oldest_age - (float)done * p_stream->m_interval;
+				float t2 = t * t;
+				float r0 = 1.0f + ( (float)particle_rnd( 16384 ) / 16384.0f );
+				float r1 = 1.0f + ( (float)particle_rnd( 16384 ) / 16384.0f );
+				float r2 = 1.0f + ( (float)particle_rnd( 16384 ) / 16384.0f );
+				float r3 = 1.0f + ( (float)particle_rnd( 16384 ) / 16384.0f );
 
-			// Obtain push buffer lock.
-			// Note that p_push is returned as a pointer to write-combined memory. Writes to write-combined memory should be
-			// consecutive and in increasing order. Reads should be avoided. Additionally, any CPU reads from memory or the
-			// L2 cache can force expensive partial flushes of the 32-byte write-combine cache.
-			DWORD *p_push; 
-			p_push = D3DDevice_BeginPush( dword_count );
+				// pos = (p0 + t*p1 + t2*p2) + (s0 + t*s1 + t2*s2) componentwise-scaled by r.
+				float px   = ( m_p0[X] + t * m_p1[X] + t2 * m_p2[X] ) + ( m_s0[X] + t * m_s1[X] + t2 * m_s2[X] ) * r0;
+				float py   = ( m_p0[Y] + t * m_p1[Y] + t2 * m_p2[Y] ) + ( m_s0[Y] + t * m_s1[Y] + t2 * m_s2[Y] ) * r1;
+				float pz   = ( m_p0[Z] + t * m_p1[Z] + t2 * m_p2[Z] ) + ( m_s0[Z] + t * m_s1[Z] + t2 * m_s2[Z] ) * r2;
+				float size = ( m_p0[W] + t * m_p1[W] + t2 * m_p2[W] ) + ( m_s0[W] + t * m_s1[W] + t2 * m_s2[W] ) * r3;
 
-			float t				= p_stream->m_oldest_age;
-			float midpoint_time = m_params.m_Lifetime * ( m_params.m_ColorMidpointPct * 0.01f );
-
-			// Seed the random number generators for this stream.
-			seed_particle_rnd( p_stream->m_rand_seed, p_stream->m_rand_a, p_stream->m_rand_b );
-
-			for( int p = 0; p < p_stream->m_num_particles; ++p )
-			{
-				// Generate random vector. Each component in the range [1.0, 2.0].
-				float r[4];
-				r[0] = 1.0f + ((float)particle_rnd( 16384 ) / 16384 );
-				r[1] = 1.0f + ((float)particle_rnd( 16384 ) / 16384 );
-				r[2] = 1.0f + ((float)particle_rnd( 16384 ) / 16384 );
-				r[3] = 1.0f + ((float)particle_rnd( 16384 ) / 16384 );
-
-				float color_interpolator;
+				// 3-key color interpolation.
+				float		col_terp;
 				Image::RGBA	col0, col1;
-
 				if( m_params.m_UseMidcolor )
 				{
 					if( t > midpoint_time )
 					{
-						color_interpolator	= ( t - midpoint_time ) * ReciprocalEstimate_ASM( m_params.m_Lifetime - midpoint_time );
-						col0				= m_params.m_Color[1];
-						col1				= m_params.m_Color[2];
+						col_terp = ( m_params.m_Lifetime > midpoint_time ) ? (( t - midpoint_time ) / ( m_params.m_Lifetime - midpoint_time )) : 0.0f;
+						col0 = m_params.m_Color[1];
+						col1 = m_params.m_Color[2];
 					}
 					else
 					{
-						color_interpolator	= t * ReciprocalEstimate_ASM( midpoint_time );
-						col0				= m_params.m_Color[0];
-						col1				= m_params.m_Color[1];
+						col_terp = ( midpoint_time > 0.0f ) ? ( t / midpoint_time ) : 0.0f;
+						col0 = m_params.m_Color[0];
+						col1 = m_params.m_Color[1];
 					}
 				}
-				else 
+				else
 				{
-					color_interpolator		= t * ReciprocalEstimate_ASM( m_params.m_Lifetime );
-					col0					= m_params.m_Color[0];
-					col1					= m_params.m_Color[2];
+					col_terp = ( m_params.m_Lifetime > 0.0f ) ? ( t / m_params.m_Lifetime ) : 0.0f;
+					col0 = m_params.m_Color[0];
+					col1 = m_params.m_Color[2];
 				}
+				if( col_terp < 0.0f ) col_terp = 0.0f;
+				if( col_terp > 1.0f ) col_terp = 1.0f;
 
-				// We're going to be loading constants.
-				p_push[0]	= D3DPUSH_ENCODE( D3DPUSH_SET_TRANSFORM_CONSTANT_LOAD, 1 );
+				int f_terp = (int)( col_terp * 4096.0f );
+				Image::RGBA color;
+				color.r = (uint8)( ((((int)col0.r ) * 4096 ) + (((int)col1.r - (int)col0.r ) * f_terp )) / 4096 );
+				color.g = (uint8)( ((((int)col0.g ) * 4096 ) + (((int)col1.g - (int)col0.g ) * f_terp )) / 4096 );
+				color.b = (uint8)( ((((int)col0.b ) * 4096 ) + (((int)col1.b - (int)col0.b ) * f_terp )) / 4096 );
+				color.a = (uint8)( ((((int)col0.a ) * 4096 ) + (((int)col1.a - (int)col0.a ) * f_terp )) / 4096 );
+				DWORD dw_color = *((DWORD*)&color);
 
-				// Specify the starting register (physical registers are offset by 96 from the D3D logical register).
-				p_push[1]	= 96 + 16;
+				// Four corners (TL,TR,BL,BR) to match the shared quad index buffer.
+				Mth::Vector pos( px, py, pz );
+				Mth::Vector ss_right	= screen_right * size;
+				Mth::Vector ss_up		= screen_up * size;
+				Mth::Vector c;
+				c = pos - ss_right + ss_up;	p_dst[0].x = c[X]; p_dst[0].y = c[Y]; p_dst[0].z = c[Z]; p_dst[0].color = dw_color; p_dst[0].u = 0.0f; p_dst[0].v = 0.0f;
+				c = pos + ss_right + ss_up;	p_dst[1].x = c[X]; p_dst[1].y = c[Y]; p_dst[1].z = c[Z]; p_dst[1].color = dw_color; p_dst[1].u = 1.0f; p_dst[1].v = 0.0f;
+				c = pos - ss_right - ss_up;	p_dst[2].x = c[X]; p_dst[2].y = c[Y]; p_dst[2].z = c[Z]; p_dst[2].color = dw_color; p_dst[2].u = 0.0f; p_dst[2].v = 1.0f;
+				c = pos + ss_right - ss_up;	p_dst[3].x = c[X]; p_dst[3].y = c[Y]; p_dst[3].z = c[Z]; p_dst[3].color = dw_color; p_dst[3].u = 1.0f; p_dst[3].v = 1.0f;
+				p_dst += 4;
 
-				// Specify the number of DWORDS to load. 8 DWORDS for 2 constants.
-				p_push[2]	= D3DPUSH_ENCODE( D3DPUSH_SET_TRANSFORM_CONSTANT, 8 );
-
-				// Load r vector.
-				p_push[3]	= *((DWORD*)&r[0] );
-				p_push[4]	= *((DWORD*)&r[1] );
-				p_push[5]	= *((DWORD*)&r[2] );
-				p_push[6]	= *((DWORD*)&r[3] );
-
-				// Load interpolator values.
-				p_push[7]	= *((DWORD*)&t );
-				p_push[8]	= *((DWORD*)&color_interpolator );
-				p_push		+= 11;
-
-				p_push[0]	= D3DPUSH_ENCODE( D3DPUSH_SET_BEGIN_END, 1 );
-				p_push[1]	= D3DPT_QUADLIST;
-				p_push		+= 2;
-
-				// NOTE: A maximum of 2047 DWORDs can be specified to D3DPUSH_ENCODE. If there is more than 2047 DWORDs of vertex
-				// data, simply split the data into multiple D3DPUSH_ENCODE( D3DPUSH_INLINE_ARRAY ) sections.
-				p_push[0]	= D3DPUSH_ENCODE( D3DPUSH_NOINCREMENT_FLAG | D3DPUSH_INLINE_ARRAY, 12 );
-				++p_push;
-
-				// Now we can start the actual vertex data.
-				p_push[0]	= *((DWORD*)&col0 );
-				p_push[1]	= *((DWORD*)&col1 );
-				p_push[2]	= 0x00000000UL;
-
-				p_push[3]	= *((DWORD*)&col0 );
-				p_push[4]	= *((DWORD*)&col1 );
-				p_push[5]	= 0x00010001UL;
-
-				p_push[6]	= *((DWORD*)&col0 );
-				p_push[7]	= *((DWORD*)&col1 );
-				p_push[8]	= 0x00020002UL;
-				
-				p_push[9]	= *((DWORD*)&col0 );
-				p_push[10]	= *((DWORD*)&col1 );
-				p_push[11]	= 0x00030003UL;
-
-				p_push		+= 12;
-
-				// End of vertex data for this particle.
-				p_push[0] = D3DPUSH_ENCODE( D3DPUSH_SET_BEGIN_END, 1 );
-				p_push[1] = 0;
-				p_push += 2;
-
-				// Reduce t by particle interval.
-				t -= p_stream->m_interval;
+				count++;
+				done++;
 			}
-			D3DDevice_EndPush( p_push );
+
+			UnlockVertexBuffer( 4 * count, (int)sizeof( sNewVert ) );
+
+			if( count == 0 )
+				break;
+
+			NxXbox::EngineGlobals.p_Device->SetStreamSource( 0, p_vb, 0, sizeof( sNewVert ) );
+			NxXbox::EngineGlobals.p_Device->SetIndices( NxXbox::EngineGlobals.p_index_buffer );
+			NxXbox::EngineGlobals.p_Device->DrawIndexedPrimitive( D3DPT_TRIANGLELIST, base_vertex, 0, 4 * count, 0, 2 * count );
 		}
 	}
-	else
-	{
-		// Submit particle material.
-		mp_material->Submit();
-
-		// Point sprites actually use texture stage 3...
-		NxXbox::set_render_state( RS_UVADDRESSMODE3, 0x00000000UL );
-		mp_material->mp_tex[0]->Set( 3 );
-
-		// Set up point sprite rendering.
-		D3DDevice_SetRenderState( D3DRS_POINTSPRITEENABLE,	TRUE );
-		D3DDevice_SetRenderState( D3DRS_POINTSCALEENABLE,	TRUE );
-//		D3DDevice_SetRenderState( D3DRS_POINTSCALE_A,		FtoDW( 0.00f ));
-//		D3DDevice_SetRenderState( D3DRS_POINTSCALE_B,		FtoDW( 0.00f ));
-//		D3DDevice_SetRenderState( D3DRS_POINTSCALE_C,		FtoDW( 1.00f ));
-
-		// Set up correct vertex and pixel shader.
-		NxXbox::set_vertex_shader( ParticleNewFlatPointSpriteVS );
-		NxXbox::set_pixel_shader( PixelShaderPointSprite );
-
-		// Load up the combined world->view_projection matrix.
-		XGMATRIX	dest_matrix;
-		XGMATRIX	projMatrix;
-		XGMATRIX	viewMatrix;
-			
-		// Projection matrix.
-		XGMatrixTranspose( &projMatrix, &NxXbox::EngineGlobals.projection_matrix );
-		
-		// View matrix.
-		XGMatrixTranspose( &viewMatrix, &NxXbox::EngineGlobals.view_matrix );
-		viewMatrix.m[3][0] = 0.0f;
-		viewMatrix.m[3][1] = 0.0f;
-		viewMatrix.m[3][2] = 0.0f;
-		viewMatrix.m[3][3] = 1.0f;
-
-		// Calculate composite world->view->projection matrix (simplified since world transform will be indentity).
-		XGMatrixMultiply( &dest_matrix, &projMatrix, &viewMatrix );
-
-		// Load up the combined world, camera & projection matrix.
-		D3DDevice_SetVertexShaderConstantFast( 0, (void*)&dest_matrix, 4 );
-
-		// Load up the stream parameters.
-		D3DDevice_SetVertexShaderConstantFast( 18, (void*)( &m_s0[X] ), 1 );
-		D3DDevice_SetVertexShaderConstantFast( 19, (void*)( &m_s1[X] ), 1 );
-		D3DDevice_SetVertexShaderConstantFast( 20, (void*)( &m_s2[X] ), 1 );
-
-		D3DDevice_SetVertexShaderConstantFast( 21, (void*)( &m_p0[X] ), 1 );
-		D3DDevice_SetVertexShaderConstantFast( 22, (void*)( &m_p1[X] ), 1 );
-		D3DDevice_SetVertexShaderConstantFast( 23, (void*)( &m_p2[X] ), 1 );
-
-		// Load up the camera position and viewport height.
-		static float cam_pos_viewport_height[4];
-		cam_pos_viewport_height[0]	= NxXbox::EngineGlobals.cam_position.x;
-		cam_pos_viewport_height[1]	= NxXbox::EngineGlobals.cam_position.y;
-		cam_pos_viewport_height[2]	= NxXbox::EngineGlobals.cam_position.z;
-		cam_pos_viewport_height[3]	= NxXbox::EngineGlobals.viewport.Height * 2.0f;
-
-		D3DDevice_SetVertexShaderConstantFast( 24, (void*)( &cam_pos_viewport_height[0] ), 1 );
-
-		// Construct a packet with data for each stream.
-		for( i = 0, p_stream = mp_oldest_stream; i < m_num_streams; i++, p_stream++ )
-		{
-			Dbg_MsgAssert( p_stream->m_num_particles < 65536, ( "particle limit reached" ));
-
-			// Wrap at end of cyclic buffer.
-			if( p_stream == mp_stream + m_max_streams )
-			{
-				p_stream = mp_stream;
-			}
-
-			// Calculate space needed.
-			DWORD dwords_per_particle	= 13;
-			DWORD dword_count			= dwords_per_particle * p_stream->m_num_particles;
-
-			// Obtain push buffer lock.
-			// Note that p_push is returned as a pointer to write-combined memory. Writes to write-combined memory should be
-			// consecutive and in increasing order. Reads should be avoided. Additionally, any CPU reads from memory or the
-			// L2 cache can force expensive partial flushes of the 32-byte write-combine cache.
-			DWORD *p_push; 
-			p_push = D3DDevice_BeginPush( dword_count );
-
-			float t				= p_stream->m_oldest_age;
-			float midpoint_time = m_params.m_Lifetime * ( m_params.m_ColorMidpointPct * 0.01f );
-
-			// Seed the random number generators for this stream.
-			seed_particle_rnd( p_stream->m_rand_seed, p_stream->m_rand_a, p_stream->m_rand_b );
-
-			for( int p = 0; p < p_stream->m_num_particles; ++p )
-			{
-				// Generate random vector. Each component in the range [1.0, 2.0].
-				float r[4];
-				r[0] = 1.0f + ((float)particle_rnd( 16384 ) / 16384 );
-				r[1] = 1.0f + ((float)particle_rnd( 16384 ) / 16384 );
-				r[2] = 1.0f + ((float)particle_rnd( 16384 ) / 16384 );
-				r[3] = 1.0f + ((float)particle_rnd( 16384 ) / 16384 );
-
-				float color_interpolator;
-				Image::RGBA	col0, col1;
-
-				if( m_params.m_UseMidcolor )
-				{
-					if( t > midpoint_time )
-					{
-						color_interpolator	= ( t - midpoint_time ) * ReciprocalEstimate_ASM( m_params.m_Lifetime - midpoint_time );
-						col0				= m_params.m_Color[1];
-						col1				= m_params.m_Color[2];
-					}
-					else
-					{
-						color_interpolator	= t * ReciprocalEstimate_ASM( midpoint_time );
-						col0				= m_params.m_Color[0];
-						col1				= m_params.m_Color[1];
-					}
-				}
-				else 
-				{
-					color_interpolator		= t * ReciprocalEstimate_ASM( m_params.m_Lifetime );
-					col0					= m_params.m_Color[0];
-					col1					= m_params.m_Color[2];
-				}
-
-				// Signal the primitive type to follow.
-				p_push[0]	= D3DPUSH_ENCODE( D3DPUSH_SET_BEGIN_END, 1 );
-				p_push[1]	= D3DPT_POINTLIST;
-				p_push		+= 2;
-
-				// NOTE: A maximum of 2047 DWORDs can be specified to D3DPUSH_ENCODE. If there is more than 2047 DWORDs of vertex
-				// data, simply split the data into multiple D3DPUSH_ENCODE( D3DPUSH_INLINE_ARRAY ) sections.
-				p_push[0]	= D3DPUSH_ENCODE( D3DPUSH_NOINCREMENT_FLAG | D3DPUSH_INLINE_ARRAY, 8 );
-				++p_push;
-
-				// Now we can start the actual vertex data.
-
-				// Load r vector.
-				p_push[0]	= *((DWORD*)&r[0] );
-				p_push[1]	= *((DWORD*)&r[1] );
-				p_push[2]	= *((DWORD*)&r[2] );
-				p_push[3]	= *((DWORD*)&r[3] );
-
-				// Load time and color interpolator values.
-				p_push[4]	= *((DWORD*)&t );
-				p_push[5]	= *((DWORD*)&color_interpolator );
-
-				// Load colors.
-				p_push[6]	= *((DWORD*)&col0 );
-				p_push[7]	= *((DWORD*)&col1 );
-
-				p_push		+= 8;
-
-				// End of vertex data for this particle.
-				p_push[0] = D3DPUSH_ENCODE( D3DPUSH_SET_BEGIN_END, 1 );
-				p_push[1] = 0;
-				p_push += 2;
-
-				// Reduce t by particle interval.
-				t -= p_stream->m_interval;
-			}
-			D3DDevice_EndPush( p_push );
-		}
-
-		// Restore render states.
-		D3DDevice_SetRenderState( D3DRS_POINTSPRITEENABLE, FALSE );
-	}
-
-	// Swap the r and b color components back in the params.
-	for( i = 0; i < vNUM_BOXES; ++i )
-	{
-		uint8 swap = m_params.m_Color[i].r;
-		m_params.m_Color[i].r	= m_params.m_Color[i].b;
-		m_params.m_Color[i].b	= swap;
-	}
-#endif
 }
 
 

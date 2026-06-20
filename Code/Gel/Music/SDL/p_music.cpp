@@ -6,6 +6,12 @@
 #include "p_music.h"
 
 #include "usersoundtrack.h"
+#include "binkaudio_dec.h"
+
+#include <cctype>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 #include <Sys/Config/config.h>
 #include <Gel/SoundFX/soundfx.h>
@@ -54,7 +60,8 @@ namespace Pcm
 	class Streamer
 	{
 		private:
-			std::vector<char> buffer;
+			//std::vector<char> buffer;
+			SysVector<char> buffer;
 
 			bool paused = true;
 			bool playing = true;
@@ -195,6 +202,163 @@ namespace Pcm
 			}
 	};
 
+	// --- pcm.wad (packed Bink-audio voice/speech streams) ----------------------
+	// Retail keeps skater voice / speech clips packed in Data/streams/pcm/pcm.wad,
+	// indexed by pcm.dat ([count][checksum,offset,length] x count). They are mono
+	// 44100Hz Bink-audio (DCT). We register them so StreamExists/PlayStream can
+	// serve them; BinkStream decodes one block at a time (see binkaudio_dec).
+	struct WadEntry { uint64 offset, length; };
+	static std::unordered_map<uint32, WadEntry> wad_entries;
+	static std::filesystem::path wad_path;
+
+	static void LoadWadIndex()
+	{
+		wad_entries.clear();
+		std::filesystem::path dat = File::DataPath() / "streams" / "pcm" / "pcm.dat";
+		wad_path = File::DataPath() / "streams" / "pcm" / "pcm.wad";
+		if (!std::filesystem::exists(dat) || !std::filesystem::exists(wad_path))
+			return;
+		std::ifstream f(dat, std::ios::binary);
+		if (!f.is_open()) return;
+		uint32 count = 0;
+		f.read((char*)&count, 4);
+		for (uint32 i = 0; i < count; i++)
+		{
+			uint32 trip[3];
+			if (!f.read((char*)trip, 12)) break;
+			wad_entries[trip[0]] = { trip[1], trip[2] };   // checksum -> offset,length
+		}
+		printf("[pcm.wad] indexed %u packed streams\n", (unsigned)wad_entries.size());
+	}
+
+	// Streamer that decodes a Bink-audio source and resamples / upmixes it to the
+	// mixer's 5ch 48000 format via miniaudio. Two sources share this path:
+	//   - packed voice clips from pcm.wad      (mono 44100, see LoadWadIndex)
+	//   - stock retail music in streams/music  (stereo 48000 .bik files)
+	class BinkStream : public Streamer
+	{
+		private:
+			// CRT-heap backed (see SysVector in binkaudio_dec.h): the blob is the whole
+			// clip and must not draw from the game's region allocator. Voice clips are
+			// ~576KB; a music .bik can be a few MB.
+			Pcm::SysVector<uint8_t> blob;
+			Pcm::BinkAudioDecoder *dec = nullptr;
+			ma_data_converter conv = {};
+			bool conv_ok = false;
+			int channels = 1;
+			Pcm::SysVector<float> in;          // current decoded block, interleaved
+			size_t in_frames = 0;              // valid frames in `in`
+			size_t in_pos = 0;                 // consumed frames
+			bool eof = false;
+
+			// Build the decoder + converter from the loaded blob. Shared by both ctors.
+			void init_from_blob()
+			{
+				dec = new Pcm::BinkAudioDecoder(blob.data(), blob.size());
+				if (!dec->Valid()) return;
+
+				channels = dec->Channels();
+				ma_data_converter_config cfg = ma_data_converter_config_init(
+					ma_format_f32, ma_format_f32, (ma_uint32)channels, 5,
+					(ma_uint32)dec->SampleRate(), 48000);
+				conv_ok = (ma_data_converter_init(&cfg, NULL, &conv) == MA_SUCCESS);
+			}
+
+			void reset_decoder()
+			{
+				delete dec; dec = new Pcm::BinkAudioDecoder(blob.data(), blob.size());
+				in.clear(); in_frames = 0; in_pos = 0; eof = false;
+			}
+
+		public:
+			// Packed clip inside pcm.wad.
+			BinkStream(uint64 offset, uint64 length)
+			{
+				std::ifstream f(wad_path, std::ios::binary);
+				if (!f.is_open()) return;
+				blob.resize(length);
+				f.seekg((std::streamoff)offset, std::ios::beg);
+				f.read((char*)blob.data(), length);
+				init_from_blob();
+			}
+
+			// Standalone .bik file (retail music, or a loose stream).
+			BinkStream(const std::filesystem::path &path)
+			{
+				std::ifstream f(path, std::ios::binary | std::ios::ate);
+				if (!f.is_open()) return;
+				std::streamoff sz = f.tellg();
+				if (sz <= 0) return;
+				blob.resize((size_t)sz);
+				f.seekg(0, std::ios::beg);
+				f.read((char*)blob.data(), sz);
+				init_from_blob();
+			}
+
+			~BinkStream() override
+			{
+				if (conv_ok) ma_data_converter_uninit(&conv, NULL);
+				delete dec;
+			}
+
+			bool Valid() const { return dec && dec->Valid() && conv_ok; }
+
+		private:
+			void Rewind() override
+			{
+				if (!Valid()) return;
+				reset_decoder();
+			}
+
+			size_t Stream(char *p, size_t bytes) override
+			{
+				if (!Valid()) return 0;
+				const size_t framesWanted = bytes / (sizeof(float) * 5);
+				float *out = (float*)p;
+				size_t produced = 0;
+
+				while (produced < framesWanted)
+				{
+					if (!eof && in_pos >= in_frames)
+					{
+						in.resize(dec->BlockSamples() * channels);
+						size_t got = dec->DecodeBlock(in.data());   // frames
+						if (got == 0) { eof = true; in_frames = 0; }
+						else { in_frames = got; in_pos = 0; }
+					}
+
+					ma_uint64 inCount  = eof ? 0 : (in_frames - in_pos);
+					ma_uint64 outCount = framesWanted - produced;
+					const void *inPtr  = eof ? NULL : (const void*)(in.data() + in_pos * channels);
+
+					ma_data_converter_process_pcm_frames(&conv, inPtr, &inCount,
+						out + produced * 5, &outCount);
+
+					in_pos   += (size_t)inCount;
+					produced += (size_t)outCount;
+
+					if (outCount == 0 && (eof || inCount == 0))
+						break;   // drained, or made no progress
+				}
+				return produced * (sizeof(float) * 5);
+			}
+	};
+
+	// Build a streamer for a loose file: a Bink .bik (retail music / stream) decodes
+	// through BinkStream, anything else (mp3/ogg/wav user soundtracks) via miniaudio.
+	static Streamer *MakeFileStreamer(const std::filesystem::path &path)
+	{
+		std::string ext = path.extension().string();
+		for (char &ch : ext) ch = (char)tolower((unsigned char)ch);
+		if (ext == ".bik")
+		{
+			BinkStream *bs = new BinkStream(path);
+			if (!bs->Valid()) { delete bs; return nullptr; }
+			return bs;
+		}
+		return new MusicDecoder(path);
+	}
+
 	// Mixing streams
 	Streamer *music_stream = nullptr;
 	Streamer *stream_stream[NUM_STREAMS] = {};
@@ -248,7 +412,11 @@ namespace Pcm
 
 		// Index music and streams
 		music_paths = Index(File::DataPath() / "music");
+		// blops: prefer .bik over custom mp3
+		for (auto &kv : Index(File::DataPath() / "streams" / "music"))
+			music_paths[kv.first] = kv.second;
 		stream_paths = Index(File::DataPath() / "streams");
+		LoadWadIndex();   // packed Bink-audio voice streams (pcm.wad)
 	}
 
 
@@ -408,10 +576,10 @@ namespace Pcm
 
 		if (music_stream != nullptr)
 			delete music_stream;
-		music_stream = new MusicDecoder(File::DataPath() / it->second);
+		music_stream = MakeFileStreamer(File::DataPath() / it->second);
 
 		Audio::Unlock();
-		return true;
+		return music_stream != nullptr;
 	}
 
 
@@ -575,11 +743,11 @@ namespace Pcm
 		if (ch != EXTRA_CHANNEL)
 			return 0;
 
-		auto it = stream_paths.find(checksum);
-		if (it == stream_paths.end())
-			return 0;
-
-		return checksum;
+		if (stream_paths.find(checksum) != stream_paths.end())
+			return checksum;
+		if (wad_entries.find(checksum) != wad_entries.end())   // packed pcm.wad streams
+			return checksum;
+		return 0;
 	}
 
 
@@ -704,16 +872,17 @@ namespace Pcm
 			return false;
 
 		Audio::Lock();
-		
+
 		// Play song
 		if (music_stream != nullptr)
 			delete music_stream;
 
-		music_stream = new MusicDecoder(File::DataPath() / it->second);
-		music_stream->Play();
+		music_stream = MakeFileStreamer(File::DataPath() / it->second);
+		if (music_stream != nullptr)
+			music_stream->Play();
 
 		Audio::Unlock();
-		return true;
+		return music_stream != nullptr;
 	}
 
 	/******************************************************************/
@@ -729,11 +898,12 @@ namespace Pcm
 			delete music_stream;
 
 		const UserSoundtrack::Soundtracks &soundtracks = UserSoundtrack::GetSoundtracks();
-		music_stream = new MusicDecoder(soundtracks.at(soundtrack).tracks.at(track).path);
-		music_stream->Play();
+		music_stream = MakeFileStreamer(soundtracks.at(soundtrack).tracks.at(track).path);
+		if (music_stream != nullptr)
+			music_stream->Play();
 
 		Audio::Unlock();
-		return true;
+		return music_stream != nullptr;
 	}
 
 
@@ -764,9 +934,10 @@ namespace Pcm
 	{
 		(void)fPitch;
 
-		// Find stream path from checksum
+		// Find the stream: prefer a loose file, else a packed pcm.wad (Bink) entry.
 		auto it = stream_paths.find(checksum);
-		if (it == stream_paths.end())
+		auto wad_it = wad_entries.find(checksum);
+		if (it == stream_paths.end() && wad_it == wad_entries.end())
 			return false;
 
 		Audio::Lock();
@@ -775,7 +946,18 @@ namespace Pcm
 		if (stream_stream[whichStream] != nullptr)
 			delete stream_stream[whichStream];
 
-		stream_stream[whichStream] = new MusicDecoder(File::DataPath() / it->second);
+		if (it != stream_paths.end())
+		{
+			stream_stream[whichStream] = MakeFileStreamer(File::DataPath() / it->second);
+			if (stream_stream[whichStream] == nullptr) { Audio::Unlock(); return false; }
+		}
+		else
+		{
+			BinkStream *bs = new BinkStream(wad_it->second.offset, wad_it->second.length);
+			if (!bs->Valid()) { delete bs; stream_stream[whichStream] = nullptr; Audio::Unlock(); return false; }
+			stream_stream[whichStream] = bs;
+		}
+
 		if (!preload)
 			stream_stream[whichStream]->Play();
 

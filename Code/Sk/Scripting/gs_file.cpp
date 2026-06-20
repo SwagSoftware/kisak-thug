@@ -42,6 +42,9 @@
 
 char g_currentScriptFile[256]; // lwss add
 
+// blops: loose script override, set by -loosescripts, skips qb.pre and load .qb straight from Data/scripts
+bool g_loose_scripts = false;
+
 namespace SkateScript
 {
 using namespace Script;
@@ -50,7 +53,6 @@ using namespace Script;
 #define MAX_QB_FILENAME_CHARS_WITH_PATH 100
 
 #define QDIR_FILE "scripts\\qdir.txt"
-#define KISAK_QDIR_FILE "..\\kisak_qdir.txt"
 #define MAIN_QB_FILEPATH "scripts\\"
 
 void LoadAllStartupQBFiles()
@@ -70,8 +72,10 @@ void LoadAllStartupQBFiles()
 			break;
 	}
 #else
-	// KISAKTODO: Replace this w/ raw qb files
-	Pip::LoadPre("qb.pre");
+	// Retail: mount the packed scripts so Pip::Load finds each .qb inside qb.pre. With -loosescripts
+	// we skip this, and Pip::Load falls through to the loose .qb files in Data\scripts\ instead.
+	if (!g_loose_scripts)
+		Pip::LoadPre("qb.pre");
 #endif		// __PLAT_NGC__
 	Mem::Manager::sHandle().PopContext();
 
@@ -151,9 +155,10 @@ void LoadAllStartupQBFiles()
 			break;
 	}
 #else
-	Pip::UnloadPre("qb.pre");
+	if (!g_loose_scripts)
+		Pip::UnloadPre("qb.pre");
 #endif		// __PLAT_NGC__
-	
+
 	// A very small memory optimization ...
 	// Remove the debugger_names array since it only exists to get its checksum names registered
 	// for the script debugger. They will have got registered by now, so the array is no longer

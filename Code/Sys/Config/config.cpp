@@ -8,6 +8,7 @@ ETerritory gTerritory=TERRITORY_UNDEFINED;
 EHardware gHardware=HARDWARE_UNDEFINED;
 bool gGotExtraMemory=false;
 bool gCD=false;
+bool g_config_cd=true;
 bool gBootstrap=false;
 bool gSonyBootstrap=false;
 float	gMasterVolume = 100.0f; 		// precentage at which we play the overall volume

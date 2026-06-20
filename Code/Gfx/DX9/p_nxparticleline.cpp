@@ -8,6 +8,51 @@ extern IDirect3DPixelShader9* PixelShader1;
 namespace Nx
 {
 
+// dynamic-VB helpers (copied from p_nxparticleflat.cpp)
+// Flat port template (p_nxparticleflat.cpp). Not used by this LINELIST type
+// (which draws via DrawPrimitiveUP), but retained for template consistency.
+static int LockVertexBuffer(int size, int n, IDirect3DVertexBuffer9** outVertexBuffer, int* outResult, unsigned int* outResult2)
+{
+	unsigned int v5; // eax
+	int v6; // edx
+	unsigned int v7; // esi
+
+	v5 = (NxXbox::EngineGlobals.dword_7CEC7C + n - 1) / n;
+	*outVertexBuffer = NxXbox::EngineGlobals.p_vertex_buffer;
+	v6 = NxXbox::EngineGlobals.vertex_buffer_length;
+	v7 = n * v5;
+	if (n * v5 + n * size > NxXbox::EngineGlobals.vertex_buffer_length)
+	{
+		NxXbox::EngineGlobals.p_vertex_buffer->Lock(0, 0, (void**)&NxXbox::EngineGlobals.dword_7CEC78, D3DLOCK_DISCARD);
+		NxXbox::EngineGlobals.dword_7CEC7C = 0;
+		if (outResult2)
+			*outResult2 = NxXbox::EngineGlobals.vertex_buffer_length / n;
+		*outResult = 0;
+		return NxXbox::EngineGlobals.dword_7CEC78;
+	}
+	else
+	{
+		*outResult = v5;
+		NxXbox::EngineGlobals.dword_7CEC7C = n * v5;
+		if (outResult2)
+			*outResult2 = (v6 - v7) / n;
+		NxXbox::EngineGlobals.p_vertex_buffer->Lock(0, 0, (void**)&NxXbox::EngineGlobals.dword_7CEC78, D3DLOCK_NOOVERWRITE);
+		return NxXbox::EngineGlobals.dword_7CEC78 + v7;
+	}
+}
+
+static int UnlockVertexBuffer(int size, int n)
+{
+	int result; // eax
+
+	NxXbox::EngineGlobals.p_vertex_buffer->Unlock();
+	result = n * size;
+	NxXbox::EngineGlobals.dword_7CEC78 = 0;
+	NxXbox::EngineGlobals.dword_7CEC7C = (n * size + NxXbox::EngineGlobals.dword_7CEC7C + 31) & 0xFFFFFFE0;
+	return result;
+}
+// end helpers
+
 /******************************************************************/
 /*                                                                */
 /*                                                                */
@@ -135,162 +180,103 @@ void CXboxParticleLine::plat_set_ea( int entry, uint8 value ) { m_end_color[entr
 /*                                                                */
 /*                                                                */
 /******************************************************************/
+// Ported to DX9 from the Xbox source (CXboxParticleLine::plat_render).
 void CXboxParticleLine::plat_render( void )
 {
-	// KISAKTODO: Finish Particle Rendering
-	return;
-#if 0
-	if( m_num_particles > 0 )
+	if( m_num_particles > 0 && !NxXbox::g_disableRendering )
 	{
-		int				lp;
-		CParticleEntry	*p_particle;
-		float			*p_v0, *p_v1;
-//		Mth::Vector		min, max;	// For dynamic bounding box calculation.
-	
-		// Obtain push buffer lock.
-		DWORD *p_push; 
-		DWORD dwords_per_particle	= 8;
-		DWORD dword_count			= dwords_per_particle * m_num_particles;
+		// Non-textured line vertex: position + DIFFUSE color (FVF XYZ|DIFFUSE, stride 16).
+		struct sLineVert { float x, y, z; DWORD color; };
+
+		// 2 verts per particle (one line segment). Fixed CPU scratch buffer
+		// (drained immediately by the DrawPrimitiveUP below, so a single
+		// shared static is safe). Clamp the count to the buffer capacity.
+		enum { MAX_LINE_PARTICLES = 4096 };
+		static sLineVert s_verts[2 * MAX_LINE_PARTICLES];
+
+		int num_particles = m_num_particles;
+		if( num_particles > MAX_LINE_PARTICLES )
+		{
+			num_particles = MAX_LINE_PARTICLES;
+		}
 
 		// Submit particle material.
 		mp_engine_particle->mp_material->Submit();
-		
+
 		// Set up correct vertex and pixel shader.
 		NxXbox::set_vertex_shader( D3DFVF_XYZ | D3DFVF_DIFFUSE );
 		NxXbox::set_pixel_shader( PixelShader1 );
-		
-		// The additional number (+5 is minimum) is to reserve enough overhead for the encoding parameters. It can safely be more, but no less.
-		p_push = D3DDevice_BeginPush( dword_count + 32 );
 
-		// Note that p_push is returned as a pointer to write-combined memory. Writes to write-combined memory should be
-		// consecutive and in increasing order. Reads should be avoided. Additionally, any CPU reads from memory or the
-		// L2 cache can force expensive partial flushes of the 32-byte write-combine cache.
-		p_push[0]	= D3DPUSH_ENCODE( D3DPUSH_SET_BEGIN_END, 1 );
-		p_push[1]	= D3DPT_LINELIST;
-		p_push		+= 2;
+		CParticleEntry	*p_particle	= mp_particle_array;
+		float			*p_v0		= mp_vertices[0];
+		float			*p_v1		= mp_vertices[1];
+		sLineVert		*p_dst		= s_verts;
 
-		// Set up loop variables here, since we be potentially enetering the loop more than once.
-		lp			= 0;
-		p_particle	= mp_particle_array;
-		p_v0		= mp_vertices[0];
-		p_v1		= mp_vertices[1];
-
-		while( dword_count > 0 )
+		for( int lp = 0; lp < num_particles; lp++, p_particle++, p_v0 += 3, p_v1 += 3 )
 		{
-			int dwords_written = 0;
+			float terp = p_particle->m_time / p_particle->m_life;
 
-			// NOTE: A maximum of 2047 DWORDs can be specified to D3DPUSH_ENCODE. If there is more than 2047 DWORDs of vertex
-			// data, simply split the data into multiple D3DPUSH_ENCODE( D3DPUSH_INLINE_ARRAY ) sections.
-			p_push[0] = D3DPUSH_ENCODE( D3DPUSH_NOINCREMENT_FLAG | D3DPUSH_INLINE_ARRAY, ( dword_count > 2047 ) ? ((int)( 2047 / dwords_per_particle )) * dwords_per_particle: dword_count );
-			++p_push;
-		
-			for( ; lp < m_num_particles; lp++, p_particle++, p_v0 += 3, p_v1 += 3 )
+			Mth::Vector	pos0( p_v0[0] + m_pos[X], p_v0[1] + m_pos[Y], p_v0[2] + m_pos[Z] );
+			Mth::Vector	pos1( p_v1[0] + m_pos[X], p_v1[1] + m_pos[Y], p_v1[2] + m_pos[Z] );
+
+			Image::RGBA color[2];
+			Image::RGBA *p_col0[2];
+			Image::RGBA *p_col1[2];
+
+			if( m_mid_time >= 0.0f )
 			{
-				// Check to see if writing another particle will take us over the edge.
-				if(( dwords_written + dwords_per_particle ) > 2047 )
+				if( terp < m_mid_time )
 				{
-					break;
-				}
+					p_col0[0] = &m_start_color[0];
+					p_col1[0] = &m_mid_color[0];
+					p_col0[1] = &m_start_color[1];
+					p_col1[1] = &m_mid_color[1];
 
-				float terp = p_particle->m_time / p_particle->m_life;
-
-				// Todo: Move hook to matrix/emitter code to cut down on per particle calculation.
-				Mth::Vector	pos0( p_v0[0] + m_pos[X], p_v0[1] + m_pos[Y], p_v0[2] + m_pos[Z] );
-				Mth::Vector	pos1( p_v1[0] + m_pos[X], p_v1[1] + m_pos[Y], p_v1[2] + m_pos[Z] );
-	
-				// Dynamic bounding box calculation.
-//				if( lp == 0 )
-//				{
-//					min = pos0;
-//					max = pos0;
-//				}
-//				else
-//				{
-//					if( pos0[X] < min[X] ) min[X] = pos0[X]; else if( pos0[X] > max[X] ) max[X] = pos0[X];
-//					if( pos0[Y] < min[Y] ) min[Y] = pos0[Y]; else if( pos0[Y] > max[Y] ) max[Y] = pos0[Y];
-//					if( pos0[Z] < min[Z] ) min[Z] = pos0[Z]; else if( pos0[Z] > max[Z] ) max[Z] = pos0[Z];
-//				}
-
-				Image::RGBA color[2];
-				Image::RGBA *p_col0[2];
-				Image::RGBA *p_col1[2];
-		
-				if( m_mid_time >= 0.0f )
-				{
-					if( terp < m_mid_time )
-					{
-						p_col0[0] = &m_start_color[0];
-						p_col1[0] = &m_mid_color[0];
-						p_col0[1] = &m_start_color[1];
-						p_col1[1] = &m_mid_color[1];
-
-						// Adjust interpolation for this half of the color blend.
-						terp = terp / m_mid_time;
-					}
-					else
-					{
-						p_col0[0] = &m_mid_color[0];
-						p_col1[0] = &m_end_color[0];
-						p_col0[1] = &m_mid_color[1];
-						p_col1[1] = &m_end_color[1];
-
-						// Adjust interpolation for this half of the color blend.
-						terp = ( terp - m_mid_time ) / ( 1.0f - m_mid_time );
-					}
+					// Adjust interpolation for this half of the color blend.
+					terp = terp / m_mid_time;
 				}
 				else
 				{
-					// No mid color specified.
-					p_col0[0] = &m_start_color[0];
+					p_col0[0] = &m_mid_color[0];
 					p_col1[0] = &m_end_color[0];
-					p_col0[1] = &m_start_color[1];
+					p_col0[1] = &m_mid_color[1];
 					p_col1[1] = &m_end_color[1];
+
+					// Adjust interpolation for this half of the color blend.
+					terp = ( terp - m_mid_time ) / ( 1.0f - m_mid_time );
 				}
-
-				// Swap red and blue here.
-				for( int c = 0; c < 2; ++c )
-				{
-					Image::RGBA start	= *( p_col0[c] );
-					Image::RGBA end		= *( p_col1[c] );
-					color[c].b = start.r + (uint8)(( ((float)( end.r - start.r )) * terp ));
-					color[c].g = start.g + (uint8)(( ((float)( end.g - start.g )) * terp ));
-					color[c].r = start.b + (uint8)(( ((float)( end.b - start.b )) * terp ));
-					color[c].a = start.a + (uint8)(( ((float)( end.a - start.a )) * terp ));
-				}
-		
-				p_push[0]	= *((DWORD*)&pos0[X] );
-				p_push[1]	= *((DWORD*)&pos0[Y] );
-				p_push[2]	= *((DWORD*)&pos0[Z] );
-				p_push[3]	= *((DWORD*)&color[0] );
-				p_push		+= 4;
-
-				p_push[0]	= *((DWORD*)&pos1[X] );
-				p_push[1]	= *((DWORD*)&pos1[Y] );
-				p_push[2]	= *((DWORD*)&pos1[Z] );
-				p_push[3]	= *((DWORD*)&color[1] );
-				p_push		+= 4;
-
-				dwords_written	+= dwords_per_particle;
-				dword_count		-= dwords_per_particle;
 			}
+			else
+			{
+				// No mid color specified.
+				p_col0[0] = &m_start_color[0];
+				p_col1[0] = &m_end_color[0];
+				p_col0[1] = &m_start_color[1];
+				p_col1[1] = &m_end_color[1];
+			}
+
+			// Swap red and blue here (colors are stored unswapped by the
+			// plat_set_* setters; the DIFFUSE DWORD wants ARGB order).
+			for( int c = 0; c < 2; ++c )
+			{
+				Image::RGBA start	= *( p_col0[c] );
+				Image::RGBA end		= *( p_col1[c] );
+				color[c].b = (uint8)( start.r + (uint8)(( ((float)( (int)end.r - (int)start.r )) * terp )) );
+				color[c].g = (uint8)( start.g + (uint8)(( ((float)( (int)end.g - (int)start.g )) * terp )) );
+				color[c].r = (uint8)( start.b + (uint8)(( ((float)( (int)end.b - (int)start.b )) * terp )) );
+				color[c].a = (uint8)( start.a + (uint8)(( ((float)( (int)end.a - (int)start.a )) * terp )) );
+			}
+
+			// Line segment: vert 0 uses list-0 position and color[0],
+			// vert 1 uses list-1 position and color[1].
+			p_dst[0].x = pos0[X]; p_dst[0].y = pos0[Y]; p_dst[0].z = pos0[Z]; p_dst[0].color = *((DWORD*)&color[0]);
+			p_dst[1].x = pos1[X]; p_dst[1].y = pos1[Y]; p_dst[1].z = pos1[Z]; p_dst[1].color = *((DWORD*)&color[1]);
+			p_dst += 2;
 		}
 
-		p_push[0] = D3DPUSH_ENCODE( D3DPUSH_SET_BEGIN_END, 1 );
-		p_push[1] = 0;
-		p_push += 2;
-		D3DDevice_EndPush( p_push );
-
-		// Set the mesh bounding box and sphere.
-//		mp_engine_particle->mp_scene->m_semitransparent_meshes[0]->m_bbox.SetMin( min );
-//		mp_engine_particle->mp_scene->m_semitransparent_meshes[0]->m_bbox.SetMax( max );
-//		mp_engine_particle->mp_scene->m_semitransparent_meshes[0]->m_sphere_center = D3DXVECTOR3( min[X] + (( max[X] - min[X] ) * 0.5f ), min[Y] + (( max[Y] - min[Y] ) * 0.5f ), min[Z] + (( max[Z] - min[Z] ) * 0.5f ));
-//		mp_engine_particle->mp_scene->m_semitransparent_meshes[0]->m_sphere_radius = 360.0f;
-
-		// And the scene bounding sphere.
-//		mp_engine_particle->mp_scene->m_sphere_center = mp_engine_particle->mp_scene->m_semitransparent_meshes[0]->m_sphere_center;
-//		mp_engine_particle->mp_scene->m_sphere_radius = mp_engine_particle->mp_scene->m_semitransparent_meshes[0]->m_sphere_radius;
+		// Draw all line segments in one call (primitive count == particle count).
+		NxXbox::EngineGlobals.p_Device->DrawPrimitiveUP( D3DPT_LINELIST, num_particles, s_verts, (int)sizeof( sLineVert ) );
 	}
-#endif
 }
 } // Nx
 

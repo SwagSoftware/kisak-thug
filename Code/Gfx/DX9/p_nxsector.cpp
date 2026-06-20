@@ -118,6 +118,9 @@ bool CXboxSector::Load_Internal(void*& p_stream, bool is_file, NxXbox::VertexMys
 	float* p_vertex_positions = new float[num_vertices * 3];
 	Read(p_vertex_positions, sizeof(float) * 3, num_vertices, p_file, is_file);
 
+	// blops: Preprocess verts that require cutscene/CAS scaling (retail sub_4B4070).
+	NxXbox::ApplyMeshScaling( p_vertex_positions, num_vertices );
+
 	// Grab a buffer for the raw vertex data normal stream (if present), and read it.
 	float* p_vertex_normals = (m_flags & 0x04) ? new float[num_vertices * 3] : NULL;
 	if (p_vertex_normals)

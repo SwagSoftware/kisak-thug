@@ -58,4 +58,5 @@ set_target_properties(KisakThug PROPERTIES WIN32_EXECUTABLE TRUE)
 # and Save/ folders live next to the .exe.
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT KisakThug)
 set_target_properties(KisakThug PROPERTIES
-    VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:KisakThug>")
+    VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:KisakThug>"
+    VS_DEBUGGER_COMMAND_ARGUMENTS "-loosescripts")

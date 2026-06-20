@@ -83,6 +83,7 @@ Manager::Manager( void )
 	}
 	
 	m_hard_drive.SetAsHardDrive();
+	CreateDirectoryA( "Save", NULL );
 }
 
 /******************************************************************/
@@ -703,7 +704,11 @@ int	Card::GetNumFreeEntries( const char* path )
 /******************************************************************/
 bool Card::Delete( const char* filename )
 {
-	return true;
+	if( DeleteFileA( filename ))
+	{
+		return true;
+	}
+	return false;
 }
 
 
@@ -731,12 +736,7 @@ File* Card::Open( const char* filename, int mode, int size )
 	
 	File*	p_file		= NULL;
 	HANDLE	handle;
-
-	// Seems incoming filenames are of the form /foo/bar etc.
-	cardFilenameBuffer[0] = m_mounted_drive_letter;
-	cardFilenameBuffer[1] = ':';
-
-	int index = 2;
+	int index = 0;
 	while( cardFilenameBuffer[index] = *filename )
 	{
 		// Switch forward slash directory separators to the supported backslash.
@@ -846,6 +846,12 @@ bool Card::GetFileList( const char* mask, Lst::Head< File > &file_list )
 	{
 		do
 		{
+
+			if (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+			{
+				continue;
+			}
+
 			File* new_file = new File(0, this);
 
 			strncpy(new_file->m_Filename, data.cFileName, 31);

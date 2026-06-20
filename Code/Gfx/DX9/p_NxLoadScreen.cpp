@@ -75,6 +75,14 @@ static void DrawLoadScreenTexture()
 
 	NxXbox::sTexture* p_texture = sp_load_screen_texture->GetEngineTexture();
 
+	// blops: (slop) The async loading-bar timer can fire while the load-screen texture isn't ready yet (engine texture or
+	// D3D texture still null) - draw nothing rather than dereference null. Must release the mutex first.
+	if (!p_texture || !p_texture->pD3DTexture)
+	{
+		ReleaseMutex(NxXbox::EngineGlobals.g_asyncRenderMutex);
+		return;
+	}
+
 	NxXbox::set_texture(0, p_texture->pD3DTexture);
 	
 	float vertexes[24];
@@ -323,6 +331,8 @@ void CLoadScreen::s_plat_display(const char* filename, bool just_freeze, bool bl
 	//NxXbox::EngineGlobals.p_Device->BlockUntilIdle();
 	// LWSS: the PC here uses a mutex instead
 	WaitForSingleObject(NxXbox::EngineGlobals.g_asyncRenderMutex, 0xFFFFFFFF);
+
+	NxXbox::EngineGlobals.loadingscreen_visible = false;
 
 	if( !just_freeze )
 	{

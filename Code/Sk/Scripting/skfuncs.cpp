@@ -5630,6 +5630,32 @@ bool ScriptGetActualCASOptionStruct( Script::CStruct* pParams, Script::CScript* 
 /*                                                                */
 /******************************************************************/
 
+// @script | SkaterIsCustom | returns true if the indicated player's skater profile is a
+// custom (created-a-skater) skater rather than a pre-made pro. The create-a-skater menu's
+// 'currently_editing_custom' visibility gate calls this; if it is wrongly false then all of
+// the custom-only options (Face, Skin Color, Hair, Hair Color) get hidden from the menu.
+// @parmopt int | player | 0 | the player profile index to check
+bool ScriptSkaterIsCustom( Script::CStruct* pParams, Script::CScript* pScript )
+{
+	int player_num = 0;
+	pParams->GetInteger(CRCD(0x67e6859a,"player"), &player_num);
+
+	Obj::CSkaterProfile* pProfile = Mdl::Skate::Instance()->GetProfile(player_num);
+	if ( !pProfile )
+	{
+		return false;
+	}
+
+	// A skater is "custom" if it is not one of the pre-made pro skaters
+	// (matches the is_custom == !is_pro logic in CSkater::SkaterEquals).
+	return !pProfile->IsPro();
+}
+
+/******************************************************************/
+/*                                                                */
+/*                                                                */
+/******************************************************************/
+
 bool ScriptGetActualPlayerAppearancePart( Script::CStruct* pParams, Script::CScript* pScript )
 {
 	int player_num = 0;

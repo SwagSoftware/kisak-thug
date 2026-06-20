@@ -290,12 +290,14 @@ set(GEL_MOVIES
 source_group("Gel/Movies" FILES ${GEL_MOVIES})
 
 set(GEL_MUSIC_SDL
-	"${SRC_DIR}/Gel/Music/SDL/miniaudio.cpp"	
-	"${SRC_DIR}/Gel/Music/SDL/miniaudio.h"	
-	"${SRC_DIR}/Gel/Music/SDL/p_music.cpp"	
-	"${SRC_DIR}/Gel/Music/SDL/p_music.h"	
-	"${SRC_DIR}/Gel/Music/SDL/usersoundtrack.cpp"	
-	"${SRC_DIR}/Gel/Music/SDL/usersoundtrack.h"	
+	"${SRC_DIR}/Gel/Music/SDL/miniaudio.cpp"
+	"${SRC_DIR}/Gel/Music/SDL/miniaudio.h"
+	"${SRC_DIR}/Gel/Music/SDL/p_music.cpp"
+	"${SRC_DIR}/Gel/Music/SDL/p_music.h"
+	"${SRC_DIR}/Gel/Music/SDL/usersoundtrack.cpp"
+	"${SRC_DIR}/Gel/Music/SDL/usersoundtrack.h"
+	"${SRC_DIR}/Gel/Music/SDL/binkaudio_dec.cpp"
+	"${SRC_DIR}/Gel/Music/SDL/binkaudio_dec.h"
 )
 set(GEL_MUSIC_WIN32
 	"${SRC_DIR}/Gel/Music/Win32/p_adpcmfilestream.cpp"	

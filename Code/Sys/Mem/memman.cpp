@@ -171,9 +171,9 @@ Manager::Manager( void )
 	_mem_end		= _mem_start + ( 33 * 1024 * 1024 );
 	_std_mem_end	= _mem_end;
 #	elif defined ( __PLAT_WN32__ )
-	// Nasty hack for WN32 for now - just grab ~38mb~50mb of main memory via a malloc.
-	_mem_start	= (char *)malloc( 50 * 1024 * 1024 );
-	_mem_end	= _mem_start + ( 50 * 1024 * 1024 );
+
+	_mem_start	= (char *)malloc( 80 * 1024 * 1024 );
+	_mem_end	= _mem_start + ( 80 * 1024 * 1024 );
 
 	_std_mem_end = _mem_end;
 

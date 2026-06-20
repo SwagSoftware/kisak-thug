@@ -1442,7 +1442,7 @@ SCFunction CFunctionLookupTable[]=
 	{ "TryJoinInternetGame",           CFuncs::ScriptDummyCommand },
 	{ "InitPrefsBeenox",			   CFuncs::ScriptDummyCommand },
 	{ "AddFacesToMenu",				   CFuncs::ScriptDummyCommand },
-	{ "SkaterIsCustom",				   CFuncs::ScriptDummyCommandFalse },
+	{ "SkaterIsCustom",				   CFuncs::ScriptSkaterIsCustom }, // blops: fixes cas menu missing options
 	{ "MultiplayerOnly",			   CFuncs::ScriptDummyCommandFalse }, // Accurate to PC ver
 	
 	// lwss end

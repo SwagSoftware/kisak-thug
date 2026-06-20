@@ -182,6 +182,9 @@ void sBillboardManager::SetCameraMatrix( void )
 /******************************************************************/
 void sBillboardManager::Render( uint32 flags )
 {
+	// match retail - skip when rendering disabled
+	if( g_disableRendering ) return;
+
 	// Render the opaque billboards if requested.
 	if( flags & vRENDER_OPAQUE )
 	{

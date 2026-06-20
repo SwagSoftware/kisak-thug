@@ -280,9 +280,9 @@ void CreateIndexBufferPC(uint32 len)
 			indexData[0] = val;
 			indexData[1] = val + 1;
 			indexData[2] = val + 2;
-			indexData[3] = val + 3;
-			indexData[4] = val + 4;
-			indexData[5] = val + 5;
+			indexData[3] = val + 2;
+			indexData[4] = val + 1;
+			indexData[5] = val + 3;
 			indexData += 6;
 			val += 4;
 			i--;
@@ -308,6 +308,10 @@ void QueryRegistryAndSetGammaRamp()
 	{
 		cbData = 4;
 		RegQueryValueExA(result, "R", 0, 0, r, &cbData);
+		cbData = 4;
+		RegQueryValueExA(result, "G", 0, 0, g, &cbData);
+		cbData = 4;
+		RegQueryValueExA(result, "B", 0, 0, b, &cbData);
 	}
 
 	SetGammaNormalized(*(float*)r, *(float*)g, *(float*)b);
@@ -392,6 +396,8 @@ void InitialiseEngine( void )
 
 	params.AutoDepthStencilFormat = D3DFMT_D24X8;
 	params.FullScreen_RefreshRateInHz = 0;
+	// blops todo: add vsync toggle somewhere
+	params.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
 	params.BackBufferFormat = params.Windowed ? displayMode.Format : D3DFMT_X8R8G8B8;
 
 	int attempts = 0;
@@ -465,7 +471,7 @@ TRY_THE_FUCK_AGAIN:
 	EngineGlobals.p_ZStencilSurface->Release();
 
 	//D3DDevice_CreateTexture(params.BackBufferWidth, params.BackBufferHeight, 1, 1, params.BackBufferFormat, D3DPOOL_DEFAULT, &EngineGlobals.p_BlurSurface_0, 0);
-	D3DDevice_CreateTexture(params.BackBufferWidth, params.BackBufferHeight, 1, 1, params.BackBufferFormat, D3DPOOL_MANAGED, &EngineGlobals.p_BlurSurface_0, 0);
+	D3DDevice_CreateTexture(params.BackBufferWidth, params.BackBufferHeight, 1, 1, params.BackBufferFormat, D3DPOOL_DEFAULT, &EngineGlobals.p_BlurSurface_0, 0);
 	D3DDevice_CreateDepthStencilSurface(params.BackBufferWidth, params.BackBufferHeight, params.AutoDepthStencilFormat, D3DMULTISAMPLE_NONE, 0, 1, &EngineGlobals.p_BlurSurface_1, 0);
 
 	D3DCAPS9 deviceCaps;
@@ -505,6 +511,7 @@ TRY_THE_FUCK_AGAIN:
 
 		EngineGlobals.blurbuffer_format = desc.Format;
 	}
+
 
 	InitialiseRenderstates();
 

@@ -562,38 +562,29 @@ static HRESULT calculate_depth_mapping( float fDepth0, float fDepth1, float* pfA
 //}
 	
 
-// LWSS add
+// Full-screen quad: { x, y, z, rhw, D3DCOLOR diffuse, u, v }, FVF XYZRHW|DIFFUSE|TEX1.
+// The retail decompile used four separate stack locals (v4..v7) that happened to be
+// contiguous under the original compiler; modern MSVC does not guarantee that layout, so
+// the four verts must live in one contiguous array for DrawPrimitiveUP's stride to work.
 void DrawPrimitives_TriangleStrip(float a1)
 {
-    float v2; // [esp+4h] [ebp-78h]
-    float v3; // [esp+8h] [ebp-74h]
-    float v4[7]; // [esp+Ch] [ebp-70h] BYREF
-    float v5[7]; // [esp+28h] [ebp-54h] BYREF
-    float v6[7]; // [esp+44h] [ebp-38h] BYREF
-    float v7[7]; // [esp+60h] [ebp-1Ch] BYREF
+    float v[4][7];
+    float u0 = 0.5f / (float)EngineGlobals.params.BackBufferWidth;
+    float v0 = 0.5f / (float)EngineGlobals.params.BackBufferHeight;
+    float w  = (float)EngineGlobals.params.BackBufferWidth;
+    float h  = (float)EngineGlobals.params.BackBufferHeight;
 
-    v2 = 0.5 / (double)EngineGlobals.params.BackBufferWidth;
-    v4[4] = a1;
-    v3 = 0.5 / (double)EngineGlobals.params.BackBufferHeight;
-    v4[0] = 0.0;
-    v4[1] = 0.0;
-    v4[2] = 0.0;
-    v4[3] = 1.0;
-    v4[5] = v2 + 0.0;
-    v4[6] = v3 + 0.0;
-    qmemcpy(v5, v4, sizeof(v5));
-    v5[0] = (float)EngineGlobals.params.BackBufferWidth;
-    v5[5] = v2 + 1.0;
-    qmemcpy(v6, v4, sizeof(v6));
-    v6[1] = (float)EngineGlobals.params.BackBufferHeight;
-    v6[6] = v3 + 1.0;
-    qmemcpy(v7, v5, sizeof(v7));
-    v7[1] = v6[1];
-    v7[6] = v6[6];
-    //return EngineGlobals_p_Device->lpVtbl->DrawPrimitiveUP(EngineGlobals_p_Device, D3DPT_TRIANGLESTRIP, 2, v4, 28);
-    D3DDevice_DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, v4, 28);
+    // TL
+    v[0][0]=0.0f; v[0][1]=0.0f; v[0][2]=0.0f; v[0][3]=1.0f; v[0][4]=a1; v[0][5]=u0;        v[0][6]=v0;
+    // TR
+    v[1][0]=w;    v[1][1]=0.0f; v[1][2]=0.0f; v[1][3]=1.0f; v[1][4]=a1; v[1][5]=u0+1.0f;   v[1][6]=v0;
+    // BL
+    v[2][0]=0.0f; v[2][1]=h;    v[2][2]=0.0f; v[2][3]=1.0f; v[2][4]=a1; v[2][5]=u0;        v[2][6]=v0+1.0f;
+    // BR
+    v[3][0]=w;    v[3][1]=h;    v[3][2]=0.0f; v[3][3]=1.0f; v[3][4]=a1; v[3][5]=u0+1.0f;   v[3][6]=v0+1.0f;
+
+    D3DDevice_DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, v, 28);
 }
-// LWSS end
 	
 // LWSS Add: Some functions used by screen blur.
 
@@ -1020,7 +1011,7 @@ static HRESULT focus_blur( int blurFlagsOverride )
     }
 
     RenderBlurBlank(COERCE_FLOAT((255 - blur) | (((255 - blur) | (((255 - blur) | ((255 - blur) << 8)) << 8)) << 8)));
-    RenderBlurSurface2(blur | ((blur | ((blur | (blur << 8)) << 8)) << 8));
+    RenderBlurSurface2(COERCE_FLOAT(blur | ((blur | ((blur | (blur << 8)) << 8)) << 8)));
 
     D3DDevice_SetRenderState(D3DRS_ZENABLE, 1);
     D3DDevice_SetTextureStageState(0, D3DTSS_COLOROP, 4);
@@ -1164,7 +1155,9 @@ static HRESULT draw_focus_effect_using_planes( void )
     D3DDevice_SetSamplerState(0, D3DSAMP_MIPFILTER, 0);
     D3DDevice_SetRenderState(D3DRS_ALPHABLENDENABLE, 0);
     D3DDevice_SetRenderState(D3DRS_ZENABLE, 0);
-    DrawPrimitives_TriangleStrip(NAN);
+    // Diffuse = white (0xFFFFFFFF) so MODULATE is a clean blit. Retail pushes 0xFFFFFFFF here;
+    // Hex-Rays renders it as "NAN" since those bits form a NaN float, but as a D3DCOLOR it's white.
+    DrawPrimitives_TriangleStrip(COERCE_FLOAT(0xFFFFFFFFu));
     D3DDevice_SetRenderState(D3DRS_ALPHABLENDENABLE, 1);
     D3DDevice_SetTextureStageState(0, D3DTSS_COLOROP, 4);
     D3DDevice_SetTextureStageState(0, D3DTSS_ALPHAOP, 4);
@@ -1514,7 +1507,7 @@ void start_screen_blur( void )
     set_render_state(RS_ZBIAS, 0);
 
 	// If the screen blur is active, we want to render into a the blur buffer, otherwise into the regular frame buffer.
-	if(( EngineGlobals.screen_blur > 0 ) && ( EngineGlobals.screen_blur_duration > 1 ))
+	if(( EngineGlobals.focus_blur > 0 ) && ( EngineGlobals.focus_blur_duration >= 2 ) && EngineGlobals.p_BlurSurface_0 )
 	{
 		//D3DDevice_SetRenderTarget( NxXbox::EngineGlobals.p_BlurSurface[0], NxXbox::EngineGlobals.p_ZStencilSurface );
         if (EngineGlobals.use_all_blur_flags)
@@ -1553,7 +1546,7 @@ void finish_screen_blur( void )
     // LWSS end
 
 	// If the screen blur is active, we want to render into a the blur buffer, otherwise into the regular frame buffer.
-	if(( EngineGlobals.screen_blur > 0 ) && ( EngineGlobals.screen_blur_duration > 1 ))
+	if(( EngineGlobals.focus_blur > 0 ) && ( EngineGlobals.focus_blur_duration >= 2 ) && EngineGlobals.p_BlurSurface_0 )
 	{
         // LWSS: Reworked for PC
 		//EngineGlobals.p_Device->BlockUntilIdle();

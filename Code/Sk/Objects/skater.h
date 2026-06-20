@@ -100,8 +100,16 @@
 #endif
 
 #if defined(__PLAT_XBOX__) || defined(__PLAT_WN32__)
-#define	BREAK_SPINE_BUTTONS (control_pad.m_L2.GetPressed() && control_pad.m_R2.GetPressed())
-#define	WALK_SPINE_BUTTONS (control_pad.m_L2.GetPressed() && control_pad.m_R2.GetPressed())
+//#define	BREAK_SPINE_BUTTONS (control_pad.m_L2.GetPressed() && control_pad.m_R2.GetPressed())
+//#define	WALK_SPINE_BUTTONS (control_pad.m_L2.GetPressed() && control_pad.m_R2.GetPressed())
+
+// blops: support for ps2 trigger behavior with scripts ( will still work fine on retail scripts )
+#define	BREAK_SPINE_BUTTONS ( (Script::GetInteger("control_scheme") == 1) \
+		? (control_pad.m_L2.GetPressed() || control_pad.m_R2.GetPressed()) \
+		: (control_pad.m_L2.GetPressed() && control_pad.m_R2.GetPressed()) )
+#define	WALK_SPINE_BUTTONS ( (Script::GetInteger("control_scheme") == 1) \
+		?  control_pad.m_R2.GetPressed() \
+		: (control_pad.m_L2.GetPressed() && control_pad.m_R2.GetPressed()) )
 #endif
 
 #ifdef	__PLAT_NGC__

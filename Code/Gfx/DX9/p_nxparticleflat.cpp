@@ -5,6 +5,13 @@
 
 extern IDirect3DPixelShader9* PixelShader0;
 
+namespace NxXbox
+{
+	// render.h declares this at global scope, but it is actually defined inside
+	// namespace NxXbox (render.cpp) - declare it here so the reference resolves.
+	extern IDirect3DPixelShader9* pixel_shader_buffer_aPs11TexT0MulR0;
+}
+
 namespace Nx
 {
 
@@ -171,398 +178,132 @@ static int UnlockVertexBuffer(int size, int n)
 // LWSS End
 
 
-#if 1
 /******************************************************************/
 /*                                                                */
 /*                                                                */
 /******************************************************************/
+// Ported to DX9 from retail Windows_THUG.exe (CXboxParticleFlat::plat_render @ 0x4A1470).
 void CXboxParticleFlat::plat_render( void )
 {
-	// KISAKTODO: Finish Particle Rendering
-	return;
-	/*
-	// LWSS: Changes for PC.
-	// Draw the particles.
-	if( m_num_particles > 0 && !NxXbox::g_disableRendering)
+	if( m_num_particles > 0 && !NxXbox::g_disableRendering )
 	{
-		// Used to figure the right and up vectors for creating screen-aligned particle quads.
+		// Screen-aligned right/up vectors derived from the view matrix.
 		D3DXMATRIX *p_matrix = (D3DXMATRIX*)&NxXbox::EngineGlobals.view_matrix;
-
-		// Concatenate p_matrix with the emmission angle to create the direction.
 		Mth::Vector up( 0.0f, 1.0f, 0.0f );
-
-		// Get the 'right' vector as the cross product of camera 'at and world 'up'.
 		Mth::Vector at( p_matrix->m[0][2], p_matrix->m[1][2], p_matrix->m[2][2] );
 		Mth::Vector screen_right	= Mth::CrossProduct( at, up );
 		Mth::Vector screen_up		= Mth::CrossProduct( screen_right, at );
-
 		screen_right.Normalize();
 		screen_up.Normalize();
 
-		int				lp;
-		CParticleEntry	*p_particle;
-		float			*p_v;
-
-		// Calculate space needed.
-		DWORD dwords_per_particle	= 32;
-		DWORD dword_count			= dwords_per_particle * m_num_particles;
-
-		// Submit particle material.
 		mp_engine_particle->mp_material->Submit();
-		
-		// Set up correct vertex and pixel shader.
-		//NxXbox::set_vertex_shader( ParticleFlatVS );
-		NxXbox::set_vertex_shader(D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE2(0) );
-		//NxXbox::set_pixel_shader( PixelShader0 );
-		
-		NxXbox::set_pixel_shader(pixel_shader_buffer_aPs11TexT0MulR0);
-		
+		NxXbox::set_vertex_shader( D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1 );
+		NxXbox::set_pixel_shader( NxXbox::pixel_shader_buffer_aPs11TexT0MulR0 );
 
-		//// Load up the combined world->view_projection matrix.
-		//XGMATRIX	temp_matrix;
-		//XGMATRIX	dest_matrix;
-		//XGMATRIX	projMatrix;
-		//XGMATRIX	viewMatrix;
-		//XGMATRIX	worldMatrix;
-		//
-		//// Projection matrix.
-		//XGMatrixTranspose( &projMatrix, &NxXbox::EngineGlobals.projection_matrix );
-		//
-		//// View matrix.
-		//XGMatrixTranspose( &viewMatrix, &NxXbox::EngineGlobals.view_matrix );
-		//viewMatrix.m[3][0] = 0.0f;
-		//viewMatrix.m[3][1] = 0.0f;
-		//viewMatrix.m[3][2] = 0.0f;
-		//viewMatrix.m[3][3] = 1.0f;
-		//
-		//// World space transformation matrix, set to be a translation matrix corresponding to the emitter position.
-		//XGMatrixTranslation( &worldMatrix, m_pos[0], m_pos[1], m_pos[2] );
-		//XGMatrixTranspose( &worldMatrix, &worldMatrix );
-		//
-		//// Calculate composite world->view->projection matrix.
-		//XGMatrixMultiply( &temp_matrix, &viewMatrix, &worldMatrix );
-		//XGMatrixMultiply( &dest_matrix, &projMatrix, &temp_matrix );
-		//
-		//// Load up the combined world, camera & projection matrix.
-		//D3DDevice_SetVertexShaderConstantFast( 0, (void*)&dest_matrix, 4 );
-		//
-		//float vector_upload[8];
-		//vector_upload[0]	= screen_right[X];
-		//vector_upload[1]	= screen_right[Y];
-		//vector_upload[2]	= screen_right[Z];
-		//vector_upload[4]	= screen_up[X];
-		//vector_upload[5]	= screen_up[Y];
-		//vector_upload[6]	= screen_up[Z];
-		//D3DDevice_SetVertexShaderConstantFast( 4, (void*)( &vector_upload[0] ), 2 );
-		//
-		//static float vconstants[32]	= {	0.0f,  0.0f, 1.0f, 1.0f,		// Vert tex coords in C8 through C11
-		//								1.0f,  0.0f, 1.0f, 1.0f,
-		//								1.0f,  1.0f, 1.0f, 1.0f,
-		//								0.0f,  1.0f, 1.0f, 1.0f,
-		//							   -1.0f,  1.0f, 1.0f, 1.0f,		// Vert w/h multipliers in C12 through C15
-		//								1.0f,  1.0f, 1.0f, 1.0f,
-		//								1.0f, -1.0f, 1.0f, 1.0f,
-		//							   -1.0f, -1.0f, 1.0f, 1.0f };
-		//D3DDevice_SetVertexShaderConstantFast( 8, (void*)( &vconstants[0] ), 8 );
-		//
-		//// Obtain push buffer lock.
-		//// Note that p_push is returned as a pointer to write-combined memory. Writes to write-combined memory should be
-		//// consecutive and in increasing order. Reads should be avoided. Additionally, any CPU reads from memory or the
-		//// L2 cache can force expensive partial flushes of the 32-byte write-combine cache.
-		//DWORD *p_push; 
-		//p_push = D3DDevice_BeginPush( dword_count );
-		//
-		//// Set up loop variables here, since we be potentially enetering the loop more than once.
-		//lp			= 0;
-		//p_particle	= mp_particle_array;
-		//p_v			= mp_vertices;
-		//
-		//for( ; lp < m_num_particles; lp++, p_particle++, p_v += 3 )
-		//{
-		//	// Calculate the interpolator ( 1.0f / particle_life ).
-		//	float terp	= p_particle->m_time * ReciprocalEstimateNR_ASM( p_particle->m_life );
-		//
-		//	// Separate interpolator for color.
-		//	float col_terp;
-		//
-		//	Mth::Vector	pos( p_v[0], p_v[1], p_v[2] );
-		//	Image::RGBA *p_col0;
-		//	Image::RGBA *p_col1;
-		//
-		//	if( m_mid_time >= 0.0f )
-		//	{
-		//		if( terp < m_mid_time )
-		//		{
-		//			p_col0		= &m_start_color;
-		//			p_col1		= &m_mid_color;
-		//
-		//			// Adjust interpolation for this half of the color blend.
-		//			col_terp	= terp / m_mid_time;
-		//		}
-		//		else
-		//		{
-		//			p_col0		= &m_mid_color;
-		//			p_col1		= &m_end_color;
-		//
-		//			// Adjust interpolation for this half of the color blend.
-		//			col_terp	= ( terp - m_mid_time ) / ( 1.0f - m_mid_time );
-		//		}
-		//	}
-		//	else
-		//	{
-		//		// No mid color specified.
-		//		p_col0		= &m_start_color;
-		//		p_col1		= &m_end_color;
-		//
-		//		// Color interpoltor value is the same as the regular interpolator.
-		//		col_terp	= terp;
-		//	}
-		//
-		//	// We're going to be loading constants.
-		//	p_push[0]	= D3DPUSH_ENCODE( D3DPUSH_SET_TRANSFORM_CONSTANT_LOAD, 1 );
-		//
-		//	// Specify the starting register (physical registers are offset by 96 from the D3D logical register).
-		//	p_push[1]	= 96 + 16;
-		//
-		//	// Specify the number of DWORDS to load. 12 DWORDS for 3 constants.
-		//	p_push[2]	= D3DPUSH_ENCODE( D3DPUSH_SET_TRANSFORM_CONSTANT, 12 );
-		//
-		//	// Load position.
-		//	p_push[3]	= *((DWORD*)&pos[X] );
-		//	p_push[4]	= *((DWORD*)&pos[Y] );
-		//	p_push[5]	= *((DWORD*)&pos[Z] );
-		//
-		//	// Load start and end width and height.
-		//	p_push[7]	= *((DWORD*)&p_particle->m_sw );
-		//	p_push[8]	= *((DWORD*)&p_particle->m_sh );
-		//	p_push[9]	= *((DWORD*)&p_particle->m_ew );
-		//	p_push[10]	= *((DWORD*)&p_particle->m_eh );
-		//
-		//	// Load size and color interpolators.
-		//	p_push[11]	= *((DWORD*)&terp );
-		//	p_push[12]	= *((DWORD*)&col_terp );
-		//
-		//	p_push		+= 15;
-		//
-		//	p_push[0]	= D3DPUSH_ENCODE( D3DPUSH_SET_BEGIN_END, 1 );
-		//	p_push[1]	= D3DPT_QUADLIST;
-		//	p_push		+= 2;
-		//
-		//	// NOTE: A maximum of 2047 DWORDs can be specified to D3DPUSH_ENCODE. If there is more than 2047 DWORDs of vertex
-		//	// data, simply split the data into multiple D3DPUSH_ENCODE( D3DPUSH_INLINE_ARRAY ) sections.
-		//	p_push[0]	= D3DPUSH_ENCODE( D3DPUSH_NOINCREMENT_FLAG | D3DPUSH_INLINE_ARRAY, 12 );
-		//	++p_push;
-		//
-		//	// Now we can start the actual vertex data.
-		//	p_push[0]	= *((DWORD*)p_col0 );
-		//	p_push[1]	= *((DWORD*)p_col1 );
-		//	p_push[2]	= 0x00000000UL;
-		//
-		//	p_push[3]	= *((DWORD*)p_col0 );
-		//	p_push[4]	= *((DWORD*)p_col1 );
-		//	p_push[5]	= 0x00010001UL;
-		//
-		//	p_push[6]	= *((DWORD*)p_col0 );
-		//	p_push[7]	= *((DWORD*)p_col1 );
-		//	p_push[8]	= 0x00020002UL;
-		//	
-		//	p_push[9]	= *((DWORD*)p_col0 );
-		//	p_push[10]	= *((DWORD*)p_col1 );
-		//	p_push[11]	= 0x00030003UL;
-		//
-		//	p_push		+= 12;
-		//
-		//	// End of vertex data for this particle.
-		//	p_push[0] = D3DPUSH_ENCODE( D3DPUSH_SET_BEGIN_END, 1 );
-		//	p_push[1] = 0;
-		//	p_push += 2;
-		//}
-		//D3DDevice_EndPush( p_push );
-	}
+		struct sFlatVert { float x, y, z; DWORD color; float u, v; };
 
-	// Deal with the Ps2 specific extensions.
-	if( m_emit_rate > 0.0f )
-	{
-		m_emit_rate_fractional += ( m_emit_rate * ( 1.0f / 60.0f ));
+		CParticleEntry	*p_particle	= mp_particle_array;
+		float			*p_v		= mp_vertices;
+		int				done		= 0;
 
-		if( m_emit_rate_fractional >= 1.0f )
+		while( done < m_num_particles )
 		{
-			// This should actually deal with fractional values by accumulating them.
-			emit( Ftoi_ASM( m_emit_rate_fractional ));
-			m_emit_rate_fractional -= (float)Ftoi_ASM( m_emit_rate_fractional );
-		}
-	}
-	*/
-}
+			IDirect3DVertexBuffer9*	p_vb		= NULL;
+			int						base_vertex	= 0;
+			unsigned int			avail_verts	= 0;
+			sFlatVert*				p_dst		= (sFlatVert*)LockVertexBuffer( 4 * ( m_num_particles - done ), (int)sizeof( sFlatVert ), &p_vb, &base_vertex, &avail_verts );
 
-#else
-/******************************************************************/
-/*                                                                */
-/*                                                                */
-/******************************************************************/
-void CXboxParticleFlat::plat_render( void )
-{
-	// Draw the particles.
-	if( m_num_particles > 0 )
-	{
-		// Used to figure the right and up vectors for creating screen-aligned particle quads.
-		D3DXMATRIX *p_matrix = (D3DXMATRIX*)&NxXbox::EngineGlobals.view_matrix;
-
-		// Concatenate p_matrix with the emmission angle to create the direction.
-		Mth::Vector up( 0.0f, 1.0f, 0.0f );
-
-		// Get the 'right' vector as the cross product of camera 'at and world 'up'.
-		Mth::Vector at( p_matrix->m[0][2], p_matrix->m[1][2], p_matrix->m[2][2] );
-		Mth::Vector screen_right	= Mth::CrossProduct( at, up );
-		Mth::Vector screen_up		= Mth::CrossProduct( screen_right, at );
-
-		screen_right.Normalize();
-		screen_up.Normalize();
-
-		int				lp;
-		CParticleEntry	*p_particle;
-		float			*p_v;
-
-		// Submit particle material.
-		mp_engine_particle->mp_material->Submit();
-		
-		// Set up correct vertex and pixel shader.
-		NxXbox::set_vertex_shader( D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE2( 0 ));
-		NxXbox::set_pixel_shader( PixelShader0 );
-		
-		DWORD dwords_per_particle	= 24;
-		DWORD dword_count			= dwords_per_particle * m_num_particles;
-
-		// Obtain push buffer lock.
-		// The additional number (+5 is minimum) is to reserve enough overhead for the encoding parameters. It can safely be more, but no less.
-		DWORD *p_push; 
-		p_push = D3DDevice_BeginPush( dword_count + ( dword_count / 2047 ) + 16 );
-
-		// Note that p_push is returned as a pointer to write-combined memory. Writes to write-combined memory should be
-		// consecutive and in increasing order. Reads should be avoided. Additionally, any CPU reads from memory or the
-		// L2 cache can force expensive partial flushes of the 32-byte write-combine cache.
-		p_push[0]	= D3DPUSH_ENCODE( D3DPUSH_SET_BEGIN_END, 1 );
-		p_push[1]	= D3DPT_QUADLIST;
-		p_push		+= 2;
-
-		// Set up loop variables here, since we be potentially enetering the loop more than once.
-		lp			= 0;
-		p_particle	= mp_particle_array;
-		p_v			= mp_vertices;
-
-		while( dword_count > 0 )
-		{
-			int dwords_written = 0;
-
-			// NOTE: A maximum of 2047 DWORDs can be specified to D3DPUSH_ENCODE. If there is more than 2047 DWORDs of vertex
-			// data, simply split the data into multiple D3DPUSH_ENCODE( D3DPUSH_INLINE_ARRAY ) sections.
-			p_push[0] = D3DPUSH_ENCODE( D3DPUSH_NOINCREMENT_FLAG | D3DPUSH_INLINE_ARRAY, ( dword_count > 2047 ) ? ((int)( 2047 / dwords_per_particle )) * dwords_per_particle: dword_count );
-			++p_push;
-		
-			for( ; lp < m_num_particles; lp++, p_particle++, p_v += 3 )
+			int count = 0;
+			while( done < m_num_particles )
 			{
-				// Check to see if writing another particle will take us over the edge.
-				if(( dwords_written + dwords_per_particle ) > 2047 )
+				// Stop if another quad (4 verts) will not fit in the locked range.
+				if( ( count + 1 ) * 4 > (int)avail_verts )
 				{
 					break;
 				}
-				
-				// Calculate the interpolator ( 1.0f / particle_life ).
-				float terp	= p_particle->m_time * ReciprocalEstimateNR_ASM( p_particle->m_life );
+
+				float terp	= p_particle->m_time / p_particle->m_life;
 				float w		= p_particle->m_sw + (( p_particle->m_ew - p_particle->m_sw ) * terp );
 				float h		= p_particle->m_sh + (( p_particle->m_eh - p_particle->m_sh ) * terp );
 
-				// Todo: Move hook to matrix/emitter code to cut down on per particle calculation.
 				Mth::Vector	pos( p_v[0] + m_pos[X], p_v[1] + m_pos[Y], p_v[2] + m_pos[Z] );
-				Mth::Vector	ss_right, ss_up;
-				Mth::Vector tmp;
-		
-				ss_right	= screen_right * w;
-				ss_up		= screen_up * h;
+				Mth::Vector	ss_right	= screen_right * w;
+				Mth::Vector	ss_up		= screen_up * h;
 
-				Image::RGBA color;
-				Image::RGBA *p_col0;
-				Image::RGBA *p_col1;
-		
+				// 3-key color interpolation (start -> mid -> end).
+				Image::RGBA	*p_col0;
+				Image::RGBA	*p_col1;
+				float		col_terp;
 				if( m_mid_time >= 0.0f )
 				{
 					if( terp < m_mid_time )
 					{
-						p_col0 = &m_start_color;
-						p_col1 = &m_mid_color;
-
-						// Adjust interpolation for this half of the color blend.
-						terp = terp / m_mid_time;
+						p_col0		= &m_start_color;
+						p_col1		= &m_mid_color;
+						col_terp	= ( m_mid_time > 0.0f ) ? ( terp / m_mid_time ) : 0.0f;
 					}
 					else
 					{
-						p_col0 = &m_mid_color;
-						p_col1 = &m_end_color;
-
-						// Adjust interpolation for this half of the color blend.
-						terp = ( terp - m_mid_time ) / ( 1.0f - m_mid_time );
+						p_col0		= &m_mid_color;
+						p_col1		= &m_end_color;
+						col_terp	= ( terp - m_mid_time ) / ( 1.0f - m_mid_time );
 					}
 				}
 				else
 				{
-					// No mid color specified.
-					p_col0 = &m_start_color;
-					p_col1 = &m_end_color;
+					p_col0		= &m_start_color;
+					p_col1		= &m_end_color;
+					col_terp	= terp;
 				}
 
-				Image::RGBA start	= *p_col0++;
-				Image::RGBA end		= *p_col1++;
+				// Fixed-point lerp per channel (channels already stored in
+				// D3DCOLOR/ARGB order by the plat_set_* setters).
+				int f_terp = (int)( col_terp * 4096.0f );
+				Image::RGBA color;
+				color.r = (uint8)( ((((int)p_col0->r ) * 4096 ) + (((int)p_col1->r - (int)p_col0->r ) * f_terp )) / 4096 );
+				color.g = (uint8)( ((((int)p_col0->g ) * 4096 ) + (((int)p_col1->g - (int)p_col0->g ) * f_terp )) / 4096 );
+				color.b = (uint8)( ((((int)p_col0->b ) * 4096 ) + (((int)p_col1->b - (int)p_col0->b ) * f_terp )) / 4096 );
+				color.a = (uint8)( ((((int)p_col0->a ) * 4096 ) + (((int)p_col1->a - (int)p_col0->a ) * f_terp )) / 4096 );
+				DWORD dw_color = *((DWORD*)&color);
 
-				// Use fixed point math to avoid _ftol2 calls.
-				int f_terp	= Ftoi_ASM( terp * 4096.0f );
-				color.r		= ((((int)start.r ) * 4096 ) + (((int)end.r - (int)start.r ) * f_terp )) / 4096;
-				color.g		= ((((int)start.g ) * 4096 ) + (((int)end.g - (int)start.g ) * f_terp )) / 4096;
-				color.b		= ((((int)start.b ) * 4096 ) + (((int)end.b - (int)start.b ) * f_terp )) / 4096;
-				color.a		= ((((int)start.a ) * 4096 ) + (((int)end.a - (int)start.a ) * f_terp )) / 4096;
-		
-				tmp			= pos - ss_right + ss_up;
-				p_push[0]	= *((DWORD*)&tmp[X] );
-				p_push[1]	= *((DWORD*)&tmp[Y] );
-				p_push[2]	= *((DWORD*)&tmp[Z] );
-				p_push[3]	= *((DWORD*)&color );
-				p_push[4]	= 0x00000000UL;
-				p_push[5]	= 0x00000000UL;
-	
-				tmp			= pos + ss_right + ss_up;		
-				p_push[6]	= *((DWORD*)&tmp[X] );
-				p_push[7]	= *((DWORD*)&tmp[Y] );
-				p_push[8]	= *((DWORD*)&tmp[Z] );
-				p_push[9]	= *((DWORD*)&color );
-				p_push[10]	= 0x3F800000UL;
-				p_push[11]	= 0x00000000UL;
+				// Four corners ordered to match the shared quad index buffer
+				// pattern (0,1,2, 2,1,3): 0=TL 1=TR 2=BL 3=BR.
+				Mth::Vector c;
+				c = pos - ss_right + ss_up;	p_dst[0].x = c[X]; p_dst[0].y = c[Y]; p_dst[0].z = c[Z]; p_dst[0].color = dw_color; p_dst[0].u = 0.0f; p_dst[0].v = 0.0f;
+				c = pos + ss_right + ss_up;	p_dst[1].x = c[X]; p_dst[1].y = c[Y]; p_dst[1].z = c[Z]; p_dst[1].color = dw_color; p_dst[1].u = 1.0f; p_dst[1].v = 0.0f;
+				c = pos - ss_right - ss_up;	p_dst[2].x = c[X]; p_dst[2].y = c[Y]; p_dst[2].z = c[Z]; p_dst[2].color = dw_color; p_dst[2].u = 0.0f; p_dst[2].v = 1.0f;
+				c = pos + ss_right - ss_up;	p_dst[3].x = c[X]; p_dst[3].y = c[Y]; p_dst[3].z = c[Z]; p_dst[3].color = dw_color; p_dst[3].u = 1.0f; p_dst[3].v = 1.0f;
+				p_dst += 4;
 
-				tmp			= pos + ss_right - ss_up;		
-				p_push[12]	= *((DWORD*)&tmp[X] );
-				p_push[13]	= *((DWORD*)&tmp[Y] );
-				p_push[14]	= *((DWORD*)&tmp[Z] );
-				p_push[15]	= *((DWORD*)&color );
-				p_push[16]	= 0x3F800000UL;
-				p_push[17]	= 0x3F800000UL;
-			
-				tmp			= pos - ss_right - ss_up;		
-				p_push[18]	= *((DWORD*)&tmp[X] );
-				p_push[19]	= *((DWORD*)&tmp[Y] );
-				p_push[20]	= *((DWORD*)&tmp[Z] );
-				p_push[21]	= *((DWORD*)&color );
-				p_push[22]	= 0x00000000UL;
-				p_push[23]	= 0x3F800000UL;
-
-				p_push		+= 24;
-
-				dwords_written	+= dwords_per_particle;
-				dword_count		-= dwords_per_particle;
+				count++;
+				done++;
+				p_particle++;
+				p_v += 3;
 			}
-		}
 
-		p_push[0] = D3DPUSH_ENCODE( D3DPUSH_SET_BEGIN_END, 1 );
-		p_push[1] = 0;
-		p_push += 2;
-		D3DDevice_EndPush( p_push );
+			UnlockVertexBuffer( 4 * count, (int)sizeof( sFlatVert ) );
+
+			if( count == 0 )
+			{
+				// Nothing fit this iteration; bail to avoid an infinite loop.
+				break;
+			}
+
+			NxXbox::EngineGlobals.p_Device->SetStreamSource( 0, p_vb, 0, sizeof( sFlatVert ) );
+			NxXbox::EngineGlobals.p_Device->SetIndices( NxXbox::EngineGlobals.p_index_buffer );
+			NxXbox::EngineGlobals.p_Device->DrawIndexedPrimitive( D3DPT_TRIANGLELIST, base_vertex, 0, 4 * count, 0, 2 * count );
+		}
 	}
-#endif
+
+	// Parametric emit-rate handling.
+	if( m_emit_rate > 0.0f )
+	{
+		m_emit_rate_fractional += ( m_emit_rate * ( 1.0f / 60.0f ));
+		if( m_emit_rate_fractional >= 1.0f )
+		{
+			emit( (int)m_emit_rate_fractional );
+			m_emit_rate_fractional -= (float)(int)m_emit_rate_fractional;
+		}
+	}
+}
 } // Nx

@@ -135,6 +135,17 @@ Manager::Manager ( void )
 	// Create the keyboard queue.
 //	XInputDebugInitKeyboardQueue( &xdkp );
 
+    // Enable HIDAPI rumble for Sony pads. SDL talks to a DualSense/DualShock 4 directly via HIDAPI,
+    // but rumble on those pads needs the "extended input report" mode, which SDL leaves OFF by
+    // default (it can interfere with non-SDL DirectInput apps). Without these, a DualSense reports
+    // its buttons/sticks fine but SDL_GameControllerRumble() is a silent no-op (notably over
+    // Bluetooth). Hints must be set before SDL_Init / before the controller is opened.
+    SDL_SetHint( SDL_HINT_JOYSTICK_HIDAPI,            "1" );	// HIDAPI drivers on (default, but be explicit)
+    SDL_SetHint( SDL_HINT_JOYSTICK_HIDAPI_PS5,        "1" );	// DualSense driver
+    SDL_SetHint( SDL_HINT_JOYSTICK_HIDAPI_PS5_RUMBLE, "1" );	// extended reports -> DualSense rumble
+    SDL_SetHint( SDL_HINT_JOYSTICK_HIDAPI_PS4,        "1" );	// DualShock 4 driver
+    SDL_SetHint( SDL_HINT_JOYSTICK_HIDAPI_PS4_RUMBLE, "1" );	// extended reports -> DualShock 4 rumble
+
     Dbg_Assert(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER | SDL_INIT_AUDIO) >= 0); // the INIT_VIDEO is needed....
 
     for (int i = 0; i < SDL_NumJoysticks(); i++)

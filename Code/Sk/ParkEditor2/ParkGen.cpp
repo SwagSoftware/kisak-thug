@@ -1718,12 +1718,15 @@ void CParkGenerator::ReadInRailInfo()
 	
 	Ryan("\n*** Reading in rail info ***\n");
 	m_in_rail_set.Destroy();
-	// BAD MEM
-	m_processed_node_tab = new int[256];
-	m_processed_node_tab_entries = 0;
-	m_temp_node_tab = new TempNodeInfo[2048];
 
-	
+	// blops: size the table to the actual node count, fixes crash on larger parks ( should match retail )
+	int num_nodes = (int)pNodeArray->GetSize();
+	int tab_size = (num_nodes > 0) ? num_nodes : 1;
+	m_processed_node_tab = new int[tab_size];
+	m_processed_node_tab_entries = 0;
+	m_temp_node_tab = new TempNodeInfo[tab_size];
+
+
 	int index = 0;
 	for ( ; index < (int)pNodeArray->GetSize(); index++)
 	{
@@ -1827,8 +1830,8 @@ void CParkGenerator::ReadInRailInfo()
 		} // end while
 	} // end while
 
-	delete m_processed_node_tab;
-	delete m_temp_node_tab;
+	delete[] m_processed_node_tab;
+	delete[] m_temp_node_tab;
 
 	scan_in_trigger_info(pNodeArray);
 //

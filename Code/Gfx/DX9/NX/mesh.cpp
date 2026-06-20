@@ -196,7 +196,7 @@ sMesh::sMesh( void )
 	m_bone_index					= -1;
 	mp_transform					= NULL;
 	m_diffuse_offset				= 0;
-	m_uv0_offset					= 0;
+	m_uv0_offset					= -1;
 	m_normal_offset					= 0;
 	m_vertex_stride					= 0;
 	m_vertex_shader[0]				= 0;
@@ -1078,16 +1078,23 @@ DISABLE_FOG:
 	}
 	
 	// Get the vertex buffer to submit (which is the one we have potentially just been writing to).
-	//IDirect3DVertexBuffer8*	p_submit_buffer = mp_vertex_buffer[m_current_write_vertex_buffer];
-	//IDirect3DVertexBuffer9*	p_submit_buffer = mp_vertex_buffer[m_current_write_vertex_buffer];
 	
+	// blops: slopfix, no idea
+	// NOTE: capture this BEFORE SwapVertexBuffers(), which advances m_current_write_vertex_buffer for
+	// the *next* frame. Retail (NxXbox::sMesh::Submit @0x4b5120) binds this captured buffer to the
+	// stream, NOT mp_vertex_buffer[m_current_write_vertex_buffer] re-read after the swap. Re-reading it
+	// post-swap binds the wrong (stale/uninitialized) buffer for double-buffered meshes and faults in
+	// DrawIndexedPrimitive (e.g. scrolling objects in the park editor).
+	auto p_submit_buffer = mp_vertex_buffer[m_current_write_vertex_buffer];
+
 	if (this->p_rawdata && (m_lastRenderFrameCount != g_globalFrameCounter || m_lastRenderFlags != renderFlags))
 	{
 		m_lastRenderFrameCount = g_globalFrameCounter;
 		m_lastRenderFlags = renderFlags;
 
 		void* pMem = NULL;
-		mp_vertex_buffer[m_current_write_vertex_buffer]->Lock(0, 0, &pMem, D3DLOCK_DISCARD);
+		//mp_vertex_buffer[m_current_write_vertex_buffer]->Lock(0, 0, &pMem, D3DLOCK_DISCARD);
+		p_submit_buffer->Lock(0, 0, &pMem, D3DLOCK_DISCARD);
 
 		switch (this->m_lastBiggestIndexUsed)
 		{
@@ -1102,15 +1109,15 @@ DISABLE_FOG:
 			break;
 		}
 
-		mp_vertex_buffer[m_current_write_vertex_buffer]->Unlock();
+		//mp_vertex_buffer[m_current_write_vertex_buffer]->Unlock();
+		p_submit_buffer->Unlock();
 	}
 
 	// Swap multiple vertex buffers if present.
 	SwapVertexBuffers();
-	
-	// Set the stream source.
-	auto sss_res = D3DDevice_SetStreamSource( 0, mp_vertex_buffer[m_current_write_vertex_buffer]->vertexBuffer,
-		mp_vertex_buffer[m_current_write_vertex_buffer]->streamOffset, m_vertex_stride );
+
+	auto sss_res = D3DDevice_SetStreamSource( 0, p_submit_buffer->vertexBuffer,
+		p_submit_buffer->streamOffset, m_vertex_stride );
 
 	Dbg_Assert(sss_res == D3D_OK);
 
@@ -1291,6 +1298,10 @@ sMesh *sMesh::Clone( bool instance )
 				//p_clone->mp_index_buffer[ib] = new uint16[p_clone->m_num_indices[ib]];
 				//CopyMemory( p_clone->mp_index_buffer[ib], mp_index_buffer[ib], sizeof( uint16 ) * p_clone->m_num_indices[ib] );
 			}
+			else
+			{
+				p_clone->mp_index_buffer[ib] = NULL;
+			}
 		}
 		
 		// LWSS: More 0x90~ fields...
@@ -1318,7 +1329,11 @@ sMesh *sMesh::Clone( bool instance )
 	}
 	if (this->m_num_vertices_raw)
 	{
-		void* v19 = malloc(6 * (this->m_num_vertices_raw + 1)); // LWSS: add +1, I've had it OOB write (1x).
+		// The edits buffer must be sized by the count actually copied (m_num_vertice_edits), not by
+		// m_num_vertices_raw. Retail (sMesh::Clone @0x4b6870) does malloc(6 * m_num_vertice_edits) +
+		// memcpy(6 * m_num_vertice_edits). Sizing by m_num_vertices_raw (+1 band-aid) overran the heap
+		// whenever m_num_vertice_edits > m_num_vertices_raw + 1 (park-editor piece select / ClonePiece).
+		void* v19 = malloc(6 * this->m_num_vertice_edits);
 		p_clone->m_vertice_edits_raw = v19;
 		memcpy(v19, this->m_vertice_edits_raw, 6 * this->m_num_vertice_edits);
 		void* v20 = malloc(12 * this->m_num_vertices_raw);
@@ -1665,9 +1680,9 @@ void sMesh::RawVertexFuckery()
 	BYTE* p_vert_rawdata = p_vert0->GetRawData();
 	for (int i = 0; i < this->m_num_vertices; i++)
 	{
-		v10[0] = p_vert_rawdata[0];
-		v10[1] = p_vert_rawdata[1];
-		v10[2] = p_vert_rawdata[2];
+		v10[0] = ((DWORD*)p_vert_rawdata)[0];	// copy the 3 position FLOATS (12 bytes), not 3 single bytes
+		v10[1] = ((DWORD*)p_vert_rawdata)[1];
+		v10[2] = ((DWORD*)p_vert_rawdata)[2];
 
 		v10 += 3;
 		p_vert_rawdata += this->m_vertex_stride;

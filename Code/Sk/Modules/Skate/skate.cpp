@@ -307,14 +307,11 @@ void		Skate::v_start_cb ( void )
 
 	Script::RunScript("default_system_startup");
 
-	if ( !Config::CD() )
+	// blops: Run the developer startup script with -loosescripts
+	extern bool g_loose_scripts;
+	if ( !skip_startup && g_loose_scripts )
 	{
-		if ( !skip_startup )
-		{
-			// Run the personal startup script.
-			// lwss: this Loads from the levels/ folder that doesn't exist. With shit like WWW_Sky
-			//Script::RunScript("Call_Personal_StartUp_Script");
-		}
+		Script::RunScript("Call_Personal_StartUp_Script");
 	}
 }
 
@@ -2171,7 +2168,7 @@ void Skate::ChangeLevel( uint32 level_id )
 	}
 	CFuncs::ScriptCleanup( pTempStructure, NULL );
 	delete pTempStructure;
-	
+
 	m_levelChanged = true;
 	
 	//if( gamenet_man->InNetGame())

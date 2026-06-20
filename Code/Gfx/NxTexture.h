@@ -123,8 +123,16 @@ private:
 
 	virtual bool			plat_combine_textures(CTexture *p_texture, bool palette_gen);
 	
-	bool					m_perm;		// set to true if this texture should survive a level change 
-	
+	bool					m_perm;		// set to true if this texture should survive a level change
+
+	// blops: slop fix for reloading textures
+	// Ref-count for individually loaded (sprite) textures. Shared sprites such as
+	// MainMenuSprites/SharedSprites/PA_shop appear in more than one texture load-list, so the
+	// same sprite can be requested again before its previous owner has released it. CTexDict's
+	// per-texture Load/Unload ref-count this so a re-load doesn't trip the "item already in hash
+	// table" assert and an unload doesn't free a texture another list still needs.
+	int						m_load_count;
+
 	#ifdef	__NOPT_ASSERT__
 	char	*				mp_name;
 	#endif

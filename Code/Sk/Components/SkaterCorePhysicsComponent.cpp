@@ -93,7 +93,13 @@ CSkaterCorePhysicsComponent::CSkaterCorePhysicsComponent() : CBaseComponent()
 	mp_movable_contact_component = NULL;
 	mp_physics_control_component = NULL;
 	mp_walk_component = NULL;
-	
+
+// blops add: some simple detections for buttslaps/bonks
+	m_bonk_detected = false;
+	m_buttslap_detected = false;
+	m_buttslap_awarded = false;
+	m_air_jumps_since_airborne = 0;
+
 	mp_coll_cache = Nx::CCollCacheManager::sCreateCollCache();
 }
 
@@ -837,6 +843,25 @@ CBaseComponent::EMemberFunctionResult CSkaterCorePhysicsComponent::CallMemberFun
 		case CRCC(0xf922431, "ResetLandedFromVert"):
 			mLandedFromVert = false;
 			break;
+
+// blops add: new scripts for bonk/buttslap detection, doesn't harm retail/unchanged scripts
+        // @script | CheckForBonk | true if a glitch-bonk (in-air collision that injected upward velocity) was detected since the last ResetBonk
+		case CRCC(0x8f3c043e, "CheckForBonk"):
+			return m_bonk_detected ? CBaseComponent::MF_TRUE : CBaseComponent::MF_FALSE;
+
+        // @script | ResetBonk | clears the bonk-detected flag (see CheckForBonk)
+		case CRCC(0x25f9f1e1, "ResetBonk"):
+			m_bonk_detected = false;
+			break;
+
+        // @script | CheckForButtslap | true if a buttslap (2nd+ jump in one airborne period, coyote-window ollie spam) was detected since the last ResetButtslap
+		case CRCC(0x8efe34c2, "CheckForButtslap"):
+			return m_buttslap_detected ? CBaseComponent::MF_TRUE : CBaseComponent::MF_FALSE;
+
+        // @script | ResetButtslap | clears the buttslap-detected flag (see CheckForButtslap)
+		case CRCC(0xc34845cb, "ResetButtslap"):
+			m_buttslap_detected = false;
+			break;
 			
 		// @script | IsInVertAir | check if VERT_AIR flag is set
 		case CRCC(0xdfb8f052, "InVertAir"):
@@ -1358,7 +1383,10 @@ void CSkaterCorePhysicsComponent::SetState ( EStateType state )
 		if (mp_state_component->m_state != WALL)
 		{
 			m_went_airborne_time = Tmr::GetTime();
-		}	
+		}
+
+		m_air_jumps_since_airborne = 0;
+		m_buttslap_awarded = false;
 
 		// Reset the spin tracking stuff.
 		mp_trick_component->mTallyAngles = 0.0f;
@@ -5138,9 +5166,11 @@ void CSkaterCorePhysicsComponent::do_in_air_physics (   )
 	// remember at this point m_pos is the new position
 	// and we might have gone through a wall
 	
-	// here again, we are factoring in the contact_movement to the start position											 
+	// blops: bonk detection, kind of broken, catches a lot of stuff we wouldnt qualify as a "bonk". needs work
+	float bonk_pre_vel_y = GetVel()[Y];
+
 	// We check if there is anything in font of us
-	bool snapped_up = handle_forward_collision_in_air(GetOldPos() + contact_movement);					
+	bool snapped_up = handle_forward_collision_in_air(GetOldPos() + contact_movement);
 
 	// If we are now in the WALL (Wallride) state, then just return	
 	if (GetState() == WALL || GetState() == WALLPLANT)
@@ -5336,13 +5366,26 @@ void CSkaterCorePhysicsComponent::do_in_air_physics (   )
 		#endif
 	}
 	
-	// Push skater down from any roof he might now be under			
+	// Push skater down from any roof he might now be under
 	if (handle_upward_collision_in_air())
 	{
 		// no acid drops after an in-air collision
 		SetFlagTrue(AIR_ACID_DROP_DISALLOWED);
 	}
-	
+
+	// blops: some filtering of "non-bonk" events, need some more, but this prevents a bonk detection on every wallride (lol)
+	if (GetVel()[Y] - bonk_pre_vel_y > 10.0f
+		&& !mp_movable_contact_component->HaveContact()
+		&& Tmr::ElapsedTime(mWallrideTime) > 250)
+	{
+		m_bonk_detected = true;
+		printf("[bonk] frame %i: dVelY=%.1f (%.1f -> %.1f) pos=%.1f,%.1f,%.1f terrain=%d node=0x%08x\n",
+			(int)Tmr::GetRenderFrame(), GetVel()[Y] - bonk_pre_vel_y, bonk_pre_vel_y, GetVel()[Y],
+			GetPos()[X], GetPos()[Y], GetPos()[Z], (int)m_feeler.GetTerrain(), (unsigned int)m_feeler.GetNodeChecksum());
+
+		Script::RunScript(CRCD(0x00589145, "AwardBonk"), NULL, GetObject());
+	}
+
 	//
 	// End of handling collisions
 	/////////////////////////////////////////////////////////////////////////////////////////////////
@@ -5361,6 +5404,13 @@ void CSkaterCorePhysicsComponent::do_in_air_physics (   )
 		{
 			enter_acid_drop(acid_drop_data);
 		}
+	}
+
+	// blops add: award the buttslap sir
+	if (m_air_jumps_since_airborne >= 2 && !m_buttslap_awarded
+		&& Tmr::ElapsedTime(m_went_airborne_time) >= static_cast< Tmr::Time >(GetPhysicsInt(CRCD(0x4c2b6df3, "Skater_Late_Jump_Slop"))))
+	{
+		maybe_award_buttslap();
 	}
 }
  
@@ -8230,13 +8280,41 @@ void CSkaterCorePhysicsComponent::do_jump ( Script::CStruct *pParams )
 		ollie_off_rail_rotate();
 	}
 	
+	// buttslap detection: jumping while already airborne is a coyote-window jump; just count them here. The popup fires once the window closes (see maybe_award_buttslap)
+	if (GetState() == AIR)
+	{
+		++m_air_jumps_since_airborne;
+	}
+
 	// don't change the state until after sound is played, as the above switch relyies on the GROUND/RAIL state...
 	SetState(AIR);
-	
+
 	m_last_jump_time_stamp = Tmr::GetTime();
 	
 	GetObject()->BroadcastEvent(CRCD(0x8687163a, "SkaterJump"));
-}			
+}
+
+/******************************************************************/
+/*                                                                */
+/*                                                                */
+/******************************************************************/
+
+void CSkaterCorePhysicsComponent::maybe_award_buttslap (   )
+{
+	// fire once per airborne period, only if a buttslap (a 2nd+ air jump) actually happened
+	if (m_buttslap_awarded || m_air_jumps_since_airborne < 2) return;
+
+	int multiplier = m_air_jumps_since_airborne - 1;	// extra jumps beyond the single legit coyote jump
+	m_buttslap_awarded = true;
+	m_buttslap_detected = true;
+
+	printf("[buttslap] frame %i: %dx buttslap (%d air jumps) pos=%.1f,%.1f,%.1f\n",
+		(int)Tmr::GetRenderFrame(), multiplier + 1, m_air_jumps_since_airborne, GetPos()[X], GetPos()[Y], GetPos()[Z]);
+
+	Script::CStruct params;
+	params.AddInteger(CRCD(0x5b6556a4, "Multiplier"), multiplier + 1);
+	Script::RunScript(CRCD(0xb58e5956, "AwardButtslap"), &params, GetObject());
+}
 
 /******************************************************************/
 /*                                                                */

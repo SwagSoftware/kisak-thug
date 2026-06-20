@@ -6,6 +6,7 @@
 
 #include <windows.h>
 #include <stdlib.h>		// atoi for the display launch-arg parser
+#include <float.h>		// _controlfp_s for the NaN/Inf trap
 
 #include <Gfx/DX9/NX/render.h>
 
@@ -20,6 +21,10 @@ bool g_windowJustWentOutOfFocus = false;
 bool g_windowHasBeenDisplayedEver = false;
 bool gbQuit = false;
 bool g_hasJustEnteredNetworkGame = false; // KISAKTODO: add more xrefs for this var
+
+namespace NxXbox { extern bool g_shadow_test; }
+namespace Config { extern bool g_config_cd; }
+extern bool g_loose_scripts;
 
 BOOL(__cdecl* g_downloadCompletionFunc)(DWORD) = NULL;
 
@@ -450,13 +455,20 @@ LRESULT __stdcall Win32_WNDPROC(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
     case WM_ACTIVATE:
         if (wParam == 1 || wParam == 2)         // activated via mouse OR keyboard
         {
-            ShowWindow(NxXbox::EngineGlobals.hWnd, 3);
+            if (NxXbox::EngineGlobals.cmdline_fullscreen)
+            {
+                ShowWindow(NxXbox::EngineGlobals.hWnd, SW_MAXIMIZE);
+            }
             g_isWindowInFocus = 1;
             result = 0;
         }
         else
         {
-            ShowWindow(NxXbox::EngineGlobals.hWnd, 6);
+
+            if (NxXbox::EngineGlobals.cmdline_fullscreen)
+            {
+                ShowWindow(NxXbox::EngineGlobals.hWnd, SW_MINIMIZE);
+            }
             g_isWindowInFocus = 0;
             g_windowJustWentOutOfFocus = 1;
             InvalidateRect(0, 0, 1);
@@ -486,14 +498,76 @@ static void __stdcall Win32_CreateDirectSound8(HWND a1)
 //    return true;
 //}
 
+static bool g_cmdline_display_override = false;
+
+
+static void Win32_GetGraphicsIniPath(char* out, int size)
+{
+    char exe[MAX_PATH];
+    GetModuleFileNameA(NULL, exe, MAX_PATH);
+    char* slash = strrchr(exe, '\\');
+    if (slash)
+    {
+        *(slash + 1) = 0;
+    }
+    else
+    {
+        exe[0] = 0;
+    }
+    _snprintf(out, size, "%sthug_gfx.ini", exe);
+    out[size - 1] = 0;
+}
+
+
+void Win32_SaveGraphicsSettings(void)
+{
+    char ini[MAX_PATH];
+    Win32_GetGraphicsIniPath(ini, sizeof(ini));
+
+    char buf[32];
+#define GFX_WRITE_INT(key, val) do { _snprintf(buf, sizeof(buf), "%d", (int)(val)); buf[sizeof(buf)-1]=0; WritePrivateProfileStringA("Graphics", key, buf, ini); } while (0)
+    GFX_WRITE_INT("Width",        NxXbox::EngineGlobals.cmdline_width  > 0 ? NxXbox::EngineGlobals.cmdline_width  : 1280);
+    GFX_WRITE_INT("Height",       NxXbox::EngineGlobals.cmdline_height > 0 ? NxXbox::EngineGlobals.cmdline_height : 960);
+    GFX_WRITE_INT("Fullscreen",   NxXbox::EngineGlobals.cmdline_fullscreen ? 1 : 0);
+    GFX_WRITE_INT("AntiAliasing", NxXbox::EngineGlobals.g_Registry_options_flag_1_MSAA);
+    GFX_WRITE_INT("EffectDetail", NxXbox::EngineGlobals.g_Registry_options_flag_2);
+    GFX_WRITE_INT("DrawDistance", NxXbox::EngineGlobals.g_Registry_distance_value);
+#undef GFX_WRITE_INT
+}
+
+// Load the graphics settings from the ini
 int Win32_QueryRegistryForSettings(LPCSTR lpSubKey)
 {
-    // KISAKTODO: I dont really want this in the Registry...
-    //NxXbox::EngineGlobals.g_Registry_options_flag_1_MSAA = 1;
-    NxXbox::EngineGlobals.g_Registry_options_flag_2 = 1;
+    char ini[MAX_PATH];
+    Win32_GetGraphicsIniPath(ini, sizeof(ini));
 
-    NxXbox::EngineGlobals.g_Registry_distance_value = 100;
-    //NxXbox::EngineGlobals.g_Registry_resolution_setting = 3;
+    bool exists = (GetFileAttributesA(ini) != INVALID_FILE_ATTRIBUTES);
+
+
+    NxXbox::EngineGlobals.g_Registry_options_flag_1_MSAA = GetPrivateProfileIntA("Graphics", "AntiAliasing", 0,   ini);
+    NxXbox::EngineGlobals.g_Registry_options_flag_2      = GetPrivateProfileIntA("Graphics", "EffectDetail", 1,   ini);
+    NxXbox::EngineGlobals.g_Registry_distance_value      = GetPrivateProfileIntA("Graphics", "DrawDistance", 100, ini);
+
+
+    if (!g_cmdline_display_override)
+    {
+        NxXbox::EngineGlobals.cmdline_width      = GetPrivateProfileIntA("Graphics", "Width",      1280, ini);
+        NxXbox::EngineGlobals.cmdline_height     = GetPrivateProfileIntA("Graphics", "Height",     960,  ini);
+        NxXbox::EngineGlobals.cmdline_fullscreen = GetPrivateProfileIntA("Graphics", "Fullscreen", 0,    ini) != 0;
+    }
+
+    if (!exists)
+    {
+        Win32_SaveGraphicsSettings();
+    }
+
+    printf("[gfx] %s: %dx%d %s AA=%u Effects=%u DrawDist=%u\n",
+        ini,
+        NxXbox::EngineGlobals.cmdline_width, NxXbox::EngineGlobals.cmdline_height,
+        NxXbox::EngineGlobals.cmdline_fullscreen ? "fullscreen" : "windowed",
+        NxXbox::EngineGlobals.g_Registry_options_flag_1_MSAA,
+        NxXbox::EngineGlobals.g_Registry_options_flag_2,
+        NxXbox::EngineGlobals.g_Registry_distance_value);
 
     return 0;
 }
@@ -521,14 +595,8 @@ static bool Win32_CreateDirectInput8(HINSTANCE inst, HWND hwnd, LPCSTR lpSubKey)
         //dword_7CECAC = 0;
         //memset(registry_k_setting_arr, -1, 0x260u);
 
-        NxXbox::EngineGlobals.g_Registry_options_flag_1_MSAA = 0;
-        NxXbox::EngineGlobals.g_Registry_options_flag_2 = 0;
-        NxXbox::EngineGlobals.g_Registry_resolution_setting = 0;
-        NxXbox::EngineGlobals.g_Registry_distance_value2 = 0;
-        NxXbox::EngineGlobals.g_Registry_distance_value = 0;
+        (void)lpSubKey;
 
-        Win32_QueryRegistryForSettings(lpSubKey);
-        
         //DirectInput8Create(inst, 0x800, IID_IDirectInput8, (void**)&g_directInput8, NULL);
         //g_directInput8->EnumDevices(0, DirectInput_EnumDevicesCallbackA, 0, 1);
         // InputWeirdFuckery();
@@ -552,18 +620,22 @@ static void Win32_ParseDisplayArgs(int argc, char** argv)
         if ((!stricmp(a, "-w") || !stricmp(a, "-width")) && (i + 1 < argc))
         {
             NxXbox::EngineGlobals.cmdline_width = atoi(argv[++i]);
+            g_cmdline_display_override = true;
         }
         else if ((!stricmp(a, "-h") || !stricmp(a, "-height")) && (i + 1 < argc))
         {
             NxXbox::EngineGlobals.cmdline_height = atoi(argv[++i]);
+            g_cmdline_display_override = true;
         }
         else if (!stricmp(a, "-fullscreen") || !stricmp(a, "-fs"))
         {
             NxXbox::EngineGlobals.cmdline_fullscreen = true;
+            g_cmdline_display_override = true;
         }
         else if (!stricmp(a, "-windowed") || !stricmp(a, "-window"))
         {
             NxXbox::EngineGlobals.cmdline_fullscreen = false;
+            g_cmdline_display_override = true;
         }
         else
         {
@@ -572,6 +644,7 @@ static void Win32_ParseDisplayArgs(int argc, char** argv)
             {
                 NxXbox::EngineGlobals.cmdline_width = w;
                 NxXbox::EngineGlobals.cmdline_height = h;
+                g_cmdline_display_override = true;
             }
         }
     }
@@ -582,6 +655,43 @@ static void Win32_ParseDisplayArgs(int argc, char** argv)
             NxXbox::EngineGlobals.cmdline_width, NxXbox::EngineGlobals.cmdline_height,
             NxXbox::EngineGlobals.cmdline_fullscreen ? "fullscreen" : "windowed");
     }
+}
+
+// Breaks on the instruction that creates a NaN/Inf instead of letting it propagate.
+static LONG WINAPI Win32_FpTrapHandler(EXCEPTION_POINTERS* ep)
+{
+    DWORD code = ep->ExceptionRecord->ExceptionCode;
+    if (code == STATUS_FLOAT_INVALID_OPERATION ||
+        code == STATUS_FLOAT_DIVIDE_BY_ZERO ||
+        code == STATUS_FLOAT_OVERFLOW)
+    {
+        void* addr = ep->ExceptionRecord->ExceptionAddress;
+        _clearfp();		// clear sticky flags so the assert path doesn't re-trip
+        unsigned int cur;
+        _controlfp_s(&cur, _MCW_EM, _MCW_EM);	// re-mask everything while we report
+        Dbg_MsgAssert(0, ("FP exception 0x%08lX at %p - NaN/Inf created here", code, addr));
+    }
+    return EXCEPTION_CONTINUE_SEARCH;
+}
+
+// Unmask invalid-op, divide-by-zero and overflow on this thread. Per-thread, opt-in via -fptrap.
+static void Win32_EnableFloatTraps()
+{
+    AddVectoredExceptionHandler(1, Win32_FpTrapHandler);
+    _clearfp();		// drop flags accumulated during startup
+    unsigned int cur;
+    _controlfp_s(&cur, _MCW_EM & ~(_EM_INVALID | _EM_ZERODIVIDE | _EM_OVERFLOW), _MCW_EM);
+    printf("[fptrap] floating-point NaN/Inf trapping enabled\n");
+}
+
+static bool Win32_WantsFloatTraps(int argc, char** argv)
+{
+    for (int i = 1; i < argc; ++i)
+    {
+        if (!stricmp(argv[i], "-fptrap"))
+            return true;
+    }
+    return false;
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine, int nCmdShow)
@@ -597,6 +707,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine,
     Win32_ParseCommandLineForNetplayOptions(lpCmdLine);
 
     Win32_ParseDisplayArgs(__argc, __argv);
+
+    NxXbox::EngineGlobals.g_Registry_options_flag_1_MSAA = 0;
+    NxXbox::EngineGlobals.g_Registry_options_flag_2      = 0;
+    NxXbox::EngineGlobals.g_Registry_resolution_setting  = 0;
+    NxXbox::EngineGlobals.g_Registry_distance_value2     = 0;
+    NxXbox::EngineGlobals.g_Registry_distance_value      = 0;
+    Win32_QueryRegistryForSettings(NULL);
+
     int win_w = (NxXbox::EngineGlobals.cmdline_width  > 0) ? NxXbox::EngineGlobals.cmdline_width  : 1280;
     int win_h = (NxXbox::EngineGlobals.cmdline_height > 0) ? NxXbox::EngineGlobals.cmdline_height : 960;
     Win32_CreateClassAndWindow("Kisak", "Kisak Hawk's OpenGround", 100, 100, win_w, win_h, Win32_WNDPROC, hInstance, 103, 1);
@@ -622,6 +740,20 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine,
 
     Win32_CreateDirectSound8(NxXbox::EngineGlobals.hWnd);
     Win32_CreateDirectInput8(hInstance, NxXbox::EngineGlobals.hWnd, "Software\\Activision\\Tony Hawk's Underground\\Settings");
+
+    // Enabled after device init so startup/driver math doesn't trip it.
+    if (Win32_WantsFloatTraps(__argc, __argv))
+        Win32_EnableFloatTraps();
+
+    for (int i = 1; i < __argc; ++i)
+    {
+        if (!stricmp(__argv[i], "-shadowtest"))
+            NxXbox::g_shadow_test = true;
+        if (!stricmp(__argv[i], "-nocd"))
+            Config::g_config_cd = false;	// force non-CD startup path (dev boot)
+        if (!stricmp(__argv[i], "-loosescripts"))
+            g_loose_scripts = true;			// load raw .qb from Data\scripts\ instead of qb.pre
+    }
 
     while (true)
     {

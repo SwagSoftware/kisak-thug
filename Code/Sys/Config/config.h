@@ -85,8 +85,9 @@ extern ETerritory gTerritory;
 inline ETerritory GetTerritory() {return gTerritory;}
 
 extern bool gCD;
-//inline bool CD() {return gCD;}
-inline bool CD() {return true;} // lwss: Accurate to PC version.
+// CD() defaults to true, launch with -nocd to force it for dev boot
+extern bool g_config_cd;
+inline bool CD() {return g_config_cd;}
 
 extern	float	gMasterVolume;
 inline	float	GetMasterVolume() {return gMasterVolume;}

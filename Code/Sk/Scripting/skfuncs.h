@@ -231,6 +231,7 @@ bool ScriptUnlockSkater( Script::CStruct* pParams, Script::CScript* pScript );
 bool ScriptGetActualCASOptionStruct( Script::CStruct* pParams, Script::CScript* pScript );
 bool ScriptGetActualPlayerAppearancePart( Script::CStruct* pParams, Script::CScript* pScript );
 bool ScriptGetPlayerAppearancePart( Script::CStruct* pParams, Script::CScript* pScript );
+bool ScriptSkaterIsCustom( Script::CStruct* pParams, Script::CScript* pScript );
 bool ScriptSetPlayerAppearanceColor( Script::CStruct* pParams, Script::CScript* pScript );
 bool ScriptSetPlayerAppearanceScale( Script::CStruct* pParams, Script::CScript* pScript );
 bool ScriptSetPlayerAppearanceUV( Script::CStruct* pParams, Script::CScript* pScript );

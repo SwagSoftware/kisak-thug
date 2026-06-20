@@ -66,6 +66,9 @@ const float FRONT_TO_BACK_SORT_CUTOFF	= ( 50.0f * 12.0f );
 
 Lst::HashTable< sTextureProjectionDetails >	*pTextureProjectionDetailsTable = NULL;
 
+// blops: shadows seem to be nearly identical to pc port, but somethings off - locking behind a flag for now
+bool g_shadow_test = false;
+
 // For converting a FLOAT to a DWORD (useful for SetRenderState() calls)
 inline DWORD FtoDW( FLOAT f ) { return *((DWORD*)&f); }
 
@@ -449,7 +452,14 @@ static IDirect3DPixelShader9* get_pixel_shader( sMaterial *p_material )
 			{
 				itr += sprintf(&shader_buffer[itr], "mov r1.rgb, t%d\n", curr_blend_mode);
 LABEL_31:
-				if (!uses_prev)
+				// Preserve this pass's alpha into r1.a so a FOLLOWING previous-mask pass can read
+				// it (the "preceding detail's preserved alpha"). Retail gated this on (!uses_prev),
+				// which left r1.a undefined when two previous-mask passes ran back-to-back -- the
+				// 2003 D3DX assembler tolerated the uninitialized read, but modern D3DCompiler_43
+				// rejects it (error X5036) and the shader fails to assemble. Only skip preservation
+				// when THIS pass is the one consuming r1.a as its mask (uses_prev && v33==4), so we
+				// don't clobber the value before reading it.
+				if (!(uses_prev && v33 == 4))
 				{
 					if (blend_modes[curr_blend_mode + 1] == vBLEND_MODE_BLEND)
 					{
@@ -1814,12 +1824,14 @@ void set_render_state( uint32 type, uint32 state )
 #endif
 			{
 				EngineGlobals.z_bias = state;
-				// *(float *)&v13 = (double)state * -0.0000009999999974752427;
-				// lwss: wtf ^^
-				DWORD v13;
+				DWORD v13, slope;
 				*(float *)&v13 = (double)state * -0.0000009999999974752427;
+				// Constant bias alone can't beat coplanar/near-coplanar geometry at grazing
+				// angles; the slope-scaled term scales the bias by the polygon's depth gradient.
+				*(float *)&slope = ( state != 0 ) ? ( (float)state * -0.5f ) : 0.0f;
 				//D3DDevice_SetRenderState( D3DRS_ZBIAS, state );
 				D3DDevice_SetRenderState(D3DRS_DEPTHBIAS, v13);
+				D3DDevice_SetRenderState(D3DRS_SLOPESCALEDEPTHBIAS, slope);
 			}
 			break;
 		}
@@ -2229,7 +2241,10 @@ void set_texture_projection_camera( sTexture *p_texture, XGVECTOR3 *p_pos, XGVEC
 		{
 			XGMatrixLookAtRH( &p_details->view_matrix, p_pos, p_at, &XGVECTOR3( 0.0f, 1.0f, 0.0f ));
 		}
-		XGMatrixOrthoRH( &p_details->projection_matrix, 96.0f, 96.0f, 1.0f, 128.0f );
+		// Match retail PC set_texture_projection_camera (sub_4B9B60): the texture-render projection (+76) AND a
+		// separate receiver UV-projection (+140 = texture_projection_matrix), both 120x120 ortho.
+		XGMatrixOrthoRH( &p_details->projection_matrix, 120.0f, 120.0f, 5.0f, 500.0f );
+		XGMatrixOrthoRH( &p_details->texture_projection_matrix, 120.0f, 120.0f, 80.0f, 500.0f );
 	}
 }
 
@@ -2692,8 +2707,9 @@ void render_shadow_targets( void )
 			
 			D3DDevice_SetDepthStencilSurface(0);
 
-			// Clear the target.
-			//D3DDevice_Clear( 0, NULL, D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL, 0, 1.0f, 0 ); 
+			// Clear to alpha 0 (no coverage). The skater rendered into this A8R8G8B8 target writes alpha=1 where it
+			// covers, so the alpha channel becomes a clean silhouette mask used by render_shadow_meshes.
+			//D3DDevice_Clear( 0, NULL, D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL, 0, 1.0f, 0 );
 			D3DDevice_Clear( 0, NULL, D3DCLEAR_TARGET, 0, 1.0f, 0 );
 			
 			// Disable color writes.
@@ -2838,6 +2854,56 @@ unsigned int TransformShadowVertices(const D3DXVECTOR3* p_vertices, int num_vert
 // LWSS End
 
 
+struct sShadowVert { float orig[3]; float proj[3]; uint32 clip; };	// 28-byte record (retail sShadowTransV layout)
+static sShadowVert s_shadow_tv[65536];
+static float       s_shadow_rv[65536 * 5];	// emitted triangle verts {x,y,z,u,v} (retail sShadowRenderV)
+
+static inline uint32 shadow_f2u(float f) { uint32 u; memcpy(&u, &f, 4); return u; }
+
+// retail TransformShadowVertices: project each receiver world position by uv_matrix -> world pos + projected UV + clip outcode.
+static void shadow_transform_verts(const D3DXVECTOR3 *p_pos, int num, const D3DXMATRIX *m)
+{
+	for (int v = 0; v < num; ++v)
+	{
+		D3DXVECTOR3 proj;
+		D3DXVec3TransformCoord(&proj, &p_pos[v], m);
+		s_shadow_tv[v].orig[0] = p_pos[v].x; s_shadow_tv[v].orig[1] = p_pos[v].y; s_shadow_tv[v].orig[2] = p_pos[v].z;
+		s_shadow_tv[v].proj[0] = proj.x;     s_shadow_tv[v].proj[1] = proj.y;     s_shadow_tv[v].proj[2] = proj.z;
+		uint32 r = ((shadow_f2u(proj.z) + 0x800000) & 0xC0000000)
+		         | ((((shadow_f2u(proj.x) + 0x800000) >> 2) & 0x30000000 | (shadow_f2u(proj.y) + 0x800000) & 0xC0000003) >> 2);
+		s_shadow_tv[v].clip = r & ~((r >> 1) & 0x54000000);
+	}
+}
+
+// retail GenerateShadowVertices: build visible shadow triangles from the de-stripped list, culling by clip code / facing / winding.
+static int shadow_generate_tris(const uint16 *p_tris, int num_tris, const float *proj_pos, const float *light_dir)
+{
+	float *out = s_shadow_rv;
+	for (int t = 0; t < num_tris; ++t, p_tris += 3)
+	{
+		const sShadowVert &a = s_shadow_tv[p_tris[0]];
+		const sShadowVert &b = s_shadow_tv[p_tris[1]];
+		const sShadowVert &c = s_shadow_tv[p_tris[2]];
+		if ((a.clip & b.clip & c.clip) != 0) continue;	// trivially outside one frustum plane
+
+		float e1x = b.orig[0]-a.orig[0], e1y = b.orig[1]-a.orig[1], e1z = b.orig[2]-a.orig[2];
+		float e2x = c.orig[0]-a.orig[0], e2y = c.orig[1]-a.orig[1], e2z = c.orig[2]-a.orig[2];
+		float nx = e2z*e1y - e2y*e1z, ny = e1z*e2x - e2z*e1x, nz = e1x*e2y - e2x*e1y;
+		if (light_dir[0]*nx + light_dir[1]*ny + light_dir[2]*nz < 0.0f) { nx = -nx; ny = -ny; nz = -nz; }
+		float tx = proj_pos[0]-a.orig[0], ty = proj_pos[1]-a.orig[1], tz = proj_pos[2]-a.orig[2];
+		if (nx*tx + ny*ty + nz*tz >= 0.0f) continue;	// not facing away from the projector
+
+		float w = (c.proj[1]-b.proj[1])*(b.proj[0]-a.proj[0]) - (c.proj[0]-b.proj[0])*(b.proj[1]-a.proj[1]);
+		if (w > -0.0001f) continue;	// wrong winding
+
+		out[0]=a.orig[0]; out[1]=a.orig[1]; out[2]=a.orig[2]; out[3]=a.proj[0]; out[4]=a.proj[1];
+		out[5]=b.orig[0]; out[6]=b.orig[1]; out[7]=b.orig[2]; out[8]=b.proj[0]; out[9]=b.proj[1];
+		out[10]=c.orig[0]; out[11]=c.orig[1]; out[12]=c.orig[2]; out[13]=c.proj[0]; out[14]=c.proj[1];
+		out += 15;
+	}
+	return (int)((out - s_shadow_rv) / 15);	// triangle count
+}
+
 /******************************************************************/
 /*                                                                */
 /*                                                                */
@@ -2861,6 +2927,120 @@ void render_shadow_meshes( sScene *p_scene, sMesh **p_mesh_indices, int num_mesh
 	// Scan through each entry in the TextureProjectionDetails table, and see whether it relates to this scene.
 	pTextureProjectionDetailsTable->IterateStart();
 	sTextureProjectionDetails *p_details = pTextureProjectionDetailsTable->IterateNext();
+
+	while (g_shadow_test && p_details)
+	{
+		if (p_details->p_model && p_details->p_texture && p_details->p_texture->pD3DTexture)
+		{
+			XGMATRIX stored_view_matrix       = EngineGlobals.view_matrix;
+			XGMATRIX stored_projection_matrix = EngineGlobals.projection_matrix;
+			// Save the raw device states we change directly, so the engine's blend cache stays consistent (we never
+			// call set_blend_mode here) and the rest of the opaque pass is unaffected.
+			DWORD saved_min_filter, saved_mag_filter, saved_abe, saved_srcblend, saved_destblend, saved_tfactor;
+			DWORD saved_atest, saved_aref, saved_afunc;
+			D3DDevice_GetSamplerState( 0, D3DSAMP_MINFILTER, &saved_min_filter );
+			D3DDevice_GetSamplerState( 0, D3DSAMP_MAGFILTER, &saved_mag_filter );
+			D3DDevice_GetRenderState( D3DRS_ALPHABLENDENABLE, &saved_abe );
+			D3DDevice_GetRenderState( D3DRS_SRCBLEND, &saved_srcblend );
+			D3DDevice_GetRenderState( D3DRS_DESTBLEND, &saved_destblend );
+			D3DDevice_GetRenderState( D3DRS_TEXTUREFACTOR, &saved_tfactor );
+			D3DDevice_GetRenderState( D3DRS_ALPHATESTENABLE, &saved_atest );
+			D3DDevice_GetRenderState( D3DRS_ALPHAREF, &saved_aref );
+			D3DDevice_GetRenderState( D3DRS_ALPHAFUNC, &saved_afunc );
+
+			// 1:1 with retail render_shadow_meshes: uv_matrix = view x texture_projection_matrix x normalizedBias,
+			// then XGVec3TransformCoord(vertex, uv_matrix) yields the final projected UV (perspective divide built in).
+			XGMATRIX uv_bias, viewXproj, uv_matrix;
+			XGMatrixIdentity(&uv_bias);
+			uv_bias._11 = 0.5f; uv_bias._22 = -0.5f; uv_bias._41 = 0.5f; uv_bias._42 = 0.5f;
+			XGMatrixMultiply(&viewXproj, &p_details->view_matrix, &p_details->texture_projection_matrix);
+			XGMatrixMultiply(&uv_matrix, &viewXproj, &uv_bias);
+
+			XGMATRIX ident;
+			XGMatrixIdentity(&ident);
+			D3DDevice_SetTransform(D3DTS_WORLD, &ident);	// our scratch verts are world-space; receivers are static geom
+
+			set_pixel_shader((IDirect3DPixelShader9*)0);
+			set_texture(0, p_details->p_texture->pD3DTexture);
+			set_vertex_shader(D3DFVF_XYZ | D3DFVF_TEX1);	// position + the projected UV computed below
+			// Flat gray shadow color via TFACTOR (retail 0xFFA0A0A0); coverage = the shadow texture's ALPHA (skater=1, bg=0).
+			D3DDevice_SetRenderState(D3DRS_TEXTUREFACTOR, 0xFFA0A0A0);
+			D3DDevice_SetTextureStageState(0, D3DTSS_TEXCOORDINDEX, 0);
+			D3DDevice_SetTextureStageState(0, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_DISABLE);
+			D3DDevice_SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
+			D3DDevice_SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TFACTOR);
+			D3DDevice_SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
+			D3DDevice_SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+			// Border alpha 0 so ground outside the projected silhouette gets no shadow.
+			D3DDevice_SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_BORDER);
+			D3DDevice_SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_BORDER);
+			D3DDevice_SetSamplerState(0, D3DSAMP_BORDERCOLOR, 0x00000000);
+			D3DDevice_SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+			D3DDevice_SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+
+			// MODULATE blend (dest = dest * gray) darkens the ground into a soft shadow; ALPHA TEST on the texture's
+			// coverage (ALPHAREF 1) masks it to the silhouette - the retail port's masking (sub_4B96D0(3,1)).
+			D3DDevice_SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+			D3DDevice_SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ZERO);
+			D3DDevice_SetRenderState(D3DRS_DESTBLEND, D3DBLEND_SRCCOLOR);
+			D3DDevice_SetRenderState(D3DRS_ALPHATESTENABLE, TRUE);
+			D3DDevice_SetRenderState(D3DRS_ALPHAREF, 1);
+			D3DDevice_SetRenderState(D3DRS_ALPHAFUNC, D3DCMP_GREATEREQUAL);
+			set_render_state(RS_ZWRITEENABLE, 0);
+			set_render_state(RS_ZBIAS, 10);
+
+			// Projector position = the view eye (retail GenerateShadowVertices uses local skater pos + 72 up);
+			// light/look direction = the view forward (-Z). Both feed the facing cull.
+			XGMATRIX inv_view;
+			D3DXMatrixInverse((D3DXMATRIX*)&inv_view, NULL, (const D3DXMATRIX*)&p_details->view_matrix);
+			float proj_pos[3]  = { inv_view._41, inv_view._42, inv_view._43 };
+			float light_dir[3] = { -p_details->view_matrix._13, -p_details->view_matrix._23, -p_details->view_matrix._33 };
+
+			for (int i = 0; i < num_meshes; ++i)
+			{
+				sMesh *p_mesh = p_mesh_indices[i];
+				if (!p_mesh || (p_mesh->m_flags & sMesh::MESH_FLAG_NO_SKATER_SHADOW)) continue;
+				if (!p_mesh->m_vertices_raw || !p_mesh->m_vertice_edits_raw || p_mesh->m_num_vertice_edits <= 0) continue;
+				if (p_mesh->m_num_vertices_raw <= 0 || p_mesh->m_num_vertices_raw > 65536 || p_mesh->m_num_vertice_edits > 21845) continue;
+				if (!frustum_check_sphere(&p_mesh->m_sphere_center, p_mesh->m_sphere_radius)) continue;
+
+				// retail flow: TransformShadowVertices -> GenerateShadowVertices -> DrawPrimitiveUP (stride 20).
+				shadow_transform_verts((const D3DXVECTOR3*)p_mesh->m_vertices_raw, p_mesh->m_num_vertices_raw, (const D3DXMATRIX*)&uv_matrix);
+				int tri_count = shadow_generate_tris((const uint16*)p_mesh->m_vertice_edits_raw, p_mesh->m_num_vertice_edits, proj_pos, light_dir);
+				if (tri_count > 0)
+					D3DDevice_DrawPrimitiveUP(D3DPT_TRIANGLELIST, tri_count, s_shadow_rv, 20);
+			}
+
+			// Fully restore everything this pass touched, so the rest of the opaque pass renders normally.
+			D3DDevice_SetTextureStageState(0, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_DISABLE);
+			D3DDevice_SetTextureStageState(0, D3DTSS_TEXCOORDINDEX, 0);
+			D3DDevice_SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+			D3DDevice_SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+			D3DDevice_SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+			D3DDevice_SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+			D3DDevice_SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+			D3DDevice_SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
+			D3DDevice_SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP);
+			D3DDevice_SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP);
+			D3DDevice_SetSamplerState(0, D3DSAMP_MINFILTER, saved_min_filter);
+			D3DDevice_SetSamplerState(0, D3DSAMP_MAGFILTER, saved_mag_filter);
+			D3DDevice_SetRenderState(D3DRS_ALPHABLENDENABLE, saved_abe);
+			D3DDevice_SetRenderState(D3DRS_SRCBLEND, saved_srcblend);
+			D3DDevice_SetRenderState(D3DRS_DESTBLEND, saved_destblend);
+			D3DDevice_SetRenderState(D3DRS_TEXTUREFACTOR, saved_tfactor);
+			D3DDevice_SetRenderState(D3DRS_ALPHATESTENABLE, saved_atest);
+			D3DDevice_SetRenderState(D3DRS_ALPHAREF, saved_aref);
+			D3DDevice_SetRenderState(D3DRS_ALPHAFUNC, saved_afunc);
+			set_texture(0, NULL);
+			set_render_state(RS_ZBIAS, 0);
+			set_render_state(RS_ZWRITEENABLE, 1);
+
+			EngineGlobals.view_matrix       = stored_view_matrix;
+			EngineGlobals.projection_matrix = stored_projection_matrix;
+		}
+		p_details = pTextureProjectionDetailsTable->IterateNext();
+	}
+
 	//while( p_details )
 	while (false) // lwss: this loop NEVER goes off in retail PC version. (KISAKTODO?)
 	{

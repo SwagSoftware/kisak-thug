@@ -1225,10 +1225,12 @@ int Manager::s_handle_join_proceed( Net::MsgHandlerContext* context )
 		msg_desc.m_Queue = Net::QUEUE_IMPORTANT;
 	}
 
-	context->m_App->EnqueueMessageToServer( &msg_desc );
-	
-	/*context->m_App->StreamMessageToServer( GameNet::MSG_ID_JOIN_REQ, msg_desc.m_Length, 
-					   msg_desc.m_Data, "appearance data", vSEQ_GROUP_PLAYER_MSGS, false );*/
+	// blops: The join request contains the skater appearance, which can be up to
+	// vMAX_APPEARANCE_DATA_SIZE (4096). Sending as one EnqueueMessage trips the size assert
+	//context->m_App->EnqueueMessageToServer( &msg_desc );
+
+	context->m_App->StreamMessageToServer( GameNet::MSG_ID_JOIN_REQ, msg_desc.m_Length,
+					   msg_desc.m_Data, "appearance data", vSEQ_GROUP_PLAYER_MSGS, false );
 
 	gamenet_man->SetJoinState( vJOIN_STATE_JOINING );
 

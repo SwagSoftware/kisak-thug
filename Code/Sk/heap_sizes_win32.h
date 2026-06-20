@@ -111,7 +111,11 @@
 
 #undef	FRONTEND_HEAP_SIZE
 //#define	FRONTEND_HEAP_SIZE				( 1050000 )
-#define	FRONTEND_HEAP_SIZE				( 2550000 )
+//#define	FRONTEND_HEAP_SIZE				( 2550000 )
+// The gameplay camera + career HUD live on this heap ("Creating camera on front end heap").
+// 2.55MB filled up partway through a story playthrough (career in NJ) and asserted in
+// Region::Allocate. PC has the RAM; give it headroom. (Main region bumped to match -- memman.cpp.)
+#define	FRONTEND_HEAP_SIZE				( 6000000 )
 
 
 #endif // __PLAT_XBOX__

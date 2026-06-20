@@ -123,6 +123,7 @@
 /******************************************************************/
 
 
+
 namespace Nx
 {
 
@@ -372,6 +373,14 @@ void CEngine::s_plat_render_world( void )
 		// Start up the screen blur if we're using it.
 		NxXbox::start_screen_blur();
 
+		// draw_focus_effect_using_planes() leaves D3DRS_ZENABLE=0 at the end of the blur
+		// composite. Retail only restores ZENABLE to 1 inside render_shadow_meshes(), which is
+		// skipped when there is no shadow mesh to draw (e.g. a dead/fallen skater during the death
+		// blur) -- so the whole world rendered into the blur surface with depth test AND depth
+		// writes disabled, and the sky pass overdrew the ground. Force it on here so the world
+		// always depth-tests regardless of whether a shadow was drawn this frame.
+		D3DDevice_SetRenderState( D3DRS_ZENABLE, 1 );
+
 		int num_viewports = CViewportManager::sGetNumActiveViewports();
 		for( int v = 0; v < num_viewports; ++v )
 		{
@@ -429,10 +438,10 @@ void CEngine::s_plat_render_world( void )
 						{
 							p_xbox_scene->m_flags |= SCENE_FLAG_RECEIVE_SHADOWS;
 
-							//for (int m = 0; m < p_xbox_scene->m_num_mesh_entries; m++)
-							//{
-							//	p_xbox_scene->m_meshes[m]->RawVertexFuckery();
-							//}
+							for (int m = 0; m < p_xbox_scene->m_num_mesh_entries; m++)
+							{
+								p_xbox_scene->m_meshes[m]->RawVertexFuckery();
+							}
 						}
 
 						NxXbox::render_scene( pXboxScene->GetEngineScene(), NxXbox::vRENDER_OPAQUE |
@@ -443,9 +452,10 @@ void CEngine::s_plat_render_world( void )
 				}
 			}
 
-			NxXbox::set_render_state( RS_ZWRITEENABLE,	0 );
-			Nx::TextureSplatRender();
-			NxXbox::set_render_state( RS_ZWRITEENABLE,	1 );
+			// NOTE: texture splats (blood etc.) used to render here, right after the opaque
+			// world. That matches retail, but means semitransparent world surfaces - drawn later -
+			// composite over the decals, so decals never showed on alpha/blended surfaces. Moved
+			// to after the semitransparent world pass below so they sit on top of those surfaces.
 
 			CEngine::sGetImposterManager()->DrawImposters();
 
@@ -493,7 +503,7 @@ void CEngine::s_plat_render_world( void )
 							DWORD stage_zero_mipfilter = 0;
 							// LWSS: Convert to DX9 Samplers
 							D3DDevice_GetSamplerState(0, D3DSAMP_MINFILTER, &stage_zero_minfilter);
-							D3DDevice_GetSamplerState(0, D3DSAMP_MIPFILTER, &stage_zero_minfilter);
+							D3DDevice_GetSamplerState(0, D3DSAMP_MIPFILTER, &stage_zero_mipfilter);
 							D3DDevice_SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
 							D3DDevice_SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_NONE);
 							//D3DDevice_GetTextureStageState(0, D3DTSS_MINFILTER, &stage_zero_minfilter);
@@ -549,6 +559,14 @@ void CEngine::s_plat_render_world( void )
 			}
 			// LWSS: Removed for PC
 			//D3DDevice_SetRenderState( D3DRS_DEPTHCLIPCONTROL, D3DDCC_CULLPRIMITIVE );
+
+			// Render texture splats (blood etc.) now that both opaque and semitransparent world
+			// geometry have been drawn, so decals composite on top of alpha/blended surfaces too.
+			// Depth test stays on (occluded by nearer geometry); z-writes off (decals don't occlude).
+			// blops: reordered texture splat, not faithful to pc port but was likely an oversight
+			NxXbox::set_render_state( RS_ZWRITEENABLE,	0 );
+			NxXbox::set_render_state( RS_ZTESTENABLE,	1 );
+			Nx::TextureSplatRender();
 
 			// Render the particles.
 			NxXbox::set_render_state( RS_ZWRITEENABLE,	0 );
@@ -625,11 +643,16 @@ void CEngine::s_plat_render_world( void )
 //		NxXbox::set_focus_blur_focus( pos, 0.0f, 10.0f * 12.0f, 100.0f * 12.0f );
 //		NxXbox::finish_focus_blur();
 
+		bool fog_state = CFog::sIsFogEnabled();
+		CFog::sEnableFog( false );
+
 		// Horrible hack - this should be somewhere else ASAP.
 		NxXbox::SDraw2D::DrawAll();
 
 		// Finish the screen blur if we're using it.
 		NxXbox::finish_screen_blur();
+
+		CFog::sEnableFog( fog_state );
 	}
 
 	// Reset viewport so screen clear will work.
@@ -1363,9 +1386,9 @@ const char* CEngine::s_plat_get_soundtrack_name( int soundtrack_number )
 		// as the xbox NULL character by changing them to an invalid character.
 		switch( buf[c] )
 		{
-			case '¡': case '¢': case '£': case '¤':
-			case '¥': case '¦': case '§': case '¨':
-			case '©': case 'ª': case '«': case '¬':
+			case '\xA1': case '\xA2': case '\xA3': case '\xA4':
+			case '\xA5': case '\xA6': case '\xA7': case '\xA8':
+			case '\xA9': case '\xAA': case '\xAB': case '\xAC':
 				buf[c] = '~';
 				break;
 			default:
@@ -1386,13 +1409,20 @@ void CEngine::s_plat_set_letterbox( bool letterbox )
 	// Letterbox mode is designed for use on a regular 4:3 screen.
 	// It should use the same, wider viewing angle as for widescreen mode, but shrink the resultant image down
 	// vertically by 25%.
+	// The base (non-letterbox) Y multiplier is resolution-dependent: backbuffer_height / 480 (see
+	// nx_init.cpp where it is first set). Retail is 640x480 so the base is 1.0 and the original code
+	// could hardcode 0.75 / 1.0. On PC at higher resolutions the base is >1, so we must scale relative
+	// to it - otherwise restoring to a hardcoded 1.0 squashes the whole 2D HUD vertically after a
+	// cutscene calls set_letterbox(false).
+	const float base_y_multiplier = NxXbox::EngineGlobals.backbuffer_height / 480.0f;
+
 	if( letterbox )
 	{
 		if( NxXbox::EngineGlobals.letterbox_active == false )
 		{
 			// Need to adjust the screen y offset and multiplier to ensure sprites are scaled properly for this mode.
 			NxXbox::EngineGlobals.screen_conv_y_offset		+= ( NxXbox::EngineGlobals.backbuffer_height / 4 ) / 2;
-			NxXbox::EngineGlobals.screen_conv_y_multiplier	= 0.75f;
+			NxXbox::EngineGlobals.screen_conv_y_multiplier	= base_y_multiplier * 0.75f;
 			NxXbox::EngineGlobals.letterbox_active			= true;
 		}
 	}
@@ -1402,7 +1432,7 @@ void CEngine::s_plat_set_letterbox( bool letterbox )
 		{
 			// Restore the screen y offset and multiplier.
 			NxXbox::EngineGlobals.screen_conv_y_offset		-= ( NxXbox::EngineGlobals.backbuffer_height / 4 ) / 2;
-			NxXbox::EngineGlobals.screen_conv_y_multiplier	= 1.0f;
+			NxXbox::EngineGlobals.screen_conv_y_multiplier	= base_y_multiplier;
 			NxXbox::EngineGlobals.letterbox_active			= false;
 		}
 	}

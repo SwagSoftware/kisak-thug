@@ -84,26 +84,20 @@ int gLastPadPressed=0;
 
 static void set_xbox_actuators( HANDLE handle, unsigned short left_motor, unsigned short right_motor )
 {
-	//// Want this to be static since otherwise it would potentially go out of scope and be written to.
-	//static XINPUT_FEEDBACK input_feedback[32];
-	//static int next_index			= 0;
+	if( !handle )
+	{
+		return;
+	}
+
+	// The PS2 left motor is the high-frequency (small) motor; the right motor is the low-frequency
+	// (large) on/off motor. SDL_GameControllerRumble() takes the low-frequency (large) motor first
+	// and the high-frequency (small) motor second, so map right_motor -> low and left_motor -> high.
 	//
-	//// The Ps2 left motor is the high frequency motor, the right motor is a simple on/off low frequency motor.
-	//// On the Xbox it is the reverse (although the left motor has more control than simple on/off).
-	//
-	//input_feedback[next_index].Header.dwStatus			= 0;
-	//input_feedback[next_index].Header.hEvent			= NULL;
-	//input_feedback[next_index].Rumble.wLeftMotorSpeed	= right_motor;
-	//input_feedback[next_index].Rumble.wRightMotorSpeed	= left_motor;
-	//
-	//DWORD status = XInputSetState( handle, &input_feedback[next_index] );
-	//Dbg_Assert(( status == ERROR_IO_PENDING ) || ( status == ERROR_SUCCESS ) || ( status == ERROR_DEVICE_NOT_CONNECTED ));
-	//
-	//// Cycle array member.
-	//if( ++next_index >= 32 )
-	//{
-	//	next_index = 0;
-	//}
+	// The vibration layer is set-and-forget: ActivateActuator() pushes a strength once and the
+	// CVibrationComponent later drives it back to 0 (or leaves it on for an unbounded effect), so
+	// use a long duration here and let those explicit calls stop it. A 0/0 call (duration unused
+	// for zero strength) effectively switches the pad off.
+	SDL_GameControllerRumble( (SDL_GameController*)handle, right_motor, left_motor, 0xFFFFFFFFu );
 }
 
 
@@ -515,6 +509,7 @@ Device::Device ( int index, int port, int slot )
     m_data.m_caps.ClearAll();
     m_data.m_num_actuators = 0;
     m_data.m_valid = false;
+    m_data.m_actuators_disabled = false;	// enable vibration by default (was left uninitialised -> garbage)
 
     memset( m_data.m_actuator_direct, 0, ACTUATOR_BUFFER_LENGTH );
     memset( m_data.m_actuator_align, 0xFF, ACTUATOR_BUFFER_LENGTH );
@@ -571,11 +566,18 @@ void Device::Acquire( void )
 		}
 
 		m_data.m_handle = SDL_GameControllerOpen(m_data.m_port);
+
+		// Set up the controller's capabilities (analog buttons + 2 rumble actuators). The old
+		// XInput path reached this via the vACQUIRING state machine; the SDL path goes straight to
+		// vACQUIRED, so call it directly here. Without it mACTUATORS / m_num_actuators stay clear
+		// and ActivateActuator() rejects every vibration request (caps_act=0).
+		query_capabilities();
+
 		memset(m_data.m_control_data, 0x00, CTRL_BUFFER_LENGTH);
 		m_data.m_valid = false;
 		//m_state = vACQUIRING;
-		m_state = vACQUIRED;
-		
+		m_state = vACQUIRED;	// query_capabilities() left us in vBUSY; go straight to acquired as before
+
 		return;
 
 		// Acquire device handle.
@@ -622,36 +624,28 @@ void Device::Unacquire ( void )
 void Device::ActivateActuator( int act_num, int percent )
 {
 	// Do nothing if the actuators are disabled.
-	//if( m_data.m_actuators_disabled )
-	//{
-	//	return;
-	//}	
-    //
-    //// First, make sure we're in a ready state and our controller has actuators
-	//read_data();
-    //if(( m_state == vACQUIRED ) && ( m_data.m_caps.TestMask( mACTUATORS )))
-    //{
-    //    if(( act_num >= 0 ) && ( act_num < m_data.m_num_actuators ))
-    //    {
-	//		unsigned short left_motor, right_motor;           
-	//		float act_strength						= ((float)percent * m_data.m_actuator_max[act_num] ) * 0.01f;
-	//		m_data.m_actuator_direct[act_num]		= (unsigned char)act_strength;
-	//
-	//		// Scale the values from [0,255] to [0,65535].
-	//		if( act_num == 0 )
-	//		{
-	//			left_motor	= (unsigned short)( act_strength * 256.0f );
-	//			right_motor	= (unsigned short)m_data.m_actuator_direct[1] * 256;
-	//		}
-	//		else
-	//		{
-	//			left_motor	= (unsigned short)m_data.m_actuator_direct[0] * 256;
-	//			right_motor	= (unsigned short)( act_strength * 256.0f );
-	//		}
-	//
-	//		set_xbox_actuators( m_data.m_handle, left_motor, right_motor );
-    //    }
-    //}
+	if( m_data.m_actuators_disabled )
+	{
+		return;
+	}
+
+	// Need an acquired controller with actuators (and a live SDL handle to rumble).
+	if(( m_state == vACQUIRED ) && ( m_data.m_caps.TestMask( mACTUATORS )) && m_data.m_handle )
+	{
+		if(( act_num >= 0 ) && ( act_num < m_data.m_num_actuators ))
+		{
+			float act_strength = ((float)percent * m_data.m_actuator_max[act_num] ) * 0.01f;
+			if( act_strength < 0.0f )	act_strength = 0.0f;
+			if( act_strength > 255.0f )	act_strength = 255.0f;
+			m_data.m_actuator_direct[act_num] = (unsigned char)act_strength;
+
+			// SDL sets both motors in a single call, so always send the current state of both.
+			// Scale the stored [0,255] strengths up to the [0,65535] range SDL expects.
+			unsigned short left_motor	= (unsigned short)m_data.m_actuator_direct[0] * 256;
+			unsigned short right_motor	= (unsigned short)m_data.m_actuator_direct[1] * 256;
+			set_xbox_actuators( m_data.m_handle, left_motor, right_motor );
+		}
+	}
 }
 
 /******************************************************************/
@@ -673,7 +667,7 @@ void Device::DisableActuators()
 			// Switch it off.
 			m_data.m_actuator_direct[i] = 0;
 		}	
-		//set_xbox_actuators( m_data.m_handle, 0, 0 );
+		set_xbox_actuators( m_data.m_handle, 0, 0 );
 	}	
 	
 	// Set the flag.
@@ -739,7 +733,7 @@ void Device::Pause( void )
 				// Then switch it off.
 				m_data.m_actuator_direct[i] = 0;
 			}	
-			//set_xbox_actuators( m_data.m_handle, 0, 0 );
+			set_xbox_actuators( m_data.m_handle, 0, 0 );
 		}	
 	}
 	m_data.m_paused_ref.Acquire();
@@ -769,9 +763,9 @@ void Device::UnPause( void )
 					// Restore the saved vibration strength.
 					m_data.m_actuator_direct[i] = m_data.m_actuator_old_direct[i];
 				}
-				//set_xbox_actuators( m_data.m_handle,
-				//					(unsigned short)m_data.m_actuator_direct[0] * 256,
-				//					(unsigned short)m_data.m_actuator_direct[1] * 256 );
+				set_xbox_actuators( m_data.m_handle,
+									(unsigned short)m_data.m_actuator_direct[0] * 256,
+									(unsigned short)m_data.m_actuator_direct[1] * 256 );
 			}	
 		}
 	}
@@ -794,7 +788,7 @@ void Device::StopAllVibrationIncludingSaved()
 			m_data.m_actuator_direct[i]		= 0;
 			m_data.m_actuator_old_direct[i]	= 0;
 		}	
-		//set_xbox_actuators( m_data.m_handle, 0, 0 );
+		set_xbox_actuators( m_data.m_handle, 0, 0 );
 	}	
 }
 

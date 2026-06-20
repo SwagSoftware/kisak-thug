@@ -23,6 +23,13 @@
 #include "gfx/DX9/nx/sprite.h"
 #include "NX/nx_init.h"
 
+// blops: this is a slop fix, no idea. should be straight from retail thug exe
+// PixelShaderPointSprite / PixelShader5 / PixelShader4 are declared at global
+// scope in render.h. They are referenced unqualified, but the PC decompiles for
+// all three weather render paths set NO pixel shader (set_pixel_shader(0)) and
+// instead drive a fixed-function texture stage (COLOROP/ALPHAOP = D3DTOP_MODULATE2X).
+extern IDirect3DPixelShader9* PixelShaderPointSprite;
+
 #define FEELER_START			50000.0f
 #define NUM_LINES_PER_BATCH		80
 #define NUM_SPRITES_PER_BATCH	80
@@ -106,8 +113,7 @@ CXboxWeather::~CXboxWeather()
 /******************************************************************/
 void CXboxWeather::plat_update_grid( void )
 {
-	// KISAKTODO: restore!
-	return;
+	// un-stubbed: builds the cel-grid and activates the weather system.
 	m_system_active = false;
 
 	// Get super sector manager.
@@ -455,196 +461,154 @@ inline DWORD FtoDW( FLOAT f ) { return *((DWORD*)&f); }
 /******************************************************************/
 void CXboxWeather::plat_render_snow( float skx, float skz )
 {
-	// KISAKTODO: Un-Stub this
-	return;
+	// Ported to DX9 from retail Windows_THUG.exe (CXboxWeather::plat_render_snow @ 0x4ABE00).
 
-	//// Early out if no drops to draw.
-	//if( !m_active_drops ) return;
-	//
-	//// Get skater position.
-	//int x = (int)(( skx - m_min_x ) / WEATHER_CEL_SIZE );
-	//int z = (int)(( skz - m_min_z ) / WEATHER_CEL_SIZE );
-	//
-	//// Calculate area to render.
-	//int sx = x - RENDER_DIST;
-	//int ex = x + DROP_SIZE;	//RENDER_DIST;
-	//int sz = z - RENDER_DIST;
-	//int ez = z + DROP_SIZE;	//RENDER_DIST;
-	//
-	//// Clip z values.
-	//if( ez < 0 ) return;
-	//if( sz > ( m_height - 1 )) return;
-	//
-	//// Pointsprites use texture stage 3 for some reason...
-	//NxXbox::set_blend_mode( m_snow_blend );
-	//NxXbox::set_render_state( RS_ALPHACUTOFF, 0 );
-	//NxXbox::set_render_state( RS_UVADDRESSMODE3, 0x00000000UL );
-	//mp_snow_texture->Set( 3 );
-	//
-	//// Set up point sprite rendering.
-	//D3DDevice_SetRenderState( D3DRS_POINTSPRITEENABLE,	TRUE );
-	//D3DDevice_SetRenderState( D3DRS_POINTSCALEENABLE,	TRUE );
-	//D3DDevice_SetRenderState( D3DRS_POINTSIZE,			FtoDW( m_snow_size ));
-	//D3DDevice_SetRenderState( D3DRS_POINTSCALE_A,		FtoDW( 0.00f ));
-	//D3DDevice_SetRenderState( D3DRS_POINTSCALE_B,		FtoDW( 0.00f ));
-	//D3DDevice_SetRenderState( D3DRS_POINTSCALE_C,		FtoDW( 1.00f ));
-	//
-	//NxXbox::set_pixel_shader( PixelShaderPointSprite );
-	//NxXbox::set_vertex_shader( D3DFVF_XYZ | D3DFVF_DIFFUSE );
-	//
-	//float minx = m_min_x;
-	//float minz = m_min_z;
-	//
-	//// Calculate drop height list.
-	//int lp;
-	//float y_off[256];
-	//for( lp = ( 254 - m_snow_frames ); lp < 256; lp++ )
-	//{
-	//	y_off[lp] = m_snow_height - (((float)(( lp - 254 ) + m_snow_frames ) / (float)m_snow_frames ) * m_snow_height );
-	//}
-	//
-	//// Calculate xz offset list.
-	//float xz_off[256];
-	//for( lp = 0; lp < 256; lp++ )
-	//{
-	//	xz_off[lp] = ((float)lp * (float)( WEATHER_CEL_SIZE / 2 )) / 255.0f;
-	//}
-	//
-	//// Calculate sine wave.
-	//float sin_off[256];
-	//
-	//for( lp = 0; lp < 256; lp++ )
-	//{
-	//	sin_off[lp] = sinf( Mth::PI * 2.0f * ((float)lp / 256.0f )) * ( WEATHER_CEL_SIZE / 2 );
-	//}
-	//
-	//// Get Xbox format color.
-	//uint32 snow_color = ((uint32)m_snow_color.a << 24 ) | ((uint32)m_snow_color.r << 16 ) | ((uint32)m_snow_color.g << 8 ) | ((uint32)m_snow_color.b << 0 );
-	//
-	//int	flakes = 0;
-	//
-	//DWORD* p_push				= NULL;
-	//DWORD* p_push_encode_fixup	= NULL;
-	//uint32 dwords_written		= 0;
-	//uint32 total_dwords_written	= 2;
-	//
-	//for( int lzz = sz; lzz <= ez; lzz++ )
-	//{
-	//	int zz = ( lzz < 0 ) ? 0 : ( lzz > ( m_height - 1 ) ) ? ( m_height - 1 ) : lzz;
-	//
-	//	if( mp_roof_row[zz].start == 16384 ) continue;
-	//
-	//	float vx = ((float)sx * (float)WEATHER_CEL_SIZE ) + minx;
-	//	float vz = ((float)zz * (float)WEATHER_CEL_SIZE ) + minz;
-	//
-	//	int cel = mp_roof_row[zz].index + ( sx - mp_roof_row[zz].start );
-	//
-	//	int drop_cel_z = (( zz & ( DROP_SIZE - 1 )) << DROP_SIZE_SHIFT );
-	//
-	//	for( int lxx = sx; lxx <= ex; lxx++, cel++ )
-	//	{
-	//		int xx = ( lxx > mp_roof_row[zz].start ) ? ( ( lxx < mp_roof_row[zz].end ) ? lxx : mp_roof_row[zz].end ) : mp_roof_row[zz].start;
-	//
-	//		// Get the current drop value. Skip this one if it's inactive.
-	//		int drop_cel = drop_cel_z + ( xx & ( DROP_SIZE - 1 ));
-	//
-	//		vx += (float)WEATHER_CEL_SIZE;
-	//		float vy = (float)( m_roof_height[mp_roof_height_index[cel]] >> PRECISION_SHIFT );
-	//
-	//		for( int d = 0; d < DROP_LAYERS; d++, drop_cel += ( DROP_SIZE * DROP_SIZE ))
-	//		{
-	//			if( m_drop_time[drop_cel] == 255 )
-	//				continue;
-	//
-	//			// Create the position for rendering.
-	//			float v0x = vx + xz_off[m_x_offset[drop_cel]] + sin_off[(m_z_offset[drop_cel]+m_drop_time[drop_cel])&255];
-	//			float v0y = vy + y_off[m_drop_time[drop_cel]] + m_snow_size;
-	//			float v0z = vz + xz_off[m_z_offset[drop_cel]] + sin_off[(m_x_offset[drop_cel]+m_drop_time[drop_cel])&255];
-	//
-	//			if( flakes == 0 )
-	//			{
-	//				flakes = NUM_SPRITES_PER_BATCH;
-	//			}
-	//
-	//			// Grab the push buffer if we don't have it yet.
-	//			if( p_push == NULL )
-	//			{
-	//				// Grab 32k of push buffer.	
-	//				p_push = D3DDevice_BeginPush( 32 * 1024 / 4 );
-	//
-	//				// Note that p_push is returned as a pointer to write-combined memory. Writes to write-combined memory should be
-	//				// consecutive and in increasing order. Reads should be avoided. Additionally, any CPU reads from memory or the
-	//				// L2 cache can force expensive partial flushes of the 32-byte write-combine cache.
-	//				p_push[0]	= D3DPUSH_ENCODE( D3DPUSH_SET_BEGIN_END, 1 );
-	//				p_push[1]	= D3DPT_POINTLIST;
-	//				p_push		+= 2;
-	//
-	//				// NOTE: A maximum of 2047 DWORDs can be specified to D3DPUSH_ENCODE. If there is more than 2047 DWORDs of vertex
-	//				// data, simply split the data into multiple D3DPUSH_ENCODE( D3DPUSH_INLINE_ARRAY ) sections.
-	//				// As yet, we don't know how many dwords we will write, so save a pointer to the current push buffer location
-	//				// so we can fix up this value at the end.
-	//				p_push_encode_fixup = p_push;
-	//				++p_push;
-	//			}
-	//
-	//			p_push[0]				= *((uint32*)&v0x );
-	//			p_push[1]				= *((uint32*)&v0y );
-	//			p_push[2]				= *((uint32*)&v0z );
-	//			p_push[3]				= snow_color;
-	//
-	//			p_push					+= 4;
-	//			dwords_written			+= 4;
-	//			total_dwords_written	+= 4;
-	//
-	//			// Check for hitting the max dwords for this encode block, in which case we need to end this block
-	//			// and start another one.
-	//			if( dwords_written >= 2044 )
-	//			{
-	//				// Now we know exactly how many dwords written, fix-up our earlier entry.
-	//				p_push_encode_fixup[0]	= D3DPUSH_ENCODE( D3DPUSH_NOINCREMENT_FLAG | D3DPUSH_INLINE_ARRAY, dwords_written );
-	//
-	//				// Are we approaching the end of this push buffer? If so, close it out and start a new one.
-	//				if( total_dwords_written > 6000 )
-	//				{
-	//					// End the push buffer.
-	//					total_dwords_written	= 0;
-	//					p_push[0]				= D3DPUSH_ENCODE( D3DPUSH_SET_BEGIN_END, 1 );
-	//					p_push[1]				= 0;
-	//					p_push					+= 2;
-	//					D3DDevice_EndPush( p_push );
-	//
-	//					p_push					= NULL;
-	//				}
-	//				else
-	//				{
-	//					// As yet, we don't know how many dwords we will write, so save a pointer to the current push buffer location
-	//					// so we can fix up this value at the end.
-	//					p_push_encode_fixup		= p_push;
-	//					++p_push;
-	//				}
-	//
-	//				dwords_written = 0;
-	//			}
-	//
-	//			flakes--;
-	//		}
-	//	}
-	//}
-	//
-	//if( p_push )
-	//{
-	//	// Now we know exactly how many dwords written, fix-up our earlier entry.
-	//	p_push_encode_fixup[0] = D3DPUSH_ENCODE( D3DPUSH_NOINCREMENT_FLAG | D3DPUSH_INLINE_ARRAY, dwords_written );
-	//
-	//	// End the push buffer.
-	//	p_push[0] = D3DPUSH_ENCODE( D3DPUSH_SET_BEGIN_END, 1 );
-	//	p_push[1] = 0;
-	//	p_push += 2;
-	//	D3DDevice_EndPush( p_push );
-	//}
-	//
-	//// Restore render states.
-	//D3DDevice_SetRenderState( D3DRS_POINTSPRITEENABLE, FALSE );
+	// Early out if no drops to draw.
+	if( !m_active_drops ) return;
+
+	// Get skater position (cel coords).
+	int z = (int)(( skz - m_min_z ) / WEATHER_CEL_SIZE );
+
+	// Calculate area to render.
+	int sx = (int)(( skx - m_min_x ) / WEATHER_CEL_SIZE ) - RENDER_DIST;
+	int ex = (int)(( skx - m_min_x ) / WEATHER_CEL_SIZE ) + DROP_SIZE;	//RENDER_DIST;
+	int sz = z - RENDER_DIST;
+	int ez = z + DROP_SIZE;	//RENDER_DIST;
+
+	// Clip z values.
+	if( ez < 0 ) return;
+	if( sz > ( m_height - 1 )) return;
+
+	// Set up render states. Point sprites use texture stage 0 on PC.
+	NxXbox::set_blend_mode( m_snow_blend );
+	NxXbox::set_render_state( RS_ALPHACUTOFF, 0 );
+	NxXbox::set_render_state( RS_UVADDRESSMODE0, 0x00000000UL );
+	mp_snow_texture->Set( 0 );
+
+	// Set up point sprite rendering.
+	D3DDevice_SetRenderState( D3DRS_POINTSPRITEENABLE,	TRUE );
+	D3DDevice_SetRenderState( D3DRS_POINTSCALEENABLE,	TRUE );
+	D3DDevice_SetRenderState( D3DRS_POINTSIZE,			FtoDW( m_snow_size ));
+	D3DDevice_SetRenderState( D3DRS_POINTSCALE_A,		FtoDW( 0.00f ));
+	D3DDevice_SetRenderState( D3DRS_POINTSCALE_B,		FtoDW( 0.00f ));
+	D3DDevice_SetRenderState( D3DRS_POINTSCALE_C,		FtoDW( 1.00f ));
+
+	NxXbox::set_pixel_shader( (IDirect3DPixelShader9*)0 );
+	D3DDevice_SetTextureStageState( 0, D3DTSS_COLOROP, 5 );		// D3DTOP_MODULATE2X
+	D3DDevice_SetTextureStageState( 0, D3DTSS_ALPHAOP, 5 );		// D3DTOP_MODULATE2X
+	NxXbox::set_vertex_shader( D3DFVF_XYZ | D3DFVF_DIFFUSE );	// 0x42
+
+	float minx = m_min_x;
+	float minz = m_min_z;
+
+	// Calculate drop height list.
+	int lp;
+	float y_off[256];
+	for( lp = ( 254 - m_snow_frames ); lp < 256; lp++ )
+	{
+		y_off[lp] = m_snow_height - (((float)(( lp - 254 ) + m_snow_frames ) / (float)m_snow_frames ) * m_snow_height );
+	}
+
+	// Calculate xz offset list.
+	float xz_off[256];
+	for( lp = 0; lp < 256; lp++ )
+	{
+		xz_off[lp] = ((float)lp * (float)( WEATHER_CEL_SIZE / 2 )) / 255.0f;
+	}
+
+	// Calculate sine wave.
+	float sin_off[256];
+	for( lp = 0; lp < 256; lp++ )
+	{
+		sin_off[lp] = sinf( Mth::PI * 2.0f * ((float)lp / 256.0f )) * ( WEATHER_CEL_SIZE / 2 );
+	}
+
+	// Get D3DCOLOR/ARGB format color. m_snow_color is stored r,g,b,a; pack as ARGB.
+	uint32 snow_color = ((uint32)m_snow_color.a << 24 ) | ((uint32)m_snow_color.r << 16 ) | ((uint32)m_snow_color.g << 8 ) | ((uint32)m_snow_color.b << 0 );
+
+	// Point sprite vertex: position + DIFFUSE color (FVF XYZ|DIFFUSE, stride 16).
+	struct sSnowVert { float x, y, z; DWORD color; };
+
+	enum { SNOW_SCRATCH_VERTS = 2048 };
+	static sSnowVert s_verts[SNOW_SCRATCH_VERTS];
+
+	sSnowVert*	p_dst	= NULL;
+	int			verts	= 0;
+	int			flakes	= 0;
+
+	for( int lzz = sz; lzz <= ez; lzz++ )
+	{
+		int zz = ( lzz < 0 ) ? 0 : ( lzz > ( m_height - 1 ) ) ? ( m_height - 1 ) : lzz;
+
+		if( mp_roof_row[zz].start == 16384 ) continue;
+
+		float vx = ((float)sx * (float)WEATHER_CEL_SIZE ) + minx;
+		float vz = ((float)zz * (float)WEATHER_CEL_SIZE ) + minz;
+
+		int cel = mp_roof_row[zz].index + ( sx - mp_roof_row[zz].start );
+
+		int drop_cel_z = (( zz & ( DROP_SIZE - 1 )) << DROP_SIZE_SHIFT );
+
+		for( int lxx = sx; lxx <= ex; lxx++, cel++ )
+		{
+			int xx = ( lxx > mp_roof_row[zz].start ) ? ( ( lxx < mp_roof_row[zz].end ) ? lxx : mp_roof_row[zz].end ) : mp_roof_row[zz].start;
+
+			// Get the current drop value. Skip this one if it's inactive.
+			int drop_cel = drop_cel_z + ( xx & ( DROP_SIZE - 1 ));
+
+			vx += (float)WEATHER_CEL_SIZE;
+			float vy = (float)( m_roof_height[mp_roof_height_index[cel]] >> PRECISION_SHIFT );
+
+			for( int d = 0; d < DROP_LAYERS; d++, drop_cel += ( DROP_SIZE * DROP_SIZE ))
+			{
+				if( m_drop_time[drop_cel] == 255 )
+					continue;
+
+				// Create the position for rendering.
+				float v0x = vx + xz_off[m_x_offset[drop_cel]] + sin_off[(m_z_offset[drop_cel]+m_drop_time[drop_cel])&255];
+				float v0y = vy + y_off[m_drop_time[drop_cel]] + m_snow_size;
+				float v0z = vz + xz_off[m_z_offset[drop_cel]] + sin_off[(m_x_offset[drop_cel]+m_drop_time[drop_cel])&255];
+
+				if( flakes == 0 )
+				{
+					flakes = NUM_SPRITES_PER_BATCH;
+				}
+
+				if( p_dst == NULL )
+				{
+					p_dst = s_verts;
+					verts = 0;
+				}
+
+				p_dst->x		= v0x;
+				p_dst->y		= v0y;
+				p_dst->z		= v0z;
+				p_dst->color	= snow_color;
+				p_dst++;
+				verts++;
+
+				// Flush the batch if the scratch buffer is nearly full.
+				if( verts >= ( SNOW_SCRATCH_VERTS - 1 ))
+				{
+					NxXbox::EngineGlobals.p_Device->DrawPrimitiveUP( D3DPT_POINTLIST, verts, s_verts, (int)sizeof( sSnowVert ));
+					p_dst	= NULL;
+					verts	= 0;
+				}
+
+				flakes--;
+			}
+		}
+	}
+
+	if( verts > 0 )
+	{
+		NxXbox::EngineGlobals.p_Device->DrawPrimitiveUP( D3DPT_POINTLIST, verts, s_verts, (int)sizeof( sSnowVert ));
+	}
+
+	// Restore render states.
+	D3DDevice_SetTextureStageState( 0, D3DTSS_COLOROP, 4 );		// D3DTOP_MODULATE
+	D3DDevice_SetTextureStageState( 0, D3DTSS_ALPHAOP, 4 );		// D3DTOP_MODULATE
+	D3DDevice_SetRenderState( D3DRS_POINTSPRITEENABLE, FALSE );
 }
 
 
@@ -655,193 +619,146 @@ void CXboxWeather::plat_render_snow( float skx, float skz )
 /******************************************************************/
 void CXboxWeather::plat_render_rain( float skx, float skz )
 {
-	// KISAKTODO: Un-stub this
-	return;
+	// Ported to DX9 from retail Windows_THUG.exe (CXboxWeather::plat_render_rain @ 0x4AB7D0).
 
-	//// Early out if no drops to draw.
-	//if ( !m_active_drops ) return;
-	//
-	//// Get skater position.
-	//int x = (int)(( skx - m_min_x ) / WEATHER_CEL_SIZE );
-	//int z = (int)(( skz - m_min_z ) / WEATHER_CEL_SIZE );
-	//
-	//// Calculate area to render.
-	//int sx = x - RENDER_DIST;
-	//int ex = x + DROP_SIZE;	//RENDER_DIST;
-	//int sz = z - RENDER_DIST;
-	//int ez = z + DROP_SIZE;	//RENDER_DIST;
-	//
-	//// Clip z values.
-	//if ( ez < 0 ) return;
-	//if ( sz > ( m_height - 1 ) ) return;
-	//
-	//// Get Xbox format top and bottom color.
-	//uint32 top_color = ((uint32)m_rain_top_color.a << 24 ) | ((uint32)m_rain_top_color.r << 16 ) | ((uint32)m_rain_top_color.g << 8 ) | ((uint32)m_rain_top_color.b << 0 );
-	//uint32 bot_color = ((uint32)m_rain_bottom_color.a << 24 ) | ((uint32)m_rain_bottom_color.r << 16 ) | ((uint32)m_rain_bottom_color.g << 8 ) | ((uint32)m_rain_bottom_color.b << 0 );
-	//
-	//// Deal with FIXED_BRIGHTEN mode, which doesn't work.
-	//if(( m_rain_blend & NxXbox::sMaterial::BLEND_MODE_MASK ) == NxXbox::vBLEND_MODE_BRIGHTEN_FIXED )
-	//{
-	//	set_blend_mode( NxXbox::vBLEND_MODE_BRIGHTEN );
-	//
-	//	top_color = ( top_color & 0x00FFFFFFUL ) | ( m_rain_blend & 0xFF000000UL );
-	//	bot_color = ( bot_color & 0x00FFFFFFUL ) | ( m_rain_blend & 0xFF000000UL );
-	//}
-	//else
-	//{
-	//	NxXbox::set_blend_mode( m_rain_blend );
-	//}
-	//
-	//NxXbox::set_render_state( RS_ALPHACUTOFF, 0 );
-	//
-	//NxXbox::set_pixel_shader( PixelShader5 );
-	//NxXbox::set_vertex_shader( D3DFVF_XYZ | D3DFVF_DIFFUSE );
-	//
-	//sint32 minx		= (sint32)( m_min_x * SUB_INCH_PRECISION );
-	//sint32 minz		= (sint32)( m_min_z * SUB_INCH_PRECISION );
-	//sint32 rlength	= (sint32)( m_rain_length * SUB_INCH_PRECISION );
-	//
-	//// Calculate drop height list.
-	//int lp;
-	//sint32 y_off[256];
-	//
-	//for( lp = ( 254 - m_rain_frames ); lp < 256; lp++ )
-	//{
-	//	y_off[lp] = (sint32)(( m_rain_height - (((float)(( lp - 254 ) + m_rain_frames ) / (float)m_rain_frames ) * m_rain_height )) * SUB_INCH_PRECISION );
-	//}
-	//
-	//// Calculate xz offset list.
-	//sint32 xz_off[256];
-	//for( lp = 0; lp < 256; lp++ )
-	//{
-	//	xz_off[lp] = (sint32)((((float)lp * (float)WEATHER_CEL_SIZE * SUB_INCH_PRECISION ) / 255.0f ));
-	//}
-	//
-	//int lines = 0;
-	//
-	//DWORD* p_push				= NULL;
-	//DWORD* p_push_encode_fixup	= NULL;
-	//uint32 dwords_written		= 0;
-	//uint32 total_dwords_written	= 2;
-	//
-	//for ( int lzz = sz; lzz <= ez; lzz++ )
-	//{
-	//	int zz = ( lzz < 0 ) ? 0 : ( lzz > ( m_height - 1 ) ) ? ( m_height - 1 ) : lzz;
-	//
-	//	if ( mp_roof_row[zz].start == 16384 ) continue;
-	//
-	//	sint32 vx = ( (sint32)sx << ( WEATHER_CEL_SIZE_SHIFT + PRECISION_SHIFT ) ) + minx;
-	//	sint32 vz = ( (sint32)zz << ( WEATHER_CEL_SIZE_SHIFT + PRECISION_SHIFT ) ) + minz;
-	//
-	//	int cel = mp_roof_row[zz].index + ( sx - mp_roof_row[zz].start );
-	//
-	//	int drop_cel_z = ( ( zz & ( DROP_SIZE - 1 ) ) << DROP_SIZE_SHIFT );
-	//
-	//	for ( int lxx = sx; lxx <= ex; lxx++, cel++ )
-	//	{
-	//		int xx = ( lxx > mp_roof_row[zz].start ) ? ( ( lxx < mp_roof_row[zz].end ) ? lxx : mp_roof_row[zz].end ) : mp_roof_row[zz].start;
-	//
-	//		// Get the current drop value. Skip this one if it's inactive.
-	//		int drop_cel = drop_cel_z + ( xx & ( DROP_SIZE - 1 ) );
-	//
-	//		vx += ( WEATHER_CEL_SIZE << PRECISION_SHIFT );
-	//		sint32 vy = m_roof_height[mp_roof_height_index[cel]];
-	//
-	//		for ( int d = 0; d < DROP_LAYERS; d++, drop_cel += ( DROP_SIZE * DROP_SIZE ) )
-	//		{
-	//			if ( m_drop_time[drop_cel] == 255 )
-	//				continue;
-	//
-	//			// Create the position for rendering.
-	//			float v0x = ( vx + xz_off[m_x_offset[drop_cel]] ) * ( 1.0f / (float)( 1 << PRECISION_SHIFT ));
-	//			float v0y = ( vy + y_off[m_drop_time[drop_cel]] ) * ( 1.0f / (float)( 1 << PRECISION_SHIFT ));
-	//			float v0z = ( vz + xz_off[m_z_offset[drop_cel]] ) * ( 1.0f / (float)( 1 << PRECISION_SHIFT ));
-	//			float v1y = v0y + ( rlength * ( 1.0f / (float)( 1 << PRECISION_SHIFT )));
-	//
-	//			if ( lines == 0 )
-	//			{
-	//				lines = NUM_LINES_PER_BATCH;
-	//			}
-	//
-	//			// Grab the push buffer if we don't have it yet.
-	//			if( p_push == NULL )
-	//			{
-	//				// Grab 32k of push buffer.	
-	//				p_push = D3DDevice_BeginPush( 32 * 1024 / 4 );
-	//
-	//				// Note that p_push is returned as a pointer to write-combined memory. Writes to write-combined memory should be
-	//				// consecutive and in increasing order. Reads should be avoided. Additionally, any CPU reads from memory or the
-	//				// L2 cache can force expensive partial flushes of the 32-byte write-combine cache.
-	//				p_push[0]	= D3DPUSH_ENCODE( D3DPUSH_SET_BEGIN_END, 1 );
-	//				p_push[1]	= D3DPT_LINELIST;
-	//				p_push		+= 2;
-	//
-	//				// NOTE: A maximum of 2047 DWORDs can be specified to D3DPUSH_ENCODE. If there is more than 2047 DWORDs of vertex
-	//				// data, simply split the data into multiple D3DPUSH_ENCODE( D3DPUSH_INLINE_ARRAY ) sections.
-	//				// As yet, we don't know how many dwords we will write, so save a pointer to the current push buffer location
-	//				// so we can fix up this value at the end.
-	//				p_push_encode_fixup = p_push;
-	//				++p_push;
-	//			}
-	//
-	//			p_push[0] = *((DWORD*)&v0x);
-	//			p_push[1] = *((DWORD*)&v0y);
-	//			p_push[2] = *((DWORD*)&v0z);
-	//			p_push[3] = bot_color;
-	//
-	//			p_push[4] = *((DWORD*)&v0x);
-	//			p_push[5] = *((DWORD*)&v1y);
-	//			p_push[6] = *((DWORD*)&v0z);
-	//			p_push[7] = top_color;
-	//
-	//			p_push					+= 8;
-	//			dwords_written			+= 8;
-	//			total_dwords_written	+= 8;
-	//
-	//			// Check for hitting the max dwords for this encode block, in which case we need to end this block
-	//			// and start another one.
-	//			if( dwords_written >= 2040 )
-	//			{
-	//				// Now we know exactly how many dwords written, fix-up our earlier entry.
-	//				p_push_encode_fixup[0]		= D3DPUSH_ENCODE( D3DPUSH_NOINCREMENT_FLAG | D3DPUSH_INLINE_ARRAY, dwords_written );
-	//
-	//				// Are we approaching the end of this push buffer? If so, close it out and start a new one.
-	//				if( total_dwords_written > 6000 )
-	//				{
-	//					// End the push buffer.
-	//					total_dwords_written	= 0;
-	//					p_push[0]				= D3DPUSH_ENCODE( D3DPUSH_SET_BEGIN_END, 1 );
-	//					p_push[1]				= 0;
-	//					p_push					+= 2;
-	//					D3DDevice_EndPush( p_push );
-	//
-	//					p_push					= NULL;
-	//				}
-	//				else
-	//				{
-	//					// As yet, we don't know how many dwords we will write, so save a pointer to the current push buffer location
-	//					// so we can fix up this value at the end.
-	//					p_push_encode_fixup		= p_push;
-	//					++p_push;
-	//				}
-	//				dwords_written = 0;
-	//			}
-	//			lines--;
-	//		}
-	//	}
-	//}
-	//
-	//if( p_push )
-	//{
-	//	// Now we know exactly how many dwords written, fix-up our earlier entry.
-	//	p_push_encode_fixup[0] = D3DPUSH_ENCODE( D3DPUSH_NOINCREMENT_FLAG | D3DPUSH_INLINE_ARRAY, dwords_written );
-	//
-	//	// End the push buffer.
-	//	p_push[0] = D3DPUSH_ENCODE( D3DPUSH_SET_BEGIN_END, 1 );
-	//	p_push[1] = 0;
-	//	p_push += 2;
-	//	D3DDevice_EndPush( p_push );
-	//}
+	// Early out if no drops to draw.
+	if ( !m_active_drops ) return;
+
+	// Get skater position (cel coords).
+	int x = (int)(( skx - m_min_x ) / WEATHER_CEL_SIZE );
+	int z = (int)(( skz - m_min_z ) / WEATHER_CEL_SIZE );
+
+	// Calculate area to render.
+	int sx = x - RENDER_DIST;
+	int ex = x + DROP_SIZE;	//RENDER_DIST;
+	int sz = z - RENDER_DIST;
+	int ez = z + DROP_SIZE;	//RENDER_DIST;
+
+	// Clip z values.
+	if ( ez < 0 ) return;
+	if ( sz > ( m_height - 1 ) ) return;
+
+	// Get D3DCOLOR/ARGB format top and bottom color (ARGB byte order).
+	uint32 top_color = ((uint32)m_rain_top_color.a << 24 ) | ((uint32)m_rain_top_color.r << 16 ) | ((uint32)m_rain_top_color.g << 8 ) | ((uint32)m_rain_top_color.b << 0 );
+	uint32 bot_color = ((uint32)m_rain_bottom_color.a << 24 ) | ((uint32)m_rain_bottom_color.r << 16 ) | ((uint32)m_rain_bottom_color.g << 8 ) | ((uint32)m_rain_bottom_color.b << 0 );
+
+	// The retail PC build replaces the Xbox FIXED_BRIGHTEN special case with a
+	// straight blend-mode substitution: (blend & 0xFFFFFF) == 0xA -> use 9.
+	if(( m_rain_blend & 0x00FFFFFFUL ) == 0xA )
+	{
+		NxXbox::set_blend_mode( 9 );
+	}
+	else
+	{
+		NxXbox::set_blend_mode( m_rain_blend );
+	}
+
+	NxXbox::set_render_state( RS_ALPHACUTOFF, 0 );
+
+	NxXbox::set_pixel_shader( (IDirect3DPixelShader9*)0 );
+	D3DDevice_SetTextureStageState( 0, D3DTSS_COLOROP, 3 );		// D3DTOP_SELECTARG1
+	D3DDevice_SetTextureStageState( 0, D3DTSS_ALPHAOP, 3 );		// D3DTOP_SELECTARG1
+	NxXbox::set_vertex_shader( D3DFVF_XYZ | D3DFVF_DIFFUSE );	// 0x42
+
+	sint32 minx		= (sint32)( m_min_x * SUB_INCH_PRECISION );
+	sint32 minz		= (sint32)( m_min_z * SUB_INCH_PRECISION );
+	sint32 rlength	= (sint32)( m_rain_length * SUB_INCH_PRECISION );
+
+	// Calculate drop height list.
+	int lp;
+	sint32 y_off[256];
+	for( lp = ( 254 - m_rain_frames ); lp < 256; lp++ )
+	{
+		y_off[lp] = (sint32)(( m_rain_height - (((float)(( lp - 254 ) + m_rain_frames ) / (float)m_rain_frames ) * m_rain_height )) * SUB_INCH_PRECISION );
+	}
+
+	// Calculate xz offset list.
+	sint32 xz_off[256];
+	for( lp = 0; lp < 256; lp++ )
+	{
+		xz_off[lp] = (sint32)((((float)lp * (float)WEATHER_CEL_SIZE * SUB_INCH_PRECISION ) / 255.0f ));
+	}
+
+	// Line-list vertex: position + DIFFUSE color (FVF XYZ|DIFFUSE, stride 16).
+	struct sRainVert { float x, y, z; DWORD color; };
+
+	enum { RAIN_SCRATCH_VERTS = 2048 };
+	static sRainVert s_verts[RAIN_SCRATCH_VERTS];
+
+	sRainVert*	p_dst	= NULL;
+	int			verts	= 0;
+	int			lines	= 0;
+
+	for ( int lzz = sz; lzz <= ez; lzz++ )
+	{
+		int zz = ( lzz < 0 ) ? 0 : ( lzz > ( m_height - 1 ) ) ? ( m_height - 1 ) : lzz;
+
+		if ( mp_roof_row[zz].start == 16384 ) continue;
+
+		sint32 vx = ( (sint32)sx << ( WEATHER_CEL_SIZE_SHIFT + PRECISION_SHIFT ) ) + minx;
+		sint32 vz = ( (sint32)zz << ( WEATHER_CEL_SIZE_SHIFT + PRECISION_SHIFT ) ) + minz;
+
+		int cel = mp_roof_row[zz].index + ( sx - mp_roof_row[zz].start );
+
+		int drop_cel_z = ( ( zz & ( DROP_SIZE - 1 ) ) << DROP_SIZE_SHIFT );
+
+		for ( int lxx = sx; lxx <= ex; lxx++, cel++ )
+		{
+			int xx = ( lxx > mp_roof_row[zz].start ) ? ( ( lxx < mp_roof_row[zz].end ) ? lxx : mp_roof_row[zz].end ) : mp_roof_row[zz].start;
+
+			// Get the current drop value. Skip this one if it's inactive.
+			int drop_cel = drop_cel_z + ( xx & ( DROP_SIZE - 1 ) );
+
+			vx += ( WEATHER_CEL_SIZE << PRECISION_SHIFT );
+			sint32 vy = m_roof_height[mp_roof_height_index[cel]];
+
+			for ( int d = 0; d < DROP_LAYERS; d++, drop_cel += ( DROP_SIZE * DROP_SIZE ) )
+			{
+				if ( m_drop_time[drop_cel] == 255 )
+					continue;
+
+				// Create the position for rendering.
+				float v0x = ( vx + xz_off[m_x_offset[drop_cel]] ) * ( 1.0f / (float)( 1 << PRECISION_SHIFT ));
+				float v0y = ( vy + y_off[m_drop_time[drop_cel]] ) * ( 1.0f / (float)( 1 << PRECISION_SHIFT ));
+				float v0z = ( vz + xz_off[m_z_offset[drop_cel]] ) * ( 1.0f / (float)( 1 << PRECISION_SHIFT ));
+				float v1y = v0y + ( rlength * ( 1.0f / (float)( 1 << PRECISION_SHIFT )));
+
+				if ( lines == 0 )
+				{
+					lines = NUM_LINES_PER_BATCH;
+				}
+
+				if( p_dst == NULL )
+				{
+					p_dst = s_verts;
+					verts = 0;
+				}
+
+				// Bottom vertex (bot_color), then top vertex (top_color).
+				p_dst[0].x = v0x; p_dst[0].y = v0y; p_dst[0].z = v0z; p_dst[0].color = bot_color;
+				p_dst[1].x = v0x; p_dst[1].y = v1y; p_dst[1].z = v0z; p_dst[1].color = top_color;
+				p_dst	+= 2;
+				verts	+= 2;
+
+				// Flush the batch if the scratch buffer is nearly full.
+				if( verts >= ( RAIN_SCRATCH_VERTS - 2 ))
+				{
+					NxXbox::EngineGlobals.p_Device->DrawPrimitiveUP( D3DPT_LINELIST, verts / 2, s_verts, (int)sizeof( sRainVert ));
+					p_dst	= NULL;
+					verts	= 0;
+				}
+				lines--;
+			}
+		}
+	}
+
+	if( verts > 0 )
+	{
+		NxXbox::EngineGlobals.p_Device->DrawPrimitiveUP( D3DPT_LINELIST, verts / 2, s_verts, (int)sizeof( sRainVert ));
+	}
+
+	// Restore alpha op.
+	D3DDevice_SetTextureStageState( 0, D3DTSS_ALPHAOP, 4 );		// D3DTOP_MODULATE
 }
 
 
@@ -852,8 +769,7 @@ void CXboxWeather::plat_render_rain( float skx, float skz )
 /******************************************************************/
 void CXboxWeather::plat_render_splashes( float skx, float skz )
 {
-	// KISAKTODO: un-stub this.
-	return;
+	// Ported to DX9 from retail Windows_THUG.exe (CXboxWeather::plat_render_splashes @ 0x4AC3C0).
 
 	// Create a new splash if required.
 	float last = m_splash_rate;
@@ -914,157 +830,74 @@ void CXboxWeather::plat_render_splashes( float skx, float skz )
 		m_splash_z[m_current_splash]			= pos[Z];
 		m_splash_current_life[m_current_splash]	= m_splash_life;
 
-		m_current_splash++;
-		//m_current_splash %= NUM_SPLASH_ACTIVE;
-		m_current_splash = (m_current_splash + 1) % NUM_SPLASH_ACTIVE;
+		// Advance to next splash slot (single increment with wrap, per PC decompile).
+		m_current_splash = ( m_current_splash + 1 ) % NUM_SPLASH_ACTIVE;
 	}
-	
+
 	// Render the splashes.
 	NxXbox::set_blend_mode( m_splash_blend );
 	NxXbox::set_render_state( RS_ALPHACUTOFF, 0 );
 	NxXbox::set_render_state( RS_UVADDRESSMODE0, 0x00000000UL );
 	mp_rain_texture->Set( 0 );
 
-	// LWSS changes below for PC
-	//NxXbox::set_pixel_shader( PixelShader4 );
-	NxXbox::set_pixel_shader( (uint32_t)0 );
-	D3DDevice_SetTextureStageState(0, D3DTSS_COLOROP, 5);
-	D3DDevice_SetTextureStageState(0, D3DTSS_ALPHAOP, 5);
-	NxXbox::set_vertex_shader( D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE2( 0 ));
+	// changes below for PC (no pixel shader; fixed-function MODULATE2X stage).
+	NxXbox::set_pixel_shader( (IDirect3DPixelShader9*)0 );
+	D3DDevice_SetTextureStageState( 0, D3DTSS_COLOROP, 5 );		// D3DTOP_MODULATE2X
+	D3DDevice_SetTextureStageState( 0, D3DTSS_ALPHAOP, 5 );		// D3DTOP_MODULATE2X
+	NxXbox::set_vertex_shader( D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE2( 0 ));	// 0x142
 
-	// LWSS: major changes for PC
-	// KISAKTODO: Finish this
-	//for ( int spl = 0; spl < NUM_SPLASH_ACTIVE; spl++ )
-	//{
-	//	if( m_splash_current_life[spl] == 0 )
-	//		continue;
-	//
-	//	// Interpolate color (and switch to Xbox format at the same time).
-	//	Image::RGBA	icol;
-	//	icol.b		= (uint8)(((int)m_splash_color.r * m_splash_current_life[spl] ) / m_splash_life );
-	//	icol.g		= (uint8)(((int)m_splash_color.g * m_splash_current_life[spl] ) / m_splash_life );
-	//	icol.r		= (uint8)(((int)m_splash_color.b * m_splash_current_life[spl] ) / m_splash_life );
-	//	icol.a		= (uint8)(((int)m_splash_color.a * m_splash_current_life[spl] ) / m_splash_life );
-	//
-	//	// Draw splashes...
-	//	float vx0	= m_splash_x[spl] - ( m_splash_size * 0.5f );
-	//	float vx1	= m_splash_x[spl] + ( m_splash_size * 0.5f );
-	//	float vy	= m_splash_y[spl];
-	//	float vz0	= m_splash_z[spl] - ( m_splash_size * 0.5f );
-	//	float vz1	= m_splash_z[spl] + ( m_splash_size * 0.5f );
-	//
-	//	p_push[0]	= *((DWORD*)&vx0 );
-	//	p_push[1]	= *((DWORD*)&vy );
-	//	p_push[2]	= *((DWORD*)&vz0 );
-	//	p_push[3]	= *((DWORD*)&icol );
-	//	p_push[4]	= 0x00000000UL;
-	//	p_push[5]	= 0x00000000UL;
-	//
-	//	p_push[6]	= *((DWORD*)&vx1 );
-	//	p_push[7]	= *((DWORD*)&vy );
-	//	p_push[8]	= *((DWORD*)&vz0 );
-	//	p_push[9]	= *((DWORD*)&icol );
-	//	p_push[10]	= 0x3F800000UL;
-	//	p_push[11]	= 0x00000000UL;
-	//
-	//	p_push[12]	= *((DWORD*)&vx1 );
-	//	p_push[13]	= *((DWORD*)&vy );
-	//	p_push[14]	= *((DWORD*)&vz1 );
-	//	p_push[15]	= *((DWORD*)&icol );
-	//	p_push[16]	= 0x3F800000UL;
-	//	p_push[17]	= 0x3F800000UL;
-	//
-	//	p_push[18]	= *((DWORD*)&vx0 );
-	//	p_push[19]	= *((DWORD*)&vy );
-	//	p_push[20]	= *((DWORD*)&vz1 );
-	//	p_push[21]	= *((DWORD*)&icol );
-	//	p_push[22]	= 0x00000000UL;
-	//	p_push[23]	= 0x3F800000UL;
-	//
-	//	p_push			+= 24;
-	//	dwords_written	+= 24;
-	//	m_splash_current_life[spl]--;
-	//}
-	 
-	//uint32 dword_count		= 24 * NUM_SPLASH_ACTIVE;
-	//uint32 dwords_written	= 0;
-	//Dbg_Assert( dword_count < 2048 );
-	//
-	//// Obtain push buffer lock.
-	//// The additional number (+5 is minimum) is to reserve enough overhead for the encoding parameters. It can safely be more, but no less.
-	//DWORD* p_push				= D3DDevice_BeginPush( dword_count + 16 );
-	//DWORD* p_push_encode_fixup	= NULL;
-	//
-	//// Note that p_push is returned as a pointer to write-combined memory. Writes to write-combined memory should be
-	//// consecutive and in increasing order. Reads should be avoided. Additionally, any CPU reads from memory or the
-	//// L2 cache can force expensive partial flushes of the 32-byte write-combine cache.
-	//p_push[0]	= D3DPUSH_ENCODE( D3DPUSH_SET_BEGIN_END, 1 );
-	//p_push[1]	= D3DPT_QUADLIST;
-	//p_push		+= 2;
-	//
-	//// NOTE: A maximum of 2047 DWORDs can be specified to D3DPUSH_ENCODE. If there is more than 2047 DWORDs of vertex
-	//// data, simply split the data into multiple D3DPUSH_ENCODE( D3DPUSH_INLINE_ARRAY ) sections.
-	//// As yet, we don't know how many dwords we will write, so save a pointer to the current push buffer location
-	//// so we can fix up this value at the end.
-	//p_push_encode_fixup = p_push;
-	//++p_push;
-	//
-	//for ( int spl = 0; spl < NUM_SPLASH_ACTIVE; spl++ )
-	//{
-	//	if( m_splash_current_life[spl] == 0 )
-	//		continue;
-	//
-	//	// Interpolate color (and switch to Xbox format at the same time).
-	//	Image::RGBA	icol;
-	//	icol.b		= (uint8)(((int)m_splash_color.r * m_splash_current_life[spl] ) / m_splash_life );
-	//	icol.g		= (uint8)(((int)m_splash_color.g * m_splash_current_life[spl] ) / m_splash_life );
-	//	icol.r		= (uint8)(((int)m_splash_color.b * m_splash_current_life[spl] ) / m_splash_life );
-	//	icol.a		= (uint8)(((int)m_splash_color.a * m_splash_current_life[spl] ) / m_splash_life );
-	//
-	//	// Draw splashes...
-	//	float vx0	= m_splash_x[spl] - ( m_splash_size * 0.5f );
-	//	float vx1	= m_splash_x[spl] + ( m_splash_size * 0.5f );
-	//	float vy	= m_splash_y[spl];
-	//	float vz0	= m_splash_z[spl] - ( m_splash_size * 0.5f );
-	//	float vz1	= m_splash_z[spl] + ( m_splash_size * 0.5f );
-	//
-	//	p_push[0]	= *((DWORD*)&vx0 );
-	//	p_push[1]	= *((DWORD*)&vy );
-	//	p_push[2]	= *((DWORD*)&vz0 );
-	//	p_push[3]	= *((DWORD*)&icol );
-	//	p_push[4]	= 0x00000000UL;
-	//	p_push[5]	= 0x00000000UL;
-	//
-	//	p_push[6]	= *((DWORD*)&vx1 );
-	//	p_push[7]	= *((DWORD*)&vy );
-	//	p_push[8]	= *((DWORD*)&vz0 );
-	//	p_push[9]	= *((DWORD*)&icol );
-	//	p_push[10]	= 0x3F800000UL;
-	//	p_push[11]	= 0x00000000UL;
-	//
-	//	p_push[12]	= *((DWORD*)&vx1 );
-	//	p_push[13]	= *((DWORD*)&vy );
-	//	p_push[14]	= *((DWORD*)&vz1 );
-	//	p_push[15]	= *((DWORD*)&icol );
-	//	p_push[16]	= 0x3F800000UL;
-	//	p_push[17]	= 0x3F800000UL;
-	//
-	//	p_push[18]	= *((DWORD*)&vx0 );
-	//	p_push[19]	= *((DWORD*)&vy );
-	//	p_push[20]	= *((DWORD*)&vz1 );
-	//	p_push[21]	= *((DWORD*)&icol );
-	//	p_push[22]	= 0x00000000UL;
-	//	p_push[23]	= 0x3F800000UL;
-	//
-	//	p_push			+= 24;
-	//	dwords_written	+= 24;
-	//	m_splash_current_life[spl]--;
-	//}
-	//
-	//p_push_encode_fixup[0]	= D3DPUSH_ENCODE( D3DPUSH_NOINCREMENT_FLAG | D3DPUSH_INLINE_ARRAY, dwords_written );
-	//p_push[0]				= D3DPUSH_ENCODE( D3DPUSH_SET_BEGIN_END, 1 );
-	//p_push[1]				= 0;
-	//D3DDevice_EndPush( p_push + 2 );
+	// Textured splash vertex: position + DIFFUSE color + uv (FVF XYZ|DIFFUSE|TEX1, stride 24).
+	struct sSplashVert { float x, y, z; DWORD color; float u, v; };
+
+	// 6 verts (2 triangles) per live splash; at most NUM_SPLASH_ACTIVE (32) splashes.
+	static sSplashVert s_verts[6 * NUM_SPLASH_ACTIVE];
+	sSplashVert*	p_dst	= s_verts;
+	int				verts	= 0;
+
+	for ( int spl = 0; spl < NUM_SPLASH_ACTIVE; spl++ )
+	{
+		if( m_splash_current_life[spl] == 0 )
+			continue;
+
+		// Interpolate color over the splash lifetime, and swap red/blue at the
+		// same time so the RGBA bytes land in D3DCOLOR/ARGB order.
+		Image::RGBA	icol;
+		icol.b		= (uint8)(((int)m_splash_color.r * m_splash_current_life[spl] ) / m_splash_life );
+		icol.g		= (uint8)(((int)m_splash_color.g * m_splash_current_life[spl] ) / m_splash_life );
+		icol.r		= (uint8)(((int)m_splash_color.b * m_splash_current_life[spl] ) / m_splash_life );
+		icol.a		= (uint8)(((int)m_splash_color.a * m_splash_current_life[spl] ) / m_splash_life );
+		DWORD dw_color = *((DWORD*)&icol );
+
+		// Horizontal quad corners (all share vy).
+		float vx0	= m_splash_x[spl] - ( m_splash_size * 0.5f );
+		float vx1	= m_splash_x[spl] + ( m_splash_size * 0.5f );
+		float vy	= m_splash_y[spl];
+		float vz0	= m_splash_z[spl] - ( m_splash_size * 0.5f );
+		float vz1	= m_splash_z[spl] + ( m_splash_size * 0.5f );
+
+		// Quad corners:  c0=(vx0,vz0,uv0,0)  c1=(vx1,vz0,uv1,0)
+		//                c2=(vx1,vz1,uv1,1)  c3=(vx0,vz1,uv0,1)
+		// Expanded to two triangles: (c0,c1,c2) and (c0,c2,c3).
+		p_dst[0].x = vx0; p_dst[0].y = vy; p_dst[0].z = vz0; p_dst[0].color = dw_color; p_dst[0].u = 0.0f; p_dst[0].v = 0.0f;
+		p_dst[1].x = vx1; p_dst[1].y = vy; p_dst[1].z = vz0; p_dst[1].color = dw_color; p_dst[1].u = 1.0f; p_dst[1].v = 0.0f;
+		p_dst[2].x = vx1; p_dst[2].y = vy; p_dst[2].z = vz1; p_dst[2].color = dw_color; p_dst[2].u = 1.0f; p_dst[2].v = 1.0f;
+		p_dst[3].x = vx0; p_dst[3].y = vy; p_dst[3].z = vz0; p_dst[3].color = dw_color; p_dst[3].u = 0.0f; p_dst[3].v = 0.0f;
+		p_dst[4].x = vx1; p_dst[4].y = vy; p_dst[4].z = vz1; p_dst[4].color = dw_color; p_dst[4].u = 1.0f; p_dst[4].v = 1.0f;
+		p_dst[5].x = vx0; p_dst[5].y = vy; p_dst[5].z = vz1; p_dst[5].color = dw_color; p_dst[5].u = 0.0f; p_dst[5].v = 1.0f;
+		p_dst	+= 6;
+		verts	+= 6;
+
+		m_splash_current_life[spl]--;
+	}
+
+	if( verts > 0 )
+	{
+		NxXbox::EngineGlobals.p_Device->DrawPrimitiveUP( D3DPT_TRIANGLELIST, verts / 3, s_verts, (int)sizeof( sSplashVert ));
+	}
+
+	// Restore texture stage state.
+	D3DDevice_SetTextureStageState( 0, D3DTSS_COLOROP, 4 );		// D3DTOP_MODULATE
+	D3DDevice_SetTextureStageState( 0, D3DTSS_ALPHAOP, 4 );		// D3DTOP_MODULATE
 }
 
 

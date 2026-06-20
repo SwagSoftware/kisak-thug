@@ -34,6 +34,8 @@
 #include <sk/modules/skate/GoalManager.h>
 #include <sk/parkeditor2/parked.h>
 #include <gel/scripting/component.h>
+#include <gel/scripting/struct.h>		// CStruct pool switching for the mem-card save
+#include <gel/scripting/vecpair.h>		// CVector pool switching for the mem-card save
 #include <sys/replay/replay.h>
 #include <gel/objtrack.h>
 #include <sk/components/goaleditorcomponent.h>
@@ -1599,9 +1601,44 @@ static const char *s_generate_xbox_directory_name(uint32 fileType, const char *p
 		}		
 	}
 	Dbg_MsgAssert( strlen( p_directory_name ) < 100, ( "Oops" ));
-	
+
 	return p_directory_name;
 }
+
+#ifdef __PLAT_WN32__
+/******************************************************************/
+/*                                                                */
+/*                                                                */
+/******************************************************************/
+// (sub_52D1B0 @ 0x52D1B0)
+static const char *s_get_win32_card_file_name(uint32 fileType, const char *p_name, char *p_dest)
+{
+	switch (fileType)
+	{
+		case 0xb010f357: // OptionsAndPros
+			sprintf(p_dest,"Save/%s.SKA",p_name);
+			break;
+		case 0xca41692d: // NetworkSettings
+			sprintf(p_dest,"Save/%s.NWS",p_name);
+			break;
+		case 0x62896edf: // CreatedGoals
+			sprintf(p_dest,"Save/%s.GOA",p_name);
+			break;
+		case 0x26c80b0d: // Replay
+			sprintf(p_dest,"Save/%s.REP",p_name);
+			break;
+		case 0x3bf882cc: // Park
+			sprintf(p_dest,"Save/%s.PRK",p_name);
+			break;
+		case 0x61a1bc57: // CAT
+			sprintf(p_dest,"Save/%s.CAT",p_name);
+			break;
+		default:
+			break;
+	}
+	return p_dest;
+}
+#endif // __PLAT_WN32__
 
 /******************************************************************/
 /*                                                                */
@@ -2425,10 +2462,10 @@ static bool s_first_date_is_more_recent(Script::CStruct *p_a, Script::CStruct *p
 	}
 	else
 	{
-		// Exactly the same date/time, so call it more recent.
-		more_recent=true;
+
+		more_recent=false;
 	}
-	
+
 	return more_recent;
 }
 
@@ -2596,19 +2633,27 @@ bool ScriptMemCardFileExists(Script::CStruct *pParams, Script::CScript *pScript)
 	switch (Config::GetHardware())
 	{
 		case Config::HARDWARE_XBOX:
-		case Config::HARDWARE_WIN32: // lwss add
 		{
 			p_xbox_directory_name=s_generate_xbox_directory_name(file_type,p_name);
 			p_xbox_converted_directory_name=p_card->ConvertDirectory(p_xbox_directory_name);
 			if (!p_xbox_converted_directory_name)
 			{
 				return false;
-			}	
+			}
 			sprintf(p_card_file_name,"/%s/%s",p_xbox_converted_directory_name,p_xbox_converted_directory_name);
 			Dbg_MsgAssert(strlen(p_card_file_name)<MAX_CARD_FILE_NAME_CHARS,("Oops"));
 			break;
 		}
-		
+
+#ifdef __PLAT_WN32__
+		case Config::HARDWARE_WIN32:
+		{
+
+			s_get_win32_card_file_name(file_type,p_name,p_card_file_name);
+			break;
+		}
+#endif // __PLAT_WN32__
+
 		case Config::HARDWARE_PS2:
 		case Config::HARDWARE_PS2_PROVIEW:
 		case Config::HARDWARE_PS2_DEVSYSTEM:
@@ -2727,13 +2772,12 @@ bool ScriptDeleteMemCardFile(Script::CStruct *pParams, Script::CScript *pScript)
 		}
 		
 		case Config::HARDWARE_XBOX:
-		case Config::HARDWARE_WIN32: // lwss add
 		{
 			if (!p_xbox_directory_name)
 			{
 				// Derive p_xbox_directory_name from the file type and user file name
 				p_xbox_directory_name=s_generate_xbox_directory_name(file_type,p_name);
-				
+
 			}
 			if (!p_card->DeleteDirectory( p_xbox_directory_name ))
 			{
@@ -2741,6 +2785,25 @@ bool ScriptDeleteMemCardFile(Script::CStruct *pParams, Script::CScript *pScript)
 			}
 			break;
 		}
+
+#ifdef __PLAT_WN32__
+		case Config::HARDWARE_WIN32:
+		{
+			char p_temp[MAX_CARD_FILE_NAME_CHARS+1];
+			const char *p_delete_name=p_xbox_directory_name;
+			if (!p_delete_name)
+			{
+				p_temp[0]=0;
+				s_get_win32_card_file_name(file_type,p_name,p_temp);
+				p_delete_name=p_temp;
+			}
+			if (!p_card->Delete(p_delete_name))
+			{
+				delete_succeeded=false;
+			}
+			break;
+		}
+#endif // __PLAT_WN32__
 		
 		case Config::HARDWARE_PS2:
 		case Config::HARDWARE_PS2_PROVIEW:
@@ -3111,6 +3174,22 @@ bool ScriptSaveToMemoryCard(Script::CStruct *pParams, Script::CScript *pScript)
 	// If the special pools exist, switch to them so that the components & structs etc get allocated off them.
 	// The special pools use the space freed by unloading the skater anims, and are for preventing memory
 	// overflows when the save size gets large.
+
+	struct sMemCardPoolScope
+	{
+		sMemCardPoolScope()
+		{
+			Script::CComponent::SSwitchToNextPool(); Script::CComponent::SCreatePool( 84000, "CComponentMemCard" );
+			Script::CStruct::SSwitchToNextPool();    Script::CStruct::SCreatePool(    18800, "CStructMemCard" );
+			Script::CVector::SSwitchToNextPool();    Script::CVector::SCreatePool(     9600, "CVectorMemCard" );
+		}
+		~sMemCardPoolScope()
+		{
+			Script::CComponent::SRemovePool(); Script::CComponent::SSwitchToPreviousPool();
+			Script::CStruct::SRemovePool();    Script::CStruct::SSwitchToPreviousPool();
+			Script::CVector::SRemovePool();    Script::CVector::SSwitchToPreviousPool();
+		}
+	} mem_card_pool_scope;
 	// LWSS: comment out
 	//Dbg_MsgAssert(CComponent::SGetCurrentPoolIndex()==0,("Bad current CComponent pool"));
 	//Dbg_MsgAssert(CStruct::SGetCurrentPoolIndex()==0,("Bad current CStruct pool"));
@@ -3300,13 +3379,21 @@ bool ScriptSaveToMemoryCard(Script::CStruct *pParams, Script::CScript *pScript)
 				goto ERRORGOTO;
 			}
 			break;
+
+#ifdef __PLAT_WN32__
+		case Config::HARDWARE_WIN32:
+			p_card_file_name[0]=0;
+			s_get_win32_card_file_name(file_type,p_name,p_card_file_name);
+			break;
+#endif // __PLAT_WN32__
+
 		default:
 			{
 				goto ERRORGOTO;
 			}
 			break;
 	}
-			
+
 
 	// Open a file big enough to hold all the data.
 	//printf("Opening file %s of size %d for writing\n",p_card_file_name,fixed_size);
@@ -3723,14 +3810,21 @@ bool ScriptLoadFromMemoryCard(Script::CStruct *pParams, Script::CScript *pScript
 			// Calculate the low-level file name.
 			sprintf( p_card_file_name, "/%s/%s", p_low_level_directory_name, p_low_level_directory_name );
 			break;
-		}	
+		}
+#ifdef __PLAT_WN32__
+		case Config::HARDWARE_WIN32:
+		{
+			s_get_win32_card_file_name(file_type,p_name,p_card_file_name);
+			break;
+		}
+#endif // __PLAT_WN32__
 		default:
 		{
 			goto ERRORGOTO;
 			break;
-		}	
+		}
 	}
-	
+
 	Dbg_MsgAssert(strlen(p_card_file_name)<MAX_CARD_FILE_NAME_CHARS+1,("Oops"));
 	
 #if __USE_REPLAYS__
@@ -4192,7 +4286,8 @@ bool ScriptGetMemCardDirectoryListing(Script::CStruct *pParams, Script::CScript 
 		
 		// No need to check the file name if it's the XBox because all the files
 		// will be in our filespace.
-		if ( Config::GetHardware() != Config::HARDWARE_XBOX )
+		if ( Config::GetHardware() != Config::HARDWARE_XBOX &&
+			 Config::GetHardware() != Config::HARDWARE_WIN32 )
 		{
 			for (int j=0; j<header_len; ++j)
 			{
@@ -4227,12 +4322,8 @@ bool ScriptGetMemCardDirectoryListing(Script::CStruct *pParams, Script::CScript 
 			file_type=s_determine_file_type(p_file->m_Filename[header_len+8-1]);
 			break;
 		case Config::HARDWARE_XBOX:
-		case Config::HARDWARE_WIN32: // LWSS ADD
 		{
-			// KISAKTODO: are these file extensions wrong?
-			// TODO: Remove this ifdef somehow, needed currently because m_DisplayFilename
-			// is only defined for XBox. Shouldn't really have any platform ifdefs in this file.
-			#if defined(__PLAT_XBOX__) || defined(__PLAT_WN32__)
+			#ifdef __PLAT_XBOX__
 			int length = strlen( p_file->m_DisplayFilename );
 			if( stricmp( &p_file->m_DisplayFilename[length - 15], "NetworkSettings" ) == 0 )
 			{
@@ -4264,9 +4355,38 @@ bool ScriptGetMemCardDirectoryListing(Script::CStruct *pParams, Script::CScript 
 			}
 			#endif // #ifdef __PLAT_XBOX__
 			break;
-		}	
-		//case Config::HARDWARE_WIN32:
-		//	break;
+		}
+#ifdef __PLAT_WN32__
+		case Config::HARDWARE_WIN32:
+		{
+			const char *p_ext=(strlen(p_file->m_Filename)>=4)?&p_file->m_Filename[strlen(p_file->m_Filename)-4]:"";
+			if( stricmp( p_ext, ".NWS" ) == 0 )
+			{
+				file_type = 0xca41692d; // NetworkSettings
+			}
+			else if( stricmp( p_ext, ".SKA" ) == 0 )
+			{
+				file_type = 0xb010f357; // OptionsAndPros
+			}
+			else if( stricmp( p_ext, ".PRK" ) == 0 )
+			{
+				file_type = 0x3bf882cc; // Park
+			}
+			else if( stricmp( p_ext, ".CAT" ) == 0 )
+			{
+				file_type = 0x61a1bc57; // CAT
+			}
+			else if( stricmp( p_ext, ".REP" ) == 0 )
+			{
+				file_type = 0x26c80b0d; // Replay
+			}
+			else if( stricmp( p_ext, ".GOA" ) == 0 )
+			{
+				file_type = 0x62896edf; // CreatedGoals
+			}
+			break;
+		}
+#endif // __PLAT_WN32__
 		default:
 			break;
 		}
@@ -4296,12 +4416,18 @@ bool ScriptGetMemCardDirectoryListing(Script::CStruct *pParams, Script::CScript 
 				if (Config::GetHardware()==Config::HARDWARE_NGC)
 				{
 					sprintf(p_card_file_name,"%s",p_file->m_Filename);
-				}	
+				}
+#ifdef __PLAT_WN32__
+				else if (Config::GetHardware()==Config::HARDWARE_WIN32)
+				{
+					// Retail PC build: the file lives directly in the "Save" folder.
+					sprintf(p_card_file_name,"Save/%s",p_file->m_Filename);
+				}
+#endif // __PLAT_WN32__
 				else
 				{
 					sprintf(p_card_file_name,"/%s/%s",p_file->m_Filename,p_file->m_Filename);
-					//sprintf(p_card_file_name,"Save/%s",p_file->m_Filename); // lwss change
-				}	
+				}
 				Dbg_MsgAssert(strlen(p_card_file_name)<100,("Oops"));
 				
 				// Store the low level file name in the structure too so that the scripts
@@ -4311,8 +4437,13 @@ bool ScriptGetMemCardDirectoryListing(Script::CStruct *pParams, Script::CScript 
 				// so in that case it would not be possible to delete it.
 				p_struct->AddString("actual_file_name",p_card_file_name);
 				
-				#if defined(__PLAT_XBOX__) || defined(__PLAT_WN32__)
+				#ifdef __PLAT_XBOX__
 				p_struct->AddString("xbox_directory_name",p_file->m_DisplayFilename);
+				#endif
+				#ifdef __PLAT_WN32__
+				// Retail PC stores the full "Save/<name>.EXT" path here so that
+				// DeleteMemCardFile can remove the file directly.
+				p_struct->AddString("xbox_directory_name",p_card_file_name);
 				#endif
 
 				// Need to open the file to get the summary info out of it ...

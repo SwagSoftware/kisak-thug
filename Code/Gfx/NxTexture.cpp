@@ -44,6 +44,7 @@ static uint32 s_convert_filename_to_checksum( const char* pFileName )
 
 CTexture::CTexture()
 {
+	m_load_count = 0;
 	#ifdef	__NOPT_ASSERT__
 	mp_name = NULL;
 	#endif
@@ -58,6 +59,7 @@ CTexture::CTexture(const CTexture & src_texture)
 {
 	m_checksum = src_texture.m_checksum;
 	m_perm = src_texture.m_perm;
+	m_load_count = 0;
 
 	#ifdef	__NOPT_ASSERT__
 	mp_name = new char[strlen("Copy of ")+strlen(src_texture.mp_name)+1];
@@ -786,15 +788,24 @@ void CTexDict::FlushTextures(bool flush_all)
 CTexture *			CTexDict::LoadTexture(const char *p_texture_name, bool sprite, bool alloc_vram, bool perm)
 {
 	Mem::PushMemProfile((char*)p_texture_name);
-	
-	
-	CTexture *p_texture = plat_load_texture(p_texture_name, sprite, alloc_vram);
+
+
+	CTexture *p_texture = GetTexture(p_texture_name);
+	if (p_texture)
+	{
+		p_texture->m_load_count++;
+		Mem::PopMemProfile();
+		return p_texture;
+	}
+
+	p_texture = plat_load_texture(p_texture_name, sprite, alloc_vram);
 
 	if (p_texture)
 	{
 		p_texture->SetPerm(perm);
+		p_texture->m_load_count = 1;
 		mp_texture_lookup->PutItem(p_texture->GetChecksum(), p_texture);
-		
+
 	} else {
 		Dbg_Error("Texture %s not found", p_texture_name);
 	}
@@ -835,7 +846,13 @@ bool				CTexDict::UnloadTexture(CTexture *p_texture)
 {
 	uint32 checksum = p_texture->GetChecksum();
 
-	// Because the texture might be still being used, we have to wait for the frame to 
+	if (p_texture->m_load_count > 1)
+	{
+		p_texture->m_load_count--;
+		return true;
+	}
+
+	// Because the texture might be still being used, we have to wait for the frame to
 	// finish rendering
 	Nx::CEngine::sFinishRendering();
 
