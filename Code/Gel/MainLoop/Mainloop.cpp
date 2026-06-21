@@ -30,6 +30,8 @@
 #include <core/task.h>
 
 #include <gfx/nx.h>
+#include <gfx/NxViewMan.h>
+#include <sys/mem/memman.h>
 
 #ifndef __PLAT_WN32__
     #include <sys/profiler.h>
@@ -71,6 +73,13 @@ void D3D_ReCreateBuffers();
 void D3D_RecreateRenderSurfaces();
 #endif
 // lwss end
+
+// blops add
+#ifdef __PLAT_WN32__
+extern "C" float g_render_interp_alpha;
+extern "C" bool  g_render_interp_enabled;
+#endif
+// blops end
 
 namespace Mdl
 {
@@ -340,46 +349,45 @@ void		Manager::MainLoop( void )
 		//	//NxXbox::g_disableRendering = true;
 		//}
 
-		static int s_mainLoopCounter = 0;
+		// blops add
+		static LONGLONG s_sim_accumulator = 0;	// QPC ticks of real time not yet consumed by a sim step
+		const LONGLONG sim_ticks = frequency.QuadPart / 60;	// QPC ticks per fixed 1/60 s sim step
 
 		LARGE_INTEGER perfcount;
 		QueryPerformanceCounter(&perfcount);
-		LONG itr;
-		for (itr = perfcount.HighPart; perfcount.QuadPart < __PAIR64__(v3, v4) + perf.QuadPart; itr = perfcount.HighPart)
+
+		LONGLONG elapsed = perfcount.QuadPart - perf.QuadPart;	// real time since previous loop iteration
+		perf.QuadPart = perfcount.QuadPart;
+		if (elapsed < 0)
 		{
-			Sleep(0);
-			QueryPerformanceCounter(&perfcount);
+			elapsed = 0;	// QPC went backwards (rare); skip this interval
 		}
-		DWORD v8 = (__PAIR64__(itr, perfcount.LowPart) - perf.QuadPart) >> 32;
-		DWORD v7 = perfcount.LowPart - perf.LowPart;
-		if (__PAIR64__(itr, perfcount.LowPart) - perf.QuadPart > 20 * __PAIR64__(v3, v4))
+		s_sim_accumulator += elapsed;
+
+		int num_sim_steps = (int)(s_sim_accumulator / sim_ticks);
+
+		// Spiral-of-death guard: cap how many sim steps one render may drive. If we
+		// fall further behind, drop the backlog and degrade to slow-mo rather than
+		// spin forever (mirrors the old ~20-frame resync clamp).
+		const int MAX_SIM_STEPS = 5;
+		if (num_sim_steps > MAX_SIM_STEPS)
 		{
-			perf.QuadPart = __PAIR64__(itr, perfcount.LowPart) - __PAIR64__(v3, v4);
-			v7 = v4;
-			v8 = v3;
-		}
-		if (s_mainLoopCounter >= 4 && g_isWindowInFocus)
-		{
-			s_mainLoopCounter = 0;
+			num_sim_steps = MAX_SIM_STEPS;
+			s_sim_accumulator = 0;
 		}
 		else
 		{
-			if (__PAIR64__(v8, v7) < __PAIR64__(v3, v4) + (__PAIR64__(v3, v4) >> 1) && g_isWindowInFocus)
-			{
-				s_mainLoopCounter = 0;
-			}
-			else
-			{
-				//++dword_69B6F0;
-				++s_mainLoopCounter;
-				//NxXbox::g_disableRendering = true;
-			}
+			s_sim_accumulator -= (LONGLONG)num_sim_steps * sim_ticks;
 		}
-		perf.QuadPart += __PAIR64__(v3, v4);
 
-		Tmr::Vblank();
-		Tmr::PreUpdateTimerInfo();
-	
+		g_render_interp_alpha = g_render_interp_enabled
+			? (float)( (double)s_sim_accumulator / (double)sim_ticks )
+			: 1.0f;
+
+		(void)v3;
+		(void)v4;
+		// blops: Moved Tmr::VBlank() into the sim-step, sim clock runs at 60hz regardless of render
+
 #endif
 // lwss end
 		if (trigger_profiling)
@@ -449,6 +457,18 @@ void		Manager::MainLoop( void )
 #	endif		
 #	endif		
 					 
+#ifdef __PLAT_WN32__
+		for (int sim_step = 0; sim_step < num_sim_steps; ++sim_step)
+		{
+			Tmr::Vblank();
+			Tmr::PreUpdateTimerInfo();
+			// Snapshot each active camera's current pose BEFORE the sim advances it, so the
+			// renderer can interpolate prev->current between steps (P1 camera interp).
+			Nx::CViewportManager::sUpdateCameraInterpSnapshots();
+			service_system();
+			game_logic();
+		}
+#else
 		service_system();
 
 #if	defined(__PLAT_NGPS__) && defined(BATCH_TRI_COLLISION)
@@ -476,6 +496,7 @@ void		Manager::MainLoop( void )
 			Nx::CBatchTriCollMan::sDisableVU0Micro();
 		}
 #endif
+#endif // __PLAT_WN32__
 
 //#ifndef __PLAT_WN32__
 		// Display the memory contents, (if memview is active)
@@ -517,10 +538,42 @@ void		Manager::MainLoop( void )
 		Sys::CPUProfiler->PopContext(  );
 #	endif		
 		Tmr::OncePerRender();
- #ifdef	__PLAT_NGPS__		
+
+#ifdef __PLAT_WN32__
+		// blops add: debug info in window title
+		{
+			static int      s_title_frames = 0;		// render frames this window
+			static int      s_title_steps  = 0;		// sim steps accumulated this window
+			static LONGLONG s_title_last   = 0;		// QPC at last title update
+			s_title_frames++;
+			s_title_steps += num_sim_steps;
+			if (s_title_last == 0)
+			{
+				s_title_last = perfcount.QuadPart;
+			}
+			LONGLONG title_elapsed = perfcount.QuadPart - s_title_last;
+			if (title_elapsed >= frequency.QuadPart / 2)	// refresh ~2x/sec
+			{
+				double secs       = (double)title_elapsed / (double)frequency.QuadPart;
+				double render_fps = s_title_frames / secs;
+				double sim_hz     = s_title_steps  / secs;
+				int    free_mb    = Mem::Available() / (1024 * 1024);	// main-region free (watch for per-frame leak)
+				char title[160];
+				sprintf(title, "Kisak Hawk's OpenGround  -  %.0f FPS  (sim %.0f Hz)  free %d MB", render_fps, sim_hz, free_mb);
+				if (NxXbox::EngineGlobals.hWnd)
+				{
+					SetWindowTextA(NxXbox::EngineGlobals.hWnd, title);
+				}
+				s_title_frames = 0;
+				s_title_steps  = 0;
+				s_title_last   = perfcount.QuadPart;
+			}
+		}
+#endif
+ #ifdef	__PLAT_NGPS__
 //		snProfSetRange( 4, (void*)NULL, (void*)-1);
- #endif		
-//#endif		
+ #endif
+//#endif
 		
 		currently_profiling = false;
 

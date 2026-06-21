@@ -9,6 +9,9 @@
 #include "occlude.h"
 #include "anim_vertdefs.h"
 
+
+extern "C" float g_render_interp_alpha;
+
 namespace NxXbox
 {
 
@@ -250,12 +253,28 @@ void render_instances( uint32 flags )
 CInstance::CInstance( sScene *pScene, Mth::Matrix &transform, int numBones, Mth::Matrix *pBoneTransforms )
 {
 	SetTransform( transform );
+	m_interp_prev_transform = m_transform;
 	mp_bone_transforms	= pBoneTransforms;
 	m_num_bones			= numBones;
 	mp_scene			= pScene;
 	mp_model			= NULL;
 	m_active			= true;
 	m_flags				= 0;
+
+	// P3 bone interpolation: owned double-buffer of the last two sim-step poses (skinned only).
+	m_interp_num_bones   = numBones;
+	m_interp_bones_snaps = 0;
+	m_interp_bones_valid = false;
+	if( numBones > 0 )
+	{
+		mp_interp_bones_cur  = new Mth::Matrix[numBones];
+		mp_interp_bones_prev = new Mth::Matrix[numBones];
+	}
+	else
+	{
+		mp_interp_bones_cur  = NULL;
+		mp_interp_bones_prev = NULL;
+	}
 
 	mp_next_instance	= pFirstInstance;
 	pFirstInstance		= this;
@@ -285,6 +304,9 @@ CInstance::CInstance( sScene *pScene, Mth::Matrix &transform, int numBones, Mth:
 /******************************************************************/
 CInstance::~CInstance()
 {
+	if( mp_interp_bones_cur )  { delete[] mp_interp_bones_cur;  mp_interp_bones_cur  = NULL; }
+	if( mp_interp_bones_prev ) { delete[] mp_interp_bones_prev; mp_interp_bones_prev = NULL; }
+
 	if( m_flags & INSTANCE_FLAG_DELETE_ATTACHED_SCENE )
 	{
 		if( mp_scene )
@@ -293,7 +315,7 @@ CInstance::~CInstance()
 			mp_scene = NULL;
 		}
 	}
-	
+
 	// Remove this instance from the list.
 	CInstance **pp_instance = &pFirstInstance;
 	while( *pp_instance )
@@ -311,6 +333,94 @@ CInstance::~CInstance()
 }
 
 
+
+
+// Shared matrix nlerp: lerp the axis rows (interpolates rotation AND any baked-in scale)
+// plus position, then fix the W column. Avoids quaternion extraction, which corrupts on a
+// scaled matrix. Slight non-orthonormality at large per-step angles is negligible at 60 Hz.
+static void nlerp_matrix( Mth::Matrix& out, const Mth::Matrix& prev, const Mth::Matrix& cur, float alpha )
+{
+	out[Mth::RIGHT] = Mth::Lerp( prev[Mth::RIGHT], cur[Mth::RIGHT], alpha );	out[Mth::RIGHT][W] = 0.0f;
+	out[Mth::UP]    = Mth::Lerp( prev[Mth::UP],    cur[Mth::UP],    alpha );	out[Mth::UP][W]    = 0.0f;
+	out[Mth::AT]    = Mth::Lerp( prev[Mth::AT],    cur[Mth::AT],    alpha );	out[Mth::AT][W]    = 0.0f;
+	out[Mth::POS]   = Mth::Lerp( prev[Mth::POS],   cur[Mth::POS],   alpha );	out[Mth::POS][W]   = 1.0f;
+}
+
+// True if the root prev/current straddle a cut/teleport (snap, don't interpolate).
+bool CInstance::InterpIsCut( void ) const
+{
+	const Mth::Matrix& prev = m_interp_prev_transform;
+	const Mth::Matrix& cur  = m_transform;
+
+	// Position jump far larger than any real per-step move = teleport / respawn / camera cut.
+	Mth::Vector dp = cur[Mth::POS] - prev[Mth::POS];
+	float dist_sq = dp.GetX()*dp.GetX() + dp.GetY()*dp.GetY() + dp.GetZ()*dp.GetZ();
+	const float vCUT_DIST_SQ = 600.0f * 600.0f;	// (inches/step)^2
+	if( dist_sq > vCUT_DIST_SQ ) return true;
+
+	// Facing axis swung > ~60 deg in one step = an instant flip.
+	Mth::Vector pa = prev[Mth::AT];
+	Mth::Vector ca = cur[Mth::AT];
+	float pal = sqrtf( pa.GetX()*pa.GetX() + pa.GetY()*pa.GetY() + pa.GetZ()*pa.GetZ() );
+	float cal = sqrtf( ca.GetX()*ca.GetX() + ca.GetY()*ca.GetY() + ca.GetZ()*ca.GetZ() );
+	if( pal > 0.0001f && cal > 0.0001f )
+	{
+		float at_dot = ( pa.GetX()*ca.GetX() + pa.GetY()*ca.GetY() + pa.GetZ()*ca.GetZ() ) / ( pal * cal );
+		if( at_dot < 0.5f ) return true;
+	}
+	return false;
+}
+
+void CInstance::GetInterpolatedTransform( Mth::Matrix& out )
+{
+	out = m_transform;	// default: current sim pose
+
+	float alpha = g_render_interp_alpha;
+	if( alpha >= 1.0f ) return;
+	if( alpha < 0.0f ) alpha = 0.0f;
+	if( InterpIsCut() ) return;
+
+	nlerp_matrix( out, m_interp_prev_transform, m_transform, alpha );
+}
+
+// P3: interpolate one bone with a per-bone flip guard for animation cuts/pops. The raw
+// AT-axis dot's sign survives uniform scale, so dot<0 (> ~90 deg in one step) -> snap.
+static void interp_bone_matrix( Mth::Matrix& out, const Mth::Matrix& prev, const Mth::Matrix& cur, float alpha )
+{
+	float at_dot = prev[Mth::AT].GetX()*cur[Mth::AT].GetX()
+				 + prev[Mth::AT].GetY()*cur[Mth::AT].GetY()
+				 + prev[Mth::AT].GetZ()*cur[Mth::AT].GetZ();
+	if( at_dot < 0.0f )
+	{
+		out = cur;
+		return;
+	}
+	nlerp_matrix( out, prev, cur, alpha );
+}
+
+// P3: double-buffer the skeleton pose. Called once per sim step (from plat_render) with
+// the skeleton's current matrices, so the render can lerp the last two poses.
+void CInstance::SnapshotBones( Mth::Matrix* pBones, int numBones )
+{
+	if( !pBones || numBones <= 0 || !mp_interp_bones_cur || !mp_interp_bones_prev )
+	{
+		// no-anim this step (or non-skinned) -> render falls back to the current pose
+		m_interp_bones_valid = false;
+		m_interp_bones_snaps = 0;
+		return;
+	}
+
+	int nb = ( numBones < m_interp_num_bones ) ? numBones : m_interp_num_bones;
+
+	// shift old current -> prev, then copy the new pose into current
+	Mth::Matrix* tmp     = mp_interp_bones_prev;
+	mp_interp_bones_prev = mp_interp_bones_cur;
+	mp_interp_bones_cur  = tmp;
+	CopyMemory( mp_interp_bones_cur, pBones, nb * sizeof( Mth::Matrix ) );
+
+	if( m_interp_bones_snaps < 2 ) m_interp_bones_snaps++;
+	m_interp_bones_valid = ( m_interp_bones_snaps >= 2 );	// need two poses to interpolate
+}
 
 /******************************************************************/
 /*                                                                */
@@ -347,6 +457,10 @@ void CInstance::Render( uint32 flags )
 		0.0f, 0.0f, 0.0f,			// Attenuation0, 1, 2
 		0.0f, 0.0f					// Theta, Phi
 	};
+
+
+	Mth::Matrix render_transform;
+	GetInterpolatedTransform( render_transform );
 
 	if(( GetBoneTransforms() == NULL ) || ( GetScene()->m_numHierarchyObjects > 0 ))
 	{
@@ -403,7 +517,7 @@ void CInstance::Render( uint32 flags )
 			int num_bones = ( GetNumBones() < MAX_SUPPORTED_BONES ) ? GetNumBones() : MAX_SUPPORTED_BONES;
 			for( int lp = 0; lp < num_bones; ++lp )
 			{
-				Mth::Matrix temp = *GetTransform();
+				Mth::Matrix temp = render_transform;
 				temp = GetBoneTransforms()[lp] * temp;
 				set_frustum_bbox_transform( &temp );
 				D3DDevice_SetTransform( D3DTS_WORLD, (D3DXMATRIX*)&temp );
@@ -423,8 +537,8 @@ void CInstance::Render( uint32 flags )
 		else
 		{
 			// Has no skeleton.
-			set_frustum_bbox_transform( GetTransform());
-			D3DDevice_SetTransform( D3DTS_WORLD, (D3DXMATRIX*)GetTransform());
+			set_frustum_bbox_transform( &render_transform );
+			D3DDevice_SetTransform( D3DTS_WORLD, (D3DXMATRIX*)&render_transform );
 
 			render_scene( GetScene(), flags | vRENDER_NO_CULLING );
 		}
@@ -432,7 +546,7 @@ void CInstance::Render( uint32 flags )
 	else
 	{
 		// Has bone transforms, is therefore an animated object such as a skater, pedestrian etc.
-		set_frustum_bbox_transform( GetTransform());
+		set_frustum_bbox_transform( &render_transform );
 
 		// We only want to upload all the bone transforms if they have changed from the last call.
 		//bool upload_bone_transforms = false;
@@ -488,8 +602,21 @@ void CInstance::Render( uint32 flags )
 			//int num_bones = ( GetNumBones() < MAX_SUPPORTED_BONES ) ? GetNumBones() : MAX_SUPPORTED_BONES;
 		}
 
-		D3DDevice_SetTransform(D3DTS_WORLDMATRIX(0), (const D3DMATRIX*)&m_transform);
-		pBoneTransforms = mp_bone_transforms;
+		D3DDevice_SetTransform(D3DTS_WORLDMATRIX(0), (const D3DMATRIX*)&render_transform);
+		static Mth::Matrix s_interp_bone_palette[MAX_SUPPORTED_BONES];
+		if( g_render_interp_alpha < 1.0f && m_interp_bones_valid && !InterpIsCut() )
+		{
+			int interp_nb = m_num_bones;
+			if( interp_nb > MAX_SUPPORTED_BONES ) interp_nb = MAX_SUPPORTED_BONES;
+			if( interp_nb > m_interp_num_bones )  interp_nb = m_interp_num_bones;
+			for( int b = 0; b < interp_nb; ++b )
+				interp_bone_matrix( s_interp_bone_palette[b], mp_interp_bones_prev[b], mp_interp_bones_cur[b], g_render_interp_alpha );
+			pBoneTransforms = s_interp_bone_palette;
+		}
+		else
+		{
+			pBoneTransforms = mp_bone_transforms;
+		}
 		numBones = m_num_bones;
 		renderFlags = m_flags;
 		render_scene(GetScene(), flags | vRENDER_NO_CULLING, 0);

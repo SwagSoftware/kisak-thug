@@ -408,6 +408,51 @@ void Handle_WM_KEYDOWN(WPARAM wParam, LPARAM lParam)
     // KISAKTODO
 }
 
+static bool            g_borderless_fullscreen = false;
+static WINDOWPLACEMENT g_pre_fs_placement = { sizeof(WINDOWPLACEMENT) };
+static LONG            g_pre_fs_style = 0;
+
+void Win32_ToggleBorderlessFullscreen(void)
+{
+    HWND hWnd = NxXbox::EngineGlobals.hWnd;
+    if (!hWnd)
+        return;
+
+    // Exclusive fullscreen (launched with -fullscreen) owns the swap chain; don't fight it.
+    // (params.Windowed == !cmdline_fullscreen, and cmdline_fullscreen is what's visible here.)
+    if (NxXbox::EngineGlobals.cmdline_fullscreen)
+        return;
+
+    if (!g_borderless_fullscreen)
+    {
+        MONITORINFO mi = { sizeof(MONITORINFO) };
+        if (!GetWindowPlacement(hWnd, &g_pre_fs_placement) ||
+            !GetMonitorInfoA(MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST), &mi))
+        {
+            return;
+        }
+
+        g_pre_fs_style = GetWindowLongA(hWnd, GWL_STYLE);
+        SetWindowLongA(hWnd, GWL_STYLE, WS_POPUP | WS_VISIBLE);
+        // HWND_TOP (not TOPMOST) so alt-tab still works normally.
+        SetWindowPos(hWnd, HWND_TOP,
+            mi.rcMonitor.left, mi.rcMonitor.top,
+            mi.rcMonitor.right - mi.rcMonitor.left,
+            mi.rcMonitor.bottom - mi.rcMonitor.top,
+            SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+        g_borderless_fullscreen = true;
+    }
+    else
+    {
+        // Restore the previous windowed style and placement.
+        SetWindowLongA(hWnd, GWL_STYLE, g_pre_fs_style);
+        SetWindowPlacement(hWnd, &g_pre_fs_placement);
+        SetWindowPos(hWnd, NULL, 0, 0, 0, 0,
+            SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+        g_borderless_fullscreen = false;
+    }
+}
+
 LRESULT __stdcall Win32_WNDPROC(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     LRESULT result; // eax
@@ -431,6 +476,11 @@ LRESULT __stdcall Win32_WNDPROC(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 Handle_WM_CHAR(wParam, lParam);
                 return 0;
             case WM_SYSKEYDOWN:
+                if (wParam == VK_RETURN && !(lParam & (1 << 30)))   // Alt+Enter (bit 30 = key-repeat, ignore)
+                {
+                    Win32_ToggleBorderlessFullscreen();
+                    return 0;
+                }
                 if (wParam == 121)
                     return 0;
                 uMsg = 260;
@@ -501,6 +551,14 @@ static void __stdcall Win32_CreateDirectSound8(HWND a1)
 static bool g_cmdline_display_override = false;
 
 
+extern "C" bool g_vsync_enabled;
+extern "C" bool g_render_interp_enabled;
+static bool g_cmdline_vsync_set  = false;	// true if vsync was set on the command line (INI won't override)
+static bool g_cmdline_interp_set = false;	// true if interpolation was set on the command line
+extern "C" int g_cmdline_refresh;
+extern "C" int g_cmdline_monitor;
+
+
 static void Win32_GetGraphicsIniPath(char* out, int size)
 {
     char exe[MAX_PATH];
@@ -532,6 +590,10 @@ void Win32_SaveGraphicsSettings(void)
     GFX_WRITE_INT("AntiAliasing", NxXbox::EngineGlobals.g_Registry_options_flag_1_MSAA);
     GFX_WRITE_INT("EffectDetail", NxXbox::EngineGlobals.g_Registry_options_flag_2);
     GFX_WRITE_INT("DrawDistance", NxXbox::EngineGlobals.g_Registry_distance_value);
+    GFX_WRITE_INT("Vsync",         g_vsync_enabled ? 1 : 0);
+    GFX_WRITE_INT("Interpolation", g_render_interp_enabled ? 1 : 0);	// render/sim decouple smoothing (high-refresh)
+    GFX_WRITE_INT("Refresh",       g_cmdline_refresh);	// exclusive-fullscreen refresh Hz (0 = auto)
+    GFX_WRITE_INT("Monitor",       g_cmdline_monitor);	// D3D adapter index (-1 = primary)
 #undef GFX_WRITE_INT
 }
 
@@ -554,20 +616,32 @@ int Win32_QueryRegistryForSettings(LPCSTR lpSubKey)
         NxXbox::EngineGlobals.cmdline_width      = GetPrivateProfileIntA("Graphics", "Width",      1280, ini);
         NxXbox::EngineGlobals.cmdline_height     = GetPrivateProfileIntA("Graphics", "Height",     960,  ini);
         NxXbox::EngineGlobals.cmdline_fullscreen = GetPrivateProfileIntA("Graphics", "Fullscreen", 0,    ini) != 0;
+        g_cmdline_refresh                        = GetPrivateProfileIntA("Graphics", "Refresh",    0,    ini);  // exclusive-fs Hz (0=auto)
+        g_cmdline_monitor                        = GetPrivateProfileIntA("Graphics", "Monitor",   -1,    ini);  // D3D adapter index (-1=primary)
     }
+
+    // Render/sim decouple toggles. Defaults: Vsync on, Interpolation off (high-refresh users opt in).
+    // Cmdline (-vsync/-novsync, -interp/-nointerp) wins over the INI.
+    if (!g_cmdline_vsync_set)
+        g_vsync_enabled = GetPrivateProfileIntA("Graphics", "Vsync", 1, ini) != 0;
+    if (!g_cmdline_interp_set)
+        g_render_interp_enabled = GetPrivateProfileIntA("Graphics", "Interpolation", 0, ini) != 0;
 
     if (!exists)
     {
         Win32_SaveGraphicsSettings();
     }
 
-    printf("[gfx] %s: %dx%d %s AA=%u Effects=%u DrawDist=%u\n",
+    printf("[gfx] %s: %dx%d@%dHz %s monitor=%d AA=%u Effects=%u DrawDist=%u Vsync=%s Interp=%s\n",
         ini,
-        NxXbox::EngineGlobals.cmdline_width, NxXbox::EngineGlobals.cmdline_height,
+        NxXbox::EngineGlobals.cmdline_width, NxXbox::EngineGlobals.cmdline_height, g_cmdline_refresh,
         NxXbox::EngineGlobals.cmdline_fullscreen ? "fullscreen" : "windowed",
+        g_cmdline_monitor,
         NxXbox::EngineGlobals.g_Registry_options_flag_1_MSAA,
         NxXbox::EngineGlobals.g_Registry_options_flag_2,
-        NxXbox::EngineGlobals.g_Registry_distance_value);
+        NxXbox::EngineGlobals.g_Registry_distance_value,
+        g_vsync_enabled ? "on" : "off",
+        g_render_interp_enabled ? "on" : "off");
 
     return 0;
 }
@@ -627,6 +701,16 @@ static void Win32_ParseDisplayArgs(int argc, char** argv)
             NxXbox::EngineGlobals.cmdline_height = atoi(argv[++i]);
             g_cmdline_display_override = true;
         }
+        else if ((!stricmp(a, "-refresh") || !stricmp(a, "-hz") || !stricmp(a, "-refreshrate")) && (i + 1 < argc))
+        {
+            g_cmdline_refresh = atoi(argv[++i]);
+            g_cmdline_display_override = true;
+        }
+        else if ((!stricmp(a, "-monitor") || !stricmp(a, "-adapter") || !stricmp(a, "-display")) && (i + 1 < argc))
+        {
+            g_cmdline_monitor = atoi(argv[++i]);
+            g_cmdline_display_override = true;
+        }
         else if (!stricmp(a, "-fullscreen") || !stricmp(a, "-fs"))
         {
             NxXbox::EngineGlobals.cmdline_fullscreen = true;
@@ -636,6 +720,26 @@ static void Win32_ParseDisplayArgs(int argc, char** argv)
         {
             NxXbox::EngineGlobals.cmdline_fullscreen = false;
             g_cmdline_display_override = true;
+        }
+        else if (!stricmp(a, "-novsync") || !stricmp(a, "-vsyncoff"))
+        {
+            g_vsync_enabled = false;
+            g_cmdline_vsync_set = true;
+        }
+        else if (!stricmp(a, "-vsync"))
+        {
+            g_vsync_enabled = true;
+            g_cmdline_vsync_set = true;
+        }
+        else if (!stricmp(a, "-interp") || !stricmp(a, "-interpolation") || !stricmp(a, "-smooth"))
+        {
+            g_render_interp_enabled = true;
+            g_cmdline_interp_set = true;
+        }
+        else if (!stricmp(a, "-nointerp") || !stricmp(a, "-nosmooth"))
+        {
+            g_render_interp_enabled = false;
+            g_cmdline_interp_set = true;
         }
         else
         {

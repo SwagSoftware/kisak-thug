@@ -83,6 +83,10 @@ public:
 	void			StoreOldPos( void );
 	Mth::Vector		m_old_pos;
 
+	void			SnapshotInterpView();								// current pose -> "previous"
+	void			ResetInterpView();									// invalidate prev (cut/teleport/spawn)
+	void			GetInterpolatedView( float alpha, Mth::Matrix& out_matrix, Mth::Vector& out_pos, float& out_hfov );
+
 public:
 	bool			CallMemberFunction( uint32 checksum, Script::CStruct* pParams, Script::CScript* pScript ); 
 
@@ -95,6 +99,11 @@ protected:
 
 	float			m_near_clip;						// near clip plane
 	float			m_far_clip;							// far clip plane
+
+	Mth::Matrix		m_interp_prev_matrix;				// previous sim-step orientation
+	Mth::Vector		m_interp_prev_pos;					// previous sim-step position
+	float			m_interp_prev_hfov;					// previous sim-step adjusted HFOV
+	bool			m_interp_valid;						// false until first snapshot / after a cut
 };
 
 /*****************************s************************************************

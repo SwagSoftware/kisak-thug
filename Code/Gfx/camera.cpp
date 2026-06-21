@@ -77,7 +77,10 @@ Camera::Camera ( )
 	m_far_clip = vDEFAULT_FARZ;
 	m_pos.Set();
 	m_old_pos.Set();
-	
+	m_interp_prev_matrix.Ident();
+	m_interp_prev_pos.Set();
+	m_interp_prev_hfov = m_h_fov;
+	m_interp_valid     = false;
 }
 
 /******************************************************************/
@@ -253,7 +256,70 @@ float Camera::GetAspectRatio ( void )
 
 void Camera::StoreOldPos( void )
 {
-	m_old_pos = GetPos();		   
+	m_old_pos = GetPos();
+}
+
+/******************************************************************/
+/* Render-rate interpolation (decouple P1).                       */
+/* SnapshotInterpView() runs once per fixed sim step (before the  */
+/* step moves the camera); GetInterpolatedView() lerps the stored */
+/* "previous" pose -> the current pose at render time. Render-only.*/
+/******************************************************************/
+
+void Camera::SnapshotInterpView( void )
+{
+	m_interp_prev_matrix = m_matrix;
+	m_interp_prev_pos    = m_pos;
+	m_interp_prev_hfov   = GetAdjustedHFOV();
+	m_interp_valid       = true;
+}
+
+/******************************************************************/
+
+void Camera::ResetInterpView( void )
+{
+	m_interp_valid = false;
+}
+
+/******************************************************************/
+
+void Camera::GetInterpolatedView( float alpha, Mth::Matrix& out_matrix, Mth::Vector& out_pos, float& out_hfov )
+{
+	float cur_hfov = GetAdjustedHFOV();
+
+	if( alpha < 0.0f ) alpha = 0.0f;
+	if( alpha > 1.0f ) alpha = 1.0f;
+
+	// No valid history (fresh camera / just reset) -> render at the current pose.
+	if( !m_interp_valid )
+	{
+		out_matrix = m_matrix;
+		out_pos    = m_pos;
+		out_hfov   = cur_hfov;
+		return;
+	}
+
+	// Cut / teleport guard: a per-step jump far larger than any real camera move means
+	// prev and current straddle a discontinuity (respawn, cutscene cut, warp). Lerping
+	// across it would smear, so snap to current. (Explicit per-object snap flags = P4.)
+	const float vCUT_DIST_SQ = 600.0f * 600.0f;	// (inches/step)^2; normal motion << this
+	const float vCUT_DOT     = 0.5f;			// at-vector dot < this => >60 deg/step => cut
+	Mth::Vector delta = m_pos - m_interp_prev_pos;
+	float dist_sq = delta.GetX()*delta.GetX() + delta.GetY()*delta.GetY() + delta.GetZ()*delta.GetZ();
+	float at_dot  = m_matrix.GetAt().GetX() * m_interp_prev_matrix.GetAt().GetX()
+				  + m_matrix.GetAt().GetY() * m_interp_prev_matrix.GetAt().GetY()
+				  + m_matrix.GetAt().GetZ() * m_interp_prev_matrix.GetAt().GetZ();
+	if( dist_sq > vCUT_DIST_SQ || at_dot < vCUT_DOT )
+	{
+		out_matrix = m_matrix;
+		out_pos    = m_pos;
+		out_hfov   = cur_hfov;
+		return;
+	}
+
+	Mth::Slerp( out_matrix, m_interp_prev_matrix, m_matrix, alpha );
+	out_pos  = Mth::Lerp( m_interp_prev_pos, m_pos, alpha );
+	out_hfov = Mth::Lerp( m_interp_prev_hfov, cur_hfov, alpha );
 }
 
 /******************************************************************/

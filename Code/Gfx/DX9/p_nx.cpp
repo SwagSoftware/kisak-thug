@@ -341,6 +341,16 @@ void CEngine::s_plat_post_render( void )
 /*                                                                */
 /*                                                                */
 /******************************************************************/
+
+extern "C"
+{
+	float g_render_interp_alpha   = 1.0f;
+	bool  g_render_interp_enabled = false;
+	bool  g_vsync_enabled         = true;
+	int   g_cmdline_refresh       = 0;
+	int   g_cmdline_monitor       = -1;
+}
+
 void CEngine::s_plat_render_world( void )
 {
 	if (NxXbox::g_disableRendering)
@@ -414,7 +424,12 @@ void CEngine::s_plat_render_world( void )
 			// Set up the camera..
 			float aspect_ratio = p_cur_viewport->GetAspectRatio();
 
-			NxXbox::set_camera( &( p_cur_camera->GetMatrix()), &( p_cur_camera->GetPos()), p_cur_camera->GetAdjustedHFOV(), aspect_ratio );
+			Mth::Matrix	interp_matrix;
+			Mth::Vector	interp_pos;
+			float		interp_hfov;
+			p_cur_camera->GetInterpolatedView( g_render_interp_alpha, interp_matrix, interp_pos, interp_hfov );
+
+			NxXbox::set_camera( &interp_matrix, &interp_pos, interp_hfov, aspect_ratio );
 
 			// Render the non-sky world scenes.
 			for( int i = 0; i < MAX_LOADED_SCENES; i++ )
@@ -471,7 +486,7 @@ void CEngine::s_plat_render_world( void )
 
 			// Set up the sky camera.
 			Mth::Vector	centre_pos( 0.0f, 0.0f, 0.0f );
-			NxXbox::set_camera( &( p_cur_camera->GetMatrix()), &centre_pos, p_cur_camera->GetAdjustedHFOV(), aspect_ratio, true );
+			NxXbox::set_camera( &interp_matrix, &centre_pos, interp_hfov, aspect_ratio, true );
 
 			// Render the sky. We have to fudge the fog here to ensure the sky is fully fogged, since it is rendered with a non-standard projection
 			// matrix to ensure a constant z=1, but which breaks the fog interpolation value.
@@ -530,7 +545,7 @@ void CEngine::s_plat_render_world( void )
 			D3DDevice_SetRenderState( D3DRS_FOGEND,		*((DWORD*)( &NxXbox::EngineGlobals.fog_end )));
 
 			// Revert to the regular camera.
-			NxXbox::set_camera( &( p_cur_camera->GetMatrix()), &( p_cur_camera->GetPos()), p_cur_camera->GetAdjustedHFOV(), aspect_ratio );
+			NxXbox::set_camera( &interp_matrix, &interp_pos, interp_hfov, aspect_ratio );
 
 			// Render all semitransparent instances.
 			NxXbox::render_instances( NxXbox::vRENDER_SEMITRANSPARENT | NxXbox::vRENDER_INSTANCE_PRE_WORLD_SEMITRANSPARENT );

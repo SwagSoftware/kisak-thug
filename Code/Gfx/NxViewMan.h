@@ -64,6 +64,8 @@ public:
 	static Gfx::Camera*			sGetClosestCamera(const Mth::Vector &pos, float *distParam = NULL);
 	static int					sGetNumActiveCameras();
 
+	static void					sUpdateCameraInterpSnapshots();
+
 	static bool					sMarkCameraForDeletion(Gfx::Camera *pCamera);
 	static void					sDeleteMarkedCameras();
 

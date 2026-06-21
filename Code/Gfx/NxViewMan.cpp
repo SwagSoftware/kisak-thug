@@ -153,6 +153,28 @@ CViewport*	CViewportManager::sGetActiveViewport(int view)
 /*                                                                */
 /******************************************************************/
 
+void	CViewportManager::sUpdateCameraInterpSnapshots()
+{
+	int num = sGetNumActiveViewports();
+	for( int v = 0; v < num; ++v )
+	{
+		CViewport *p_vp = sGetActiveViewport( v );
+		if( p_vp )
+		{
+			Gfx::Camera *p_cam = p_vp->GetCamera();
+			if( p_cam )
+			{
+				p_cam->SnapshotInterpView();
+			}
+		}
+	}
+}
+
+/******************************************************************/
+/*                                                                */
+/*                                                                */
+/******************************************************************/
+
 int			CViewportManager::sGetActiveViewportNumber(CViewport *p_viewport)
 {
 	int found_views = 0;

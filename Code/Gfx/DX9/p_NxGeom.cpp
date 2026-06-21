@@ -503,6 +503,7 @@ bool CXboxGeom::plat_render(Mth::Matrix* pRootMatrix, Mth::Matrix* pBoneMatrices
 	if( mp_instance )
 	{
 		mp_instance->SetTransform( *pRootMatrix );
+		mp_instance->SnapshotBones( pBoneMatrices, numBones );
 	}
     return true;
 }

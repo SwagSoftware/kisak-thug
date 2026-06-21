@@ -14,6 +14,11 @@
 #include "gamma.h"
 #include "grass.h"
 
+// Render/sim decouple: vsync default on; -novsync / [Graphics] Vsync=0 selects IMMEDIATE present.
+extern "C" bool g_vsync_enabled;
+extern "C" int  g_cmdline_refresh;
+extern "C" int  g_cmdline_monitor;
+
 namespace NxXbox
 {
 
@@ -341,8 +346,12 @@ void InitialiseEngine( void )
 
 	Dbg_Assert(EngineGlobals.p_d3d != NULL);
 
+	UINT selected_adapter = D3DADAPTER_DEFAULT;
+	if (g_cmdline_monitor >= 0 && (UINT)g_cmdline_monitor < EngineGlobals.p_d3d->GetAdapterCount())
+		selected_adapter = (UINT)g_cmdline_monitor;
+
 	D3DDISPLAYMODE displayMode;
-	Dbg_Assert(EngineGlobals.p_d3d->GetAdapterDisplayMode(0, &displayMode) == D3D_OK);
+	Dbg_Assert(EngineGlobals.p_d3d->GetAdapterDisplayMode(selected_adapter, &displayMode) == D3D_OK);
 
 #define params NxXbox::EngineGlobals.params
 
@@ -376,8 +385,16 @@ void InitialiseEngine( void )
 	}
 	else
 	{
+		int fs_x = 0, fs_y = 0;
+		HMONITOR h_adapter_mon = EngineGlobals.p_d3d->GetAdapterMonitor(selected_adapter);
+		MONITORINFO ami = { sizeof(MONITORINFO) };
+		if (h_adapter_mon && GetMonitorInfoA(h_adapter_mon, &ami))
+		{
+			fs_x = ami.rcMonitor.left;
+			fs_y = ami.rcMonitor.top;
+		}
 		SetWindowLongA(EngineGlobals.hWnd, GWL_STYLE, WS_POPUP | WS_VISIBLE);
-		SetWindowPos(EngineGlobals.hWnd, HWND_TOP, 0, 0,
+		SetWindowPos(EngineGlobals.hWnd, HWND_TOP, fs_x, fs_y,
 			s_engineResolutionWidth, s_engineResolutionHeight, SWP_FRAMECHANGED);
 	}
 
@@ -395,15 +412,15 @@ void InitialiseEngine( void )
 	}
 
 	params.AutoDepthStencilFormat = D3DFMT_D24X8;
-	params.FullScreen_RefreshRateInHz = 0;
+	params.FullScreen_RefreshRateInHz = (!params.Windowed && g_cmdline_refresh > 0) ? (UINT)g_cmdline_refresh : 0;
 	// blops todo: add vsync toggle somewhere
-	params.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
+	params.PresentationInterval = g_vsync_enabled ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
 	params.BackBufferFormat = params.Windowed ? displayMode.Format : D3DFMT_X8R8G8B8;
 
 	int attempts = 0;
 TRY_THE_FUCK_AGAIN:
 	attempts++;
-	auto createDeviceErr = NxXbox::EngineGlobals.p_d3d->CreateDevice(D3DADAPTER_DEFAULT,
+	auto createDeviceErr = NxXbox::EngineGlobals.p_d3d->CreateDevice(selected_adapter,
 		D3DDEVTYPE_HAL,
 		EngineGlobals.hWnd,
 		//D3DCREATE_HARDWARE_VERTEXPROCESSING,	// Note: may want to consider adding the PUREDEVICE flag here also.
@@ -411,7 +428,7 @@ TRY_THE_FUCK_AGAIN:
 		&params,
 		&EngineGlobals.p_Device);
 		
-		//Direct3D_CreateDevice(D3DADAPTER_DEFAULT,
+		//Direct3D_CreateDevice(selected_adapter,
 		//D3DDEVTYPE_HAL,
 		//NULL,
 		////D3DCREATE_HARDWARE_VERTEXPROCESSING,	// Note: may want to consider adding the PUREDEVICE flag here also.
