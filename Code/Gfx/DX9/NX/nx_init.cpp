@@ -18,6 +18,8 @@
 extern "C" bool g_vsync_enabled;
 extern "C" int  g_cmdline_refresh;
 extern "C" int  g_cmdline_monitor;
+// DIAG: thread that created the D3D device (Reset must run on the same thread).
+extern "C" unsigned long g_d3d_create_thread_id = 0;
 
 namespace NxXbox
 {
@@ -272,7 +274,13 @@ void CreateVertexBufferPC(uint32 len)
 void CreateIndexBufferPC(uint32 len)
 {
 	uint16* indexData = NULL;
-	D3DDevice_CreateIndexBuffer(12 * len, 8, D3DFMT_INDEX16, D3DPOOL_DEFAULT, &EngineGlobals.p_index_buffer, 0);
+	EngineGlobals.p_index_buffer = NULL;
+	HRESULT cr = D3DDevice_CreateIndexBuffer(12 * len, 8, D3DFMT_INDEX16, D3DPOOL_DEFAULT, &EngineGlobals.p_index_buffer, 0);
+	if (cr != D3D_OK || !EngineGlobals.p_index_buffer)
+	{
+		printf("[gfx] CreateIndexBufferPC failed: hr=0x%08X\n", (unsigned)cr);
+		return;
+	}
 
 	// Locks a range of index data and obtains a pointer to the index buffer memory.
 	EngineGlobals.p_index_buffer->Lock(0, 0, (void**)&indexData, 0);
@@ -487,6 +495,9 @@ TRY_THE_FUCK_AGAIN:
 	}
 
 	// LWSS: omitted some crappy retry code for the d3d create here.
+
+	g_d3d_create_thread_id = GetCurrentThreadId();
+	printf("[gfx] device created on thread %lu\n", g_d3d_create_thread_id);
 
 	EngineGlobals.screen_conv_x_multiplier = params.BackBufferWidth / 640.0;
 	EngineGlobals.screen_conv_x_offset = 0;

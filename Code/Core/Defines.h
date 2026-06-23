@@ -100,13 +100,51 @@ extern bool g_hasJustEnteredNetworkGame;
 #define D3DDevice_SetDialogBoxMode(a) (NxXbox::EngineGlobals.p_Device)->SetDialogBoxMode(a)
 #define D3DDevice_SetGammaRamp(a,b,c) (NxXbox::EngineGlobals.p_Device)->SetGammaRamp(a,b,c)
 #define D3DDevice_GetGammaRamp(a,b) (NxXbox::EngineGlobals.p_Device)->GetGammaRamp(a,b)
-#define D3DDevice_CreateTexture(a,b,c,d,e,f,g,h) (NxXbox::EngineGlobals.p_Device)->CreateTexture(a,b,c,d,e,f,g,h)
+// DIAG: resource-creation tracker (no AddRef - just records creation site by raw pointer; the
+// engine's strict refcount asserts forbid us holding owning refs). GfxTrack_Note on create,
+// GfxTrack_Forget on release; whatever remains at Reset never went through a release path.
+void GfxTrack_Note( IUnknown* res, const char* file, int line );
+void GfxTrack_Forget( IUnknown* res );
+void GfxTrack_ReportLeaks( void );
+
+inline HRESULT GfxTrack_CreateTexture( const char* f, int ln, IDirect3DDevice9* dev, UINT w, UINT h, UINT lv, DWORD usage, D3DFORMAT fmt, D3DPOOL pool, IDirect3DTexture9** pp, HANDLE* sh )
+{
+	HRESULT hr = dev->CreateTexture(w,h,lv,usage,fmt,pool,pp,sh);
+	if (SUCCEEDED(hr) && pool == D3DPOOL_DEFAULT && pp && *pp) GfxTrack_Note(*pp, f, ln);
+	return hr;
+}
+inline HRESULT GfxTrack_CreateVertexBuffer( const char* f, int ln, IDirect3DDevice9* dev, UINT len, DWORD usage, DWORD fvf, D3DPOOL pool, IDirect3DVertexBuffer9** pp, HANDLE* sh )
+{
+	HRESULT hr = dev->CreateVertexBuffer(len,usage,fvf,pool,pp,sh);
+	if (SUCCEEDED(hr) && pool == D3DPOOL_DEFAULT && pp && *pp) GfxTrack_Note(*pp, f, ln);
+	return hr;
+}
+inline HRESULT GfxTrack_CreateIndexBuffer( const char* f, int ln, IDirect3DDevice9* dev, UINT len, DWORD usage, D3DFORMAT fmt, D3DPOOL pool, IDirect3DIndexBuffer9** pp, HANDLE* sh )
+{
+	HRESULT hr = dev->CreateIndexBuffer(len,usage,fmt,pool,pp,sh);
+	if (SUCCEEDED(hr) && pool == D3DPOOL_DEFAULT && pp && *pp) GfxTrack_Note(*pp, f, ln);
+	return hr;
+}
+inline HRESULT GfxTrack_CreateRenderTarget( const char* f, int ln, IDirect3DDevice9* dev, UINT w, UINT h, D3DFORMAT fmt, D3DMULTISAMPLE_TYPE ms, DWORD msq, BOOL lockable, IDirect3DSurface9** pp, HANDLE* sh )
+{
+	HRESULT hr = dev->CreateRenderTarget(w,h,fmt,ms,msq,lockable,pp,sh);
+	if (SUCCEEDED(hr) && pp && *pp) GfxTrack_Note(*pp, f, ln);	// render targets are always default-pool
+	return hr;
+}
+inline HRESULT GfxTrack_CreateDepthStencilSurface( const char* f, int ln, IDirect3DDevice9* dev, UINT w, UINT h, D3DFORMAT fmt, D3DMULTISAMPLE_TYPE ms, DWORD msq, BOOL discard, IDirect3DSurface9** pp, HANDLE* sh )
+{
+	HRESULT hr = dev->CreateDepthStencilSurface(w,h,fmt,ms,msq,discard,pp,sh);
+	if (SUCCEEDED(hr) && pp && *pp) GfxTrack_Note(*pp, f, ln);	// depth-stencil surfaces are always default-pool
+	return hr;
+}
+
+#define D3DDevice_CreateTexture(a,b,c,d,e,f,g,h) GfxTrack_CreateTexture(__FILE__,__LINE__,(NxXbox::EngineGlobals.p_Device),a,b,c,d,e,f,g,h)
 #define D3DDevice_CreateVolumeTexture(a,b,c,d,e,f,g,h,i) (NxXbox::EngineGlobals.p_Device)->CreateVolumeTexture(a,b,c,d,e,f,g,h,i)
 #define D3DDevice_CreateCubeTexture(a,b,c,d,e,f,g) (NxXbox::EngineGlobals.p_Device)->CreateCubeTexture(a,b,c,d,e,f,g)
-#define D3DDevice_CreateVertexBuffer(a,b,c,d,e,f) (NxXbox::EngineGlobals.p_Device)->CreateVertexBuffer(a,b,c,d,e,f)
-#define D3DDevice_CreateIndexBuffer(a,b,c,d,e,f) (NxXbox::EngineGlobals.p_Device)->CreateIndexBuffer(a,b,c,d,e,f)
-#define D3DDevice_CreateRenderTarget(a,b,c,d,e,f,g,h) (NxXbox::EngineGlobals.p_Device)->CreateRenderTarget(a,b,c,d,e,f,g,h)
-#define D3DDevice_CreateDepthStencilSurface(a,b,c,d,e,f,g,h) (NxXbox::EngineGlobals.p_Device)->CreateDepthStencilSurface(a,b,c,d,e,f,g,h)
+#define D3DDevice_CreateVertexBuffer(a,b,c,d,e,f) GfxTrack_CreateVertexBuffer(__FILE__,__LINE__,(NxXbox::EngineGlobals.p_Device),a,b,c,d,e,f)
+#define D3DDevice_CreateIndexBuffer(a,b,c,d,e,f) GfxTrack_CreateIndexBuffer(__FILE__,__LINE__,(NxXbox::EngineGlobals.p_Device),a,b,c,d,e,f)
+#define D3DDevice_CreateRenderTarget(a,b,c,d,e,f,g,h) GfxTrack_CreateRenderTarget(__FILE__,__LINE__,(NxXbox::EngineGlobals.p_Device),a,b,c,d,e,f,g,h)
+#define D3DDevice_CreateDepthStencilSurface(a,b,c,d,e,f,g,h) GfxTrack_CreateDepthStencilSurface(__FILE__,__LINE__,(NxXbox::EngineGlobals.p_Device),a,b,c,d,e,f,g,h)
 #define D3DDevice_UpdateSurface(a,b,c,d) (NxXbox::EngineGlobals.p_Device)->UpdateSurface(a,b,c,d)
 #define D3DDevice_UpdateTexture(a,b) (NxXbox::EngineGlobals.p_Device)->UpdateTexture(a,b)
 #define D3DDevice_GetRenderTargetData(a,b) (NxXbox::EngineGlobals.p_Device)->GetRenderTargetData(a,b)

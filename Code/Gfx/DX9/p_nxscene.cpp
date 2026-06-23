@@ -125,7 +125,11 @@ void CXboxScene::ReleaseDeviceVertexBuffer( void )
 {
 	if (p_vertex_buffer)
 	{
-		p_vertex_buffer->Release();
+		// DIAG: this is the scene's own (last) reference - the return value should be 0.
+		// Anything > 0 means mesh wrappers didn't all drop their shared-buffer refs (leak
+		// that makes Reset() fail with D3DERR_INVALIDCALL).
+		ULONG rc = p_vertex_buffer->Release();
+		printf("[gfx] scene shared VB release -> refcount %lu (expect 0)\n", rc);
 		p_vertex_buffer = NULL;
 	}
 }

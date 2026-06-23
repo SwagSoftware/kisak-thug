@@ -44,6 +44,63 @@ namespace Nx
 extern "C" volatile bool g_pending_device_reset = false;
 extern "C" void RequestDeviceReset( void ) { g_pending_device_reset = true; }
 extern "C" bool g_vsync_enabled;	// defined elsewhere; needed by the debug hotkeys below
+extern "C" unsigned long g_d3d_create_thread_id;	// DIAG: device-creation thread (defined in nx_init.cpp)
+
+// DIAG: default-pool resource tracker. NO AddRef (the engine asserts refcount==0 on destroy, so
+// we must not hold refs). Note() records the creation site by raw pointer; Forget() clears it on
+// release. At Reset we print the sites still recorded = resources that never went through a known
+// release path. We only print stored data (file:line) - never deref the pointer - so dangling is safe.
+struct GfxTrackEntry { IUnknown* res; const char* file; int line; };
+static const int GFXTRACK_MAX = 65536;
+static GfxTrackEntry g_gfxTrack[GFXTRACK_MAX];
+static int g_gfxTrackCount = 0;
+
+void GfxTrack_Note( IUnknown* res, const char* file, int line )
+{
+    if (!res || g_gfxTrackCount >= GFXTRACK_MAX) return;
+    g_gfxTrack[g_gfxTrackCount].res  = res;
+    g_gfxTrack[g_gfxTrackCount].file = file;
+    g_gfxTrack[g_gfxTrackCount].line = line;
+    g_gfxTrackCount++;
+}
+
+void GfxTrack_Forget( IUnknown* res )
+{
+    if (!res) return;
+    for (int i = g_gfxTrackCount - 1; i >= 0; --i)   // search back-to-front (most recent first)
+    {
+        if (g_gfxTrack[i].res == res)
+        {
+            g_gfxTrack[i].res = NULL;   // tombstone; leave slot (count not compacted)
+            return;
+        }
+    }
+}
+
+void GfxTrack_ReportLeaks( void )
+{
+    // Aggregate surviving (un-forgotten) creations by site so the output is readable.
+    int alive = 0;
+    for (int i = 0; i < g_gfxTrackCount; i++)
+    {
+        if (!g_gfxTrack[i].res) continue;
+        alive++;
+        // Count how many at the same site, and tombstone them so each site prints once.
+        int count = 0;
+        const char* f = g_gfxTrack[i].file; int ln = g_gfxTrack[i].line;
+        for (int j = i; j < g_gfxTrackCount; j++)
+        {
+            if (g_gfxTrack[j].res && g_gfxTrack[j].file == f && g_gfxTrack[j].line == ln)
+            {
+                g_gfxTrack[j].res = NULL;
+                count++;
+            }
+        }
+        printf("[gfx] default-pool created x%d at %s:%d\n", count, f, ln);
+    }
+    printf("[gfx] GfxTrack: %d default-pool resources created since boot (every creation site above)\n", alive);
+    g_gfxTrackCount = 0;
+}
 // lwss end
 
 BOOL(__cdecl* g_downloadCompletionFunc)(DWORD) = NULL;
@@ -96,20 +153,55 @@ void D3D_ResetTextures()
     // (set in sTexture::SetRenderTarget); their contents are regenerated each frame, so
     // recreating them empty after Reset is fine. D3D_ReCreateTextures keys off pD3DTexture
     // being NULL, so leaving managed textures' pD3DTexture intact makes recreate skip them.
+    // DIAG: count textures by pool. Any D3DPOOL_DEFAULT texture we DON'T release (because it has
+    // no pD3DSurface) would silently block Reset. MANAGED (1)/SYSTEMMEM(2) survive Reset.
+    {
+        int tex_total = 0, tex_default = 0, tex_managed = 0, tex_other = 0, tex_default_nosurf = 0;
+        for (NxXbox::LinkedList* j = NxXbox::g_sTexturesList; j; j = j->next)
+        {
+            NxXbox::sTexture* data = (NxXbox::sTexture*)j->data;
+            if (!data || !data->pD3DTexture) continue;
+            tex_total++;
+            D3DSURFACE_DESC desc;
+            if (data->pD3DTexture->GetLevelDesc(0, &desc) == D3D_OK)
+            {
+                if (desc.Pool == D3DPOOL_DEFAULT)
+                {
+                    tex_default++;
+                    if (!data->pD3DSurface) tex_default_nosurf++;
+                    if (tex_default <= 12)
+                        printf("[gfx] DEFAULT-pool tex %dx%d usage=0x%X fmt=%d hasSurf=%d\n",
+                            desc.Width, desc.Height, desc.Usage, (int)desc.Format, data->pD3DSurface ? 1 : 0);
+                }
+                else if (desc.Pool == D3DPOOL_MANAGED) tex_managed++;
+                else tex_other++;
+            }
+        }
+        printf("[gfx] DIAG textures live=%d  DEFAULT=%d (no-surface=%d)  MANAGED=%d  other=%d\n",
+            tex_total, tex_default, tex_default_nosurf, tex_managed, tex_other);
+    }
+
+    int rt_count = 0;
     for (NxXbox::LinkedList* j = NxXbox::g_sTexturesList; j; j = j->next)
     {
         NxXbox::sTexture* data = (NxXbox::sTexture*)j->data;
         if (data->pD3DSurface)   // non-NULL => render target (D3DPOOL_DEFAULT)
         {
-            data->pD3DSurface->Release();
+            ULONG rcs = data->pD3DSurface->Release();
             data->pD3DSurface = NULL;
+            ULONG rct = 0;
             if (data->pD3DTexture)
             {
-                data->pD3DTexture->Release();
+                rct = data->pD3DTexture->Release();
                 data->pD3DTexture = NULL;
             }
+            // DIAG: surface refcount should drop to its parent texture; texture should hit 0.
+            printf("[gfx] render-target tex %dx%d release -> surf %lu tex %lu (tex expect 0)\n",
+                data->BaseWidth, data->BaseHeight, rcs, rct);
+            rt_count++;
         }
     }
+    printf("[gfx] released %d render-target textures\n", rt_count);
 
 
     NxXbox::pTextureProjectionDetailsTable->IterateStart();
@@ -138,32 +230,55 @@ void D3D_ResetBuffers()
     D3DDevice_SetStreamSource(0, 0, 0, 0);
     D3DDevice_SetIndices(0);
 
+    int vb_total = 0, vb_live = 0, vb_stuck = 0;
     for (NxXbox::LinkedList* vertItr = NxXbox::g_meshVertexBuffers; vertItr; vertItr = vertItr->next)
     {
         NxXbox::VertexBufferWrapper* data = (NxXbox::VertexBufferWrapper*)vertItr->data;
         if (data)
         {
+            vb_total++;
             if (data->vertexBuffer)
             {
-                data->vertexBuffer->Release();
+                vb_live++;
+                ULONG rr = data->vertexBuffer->Release();
+                // Independent wrappers (own buffer) must hit 0. Shared wrappers (FLAG_NO_CREATE,
+                // pointing into a scene buffer) legitimately return >0 until the last ref.
+                bool shared = (data->vertexWrapperCreationFlags & FLAG_NO_CREATE_VERTEX_BUFFER) != 0;
+                if (rr != 0 && !shared)
+                {
+                    vb_stuck++;
+                    if (vb_stuck <= 8)
+                        printf("[gfx] STUCK vb wrapper '%s' refcount=%lu flags=0x%X len=%d\n",
+                            data->debug_name[0] ? data->debug_name : "(noname)", rr, data->vertexWrapperCreationFlags, data->len);
+                }
                 data->vertexBuffer = NULL;
             }
-            // vertItr->data->vertexBuffer = v2;
         }
     }
+    printf("[gfx] vertex wrappers: total=%d live=%d stuck(independent,refcount>0)=%d\n", vb_total, vb_live, vb_stuck);
 
+    int ib_total = 0, ib_live = 0, ib_stuck = 0;
     for (NxXbox::LinkedList* indexItr = NxXbox::g_meshIndexBuffers; indexItr; indexItr = indexItr->next)
     {
         NxXbox::IndexBufferWrapper* data = (NxXbox::IndexBufferWrapper*)indexItr->data;
         if (data)
         {
+            ib_total++;
             if (data->indexBuffer)
             {
-                data->indexBuffer->Release();
+                ib_live++;
+                ULONG rr = data->indexBuffer->Release();
+                if (rr != 0)
+                {
+                    ib_stuck++;
+                    if (ib_stuck <= 8)
+                        printf("[gfx] STUCK ib wrapper refcount=%lu len=%d\n", rr, data->len);
+                }
                 data->indexBuffer = NULL;
             }
         }
     }
+    printf("[gfx] index wrappers: total=%d live=%d stuck(refcount>0)=%d\n", ib_total, ib_live, ib_stuck);
 
     // Now that every mesh wrapper has dropped its shared-buffer reference, drop the
     // scene-owned reference so each scene's D3DPOOL_DEFAULT vertex buffer is fully
@@ -172,44 +287,34 @@ void D3D_ResetBuffers()
 }
 void D3D_ReleaseRenderSurfaces()
 {
+    // DIAG: each of these is the last reference we expect to hold; Release() should return 0.
+    // A non-zero return marks a resource still referenced/bound -> Reset() fails (INVALIDCALL).
     NxXbox::EngineGlobals.p_RenderSurface = NULL;
     NxXbox::EngineGlobals.p_ZStencilSurface = NULL;
 
     if (NxXbox::EngineGlobals.p_BlurSurface_2)
-    {
-        NxXbox::EngineGlobals.p_BlurSurface_2->Release();
-    }
+        printf("[gfx] BlurSurface_2 release -> %lu\n", NxXbox::EngineGlobals.p_BlurSurface_2->Release());
     NxXbox::EngineGlobals.p_BlurSurface_2 = NULL;
 
     if (NxXbox::EngineGlobals.p_BlurSurface_3)
-    {
-        NxXbox::EngineGlobals.p_BlurSurface_3->Release();
-    }
+        printf("[gfx] BlurSurface_3 release -> %lu\n", NxXbox::EngineGlobals.p_BlurSurface_3->Release());
     NxXbox::EngineGlobals.p_BlurSurface_3 = NULL;
 
     if (NxXbox::EngineGlobals.p_BlurSurface_0)
-    {
-        NxXbox::EngineGlobals.p_BlurSurface_0->Release();
-    }
+        printf("[gfx] BlurSurface_0 release -> %lu\n", NxXbox::EngineGlobals.p_BlurSurface_0->Release());
     NxXbox::EngineGlobals.p_BlurSurface_0 = NULL;
 
     if (NxXbox::EngineGlobals.p_BlurSurface_1)
-    {
-        NxXbox::EngineGlobals.p_BlurSurface_1->Release();
-    }
+        printf("[gfx] BlurSurface_1 release -> %lu\n", NxXbox::EngineGlobals.p_BlurSurface_1->Release());
     NxXbox::EngineGlobals.p_BlurSurface_1 = NULL;
 
     // D3D_ReleaseVertexBuffer()
     if (NxXbox::EngineGlobals.p_vertex_buffer)
-    {
-        NxXbox::EngineGlobals.p_vertex_buffer->Release();
-    }
+        printf("[gfx] scratch VB release -> %lu\n", NxXbox::EngineGlobals.p_vertex_buffer->Release());
     NxXbox::EngineGlobals.p_vertex_buffer = NULL;
 
     if (NxXbox::EngineGlobals.p_index_buffer)
-    {
-        NxXbox::EngineGlobals.p_index_buffer->Release();
-    }
+        printf("[gfx] scratch IB release -> %lu\n", NxXbox::EngineGlobals.p_index_buffer->Release());
     NxXbox::EngineGlobals.p_index_buffer = NULL;
 }
 void D3D_ReCreateTextures()
@@ -308,11 +413,15 @@ void D3D_RecreateRenderSurfaces()
         NULL
     );
 
+    NxXbox::EngineGlobals.p_RenderSurface = NULL;
+    NxXbox::EngineGlobals.p_ZStencilSurface = NULL;
     D3DDevice_GetRenderTarget(0, &NxXbox::EngineGlobals.p_RenderSurface);
     D3DDevice_GetDepthStencilSurface(&NxXbox::EngineGlobals.p_ZStencilSurface);
 
-    NxXbox::EngineGlobals.p_RenderSurface->Release();
-    NxXbox::EngineGlobals.p_ZStencilSurface->Release();
+    if (NxXbox::EngineGlobals.p_RenderSurface)
+        NxXbox::EngineGlobals.p_RenderSurface->Release();
+    if (NxXbox::EngineGlobals.p_ZStencilSurface)
+        NxXbox::EngineGlobals.p_ZStencilSurface->Release();
 
     D3DDevice_CreateTexture(
         params.BackBufferWidth, 
@@ -346,18 +455,194 @@ void D3D_RecreateRenderSurfaces()
 // frames (outside any BeginScene/EndScene pair) - see s_plat_pre_render in p_nx.cpp.
 extern "C" bool D3D_ResetDevice( void )
 {
-    if (NxXbox::EngineGlobals.p_Device == NULL)
+    IDirect3DDevice9* dev = NxXbox::EngineGlobals.p_Device;
+    if (dev == NULL)
         return false;
+
+    // Remember the present params / window settings so we can roll back if Reset fails
+    // (a failed Reset leaves the device in its previous state).
+    D3DPRESENT_PARAMETERS saved_params = NxXbox::EngineGlobals.params;
+    int  saved_w  = NxXbox::EngineGlobals.cmdline_width;
+    int  saved_h  = NxXbox::EngineGlobals.cmdline_height;
+    bool saved_fs = NxXbox::EngineGlobals.cmdline_fullscreen;
+
+    // 0. Detach every default-pool resource from the device. A stream, texture, render
+    //    target or depth-stencil left bound keeps an implicit reference and makes Reset()
+    //    fail with D3DERR_INVALIDCALL - e.g. the shadow render-to-texture surface left bound.
+    // DIAG: log what's actually bound as RT/depth at reset time BEFORE we touch anything.
+    {
+        IDirect3DSurface9* cur_rt = NULL;
+        if (dev->GetRenderTarget(0, &cur_rt) == D3D_OK && cur_rt)
+        {
+            D3DSURFACE_DESC d; cur_rt->GetDesc(&d);
+            printf("[gfx] DIAG bound RT before detach: %ux%u usage=0x%X pool=%d (backbuffer should be full-res)\n",
+                d.Width, d.Height, d.Usage, (int)d.Pool);
+            cur_rt->Release();
+        }
+        IDirect3DSurface9* cur_ds = NULL;
+        if (dev->GetDepthStencilSurface(&cur_ds) == D3D_OK && cur_ds)
+        {
+            D3DSURFACE_DESC d; cur_ds->GetDesc(&d);
+            printf("[gfx] DIAG bound depth before detach: %ux%u pool=%d\n", d.Width, d.Height, (int)d.Pool);
+            cur_ds->Release();
+        }
+        else printf("[gfx] DIAG no depth bound before detach\n");
+    }
+    for (UINT s = 0; s < 8; ++s)
+        dev->SetStreamSource(s, NULL, 0, 0);
+    dev->SetIndices(NULL);
+    for (DWORD t = 0; t < 16; ++t)
+        dev->SetTexture(t, NULL);
+    {
+        // Clear the depth-stencil FIRST: SetRenderTarget fails if the bound depth is smaller than
+        // the new RT (e.g. a 256x256 shadow depth still bound), which would leave the old RT bound.
+        dev->SetDepthStencilSurface(NULL);
+        IDirect3DSurface9* p_back = NULL;
+        if (dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &p_back) == D3D_OK && p_back)
+        {
+            HRESULT srt = dev->SetRenderTarget(0, p_back);
+            printf("[gfx] DIAG SetRenderTarget(backbuffer) -> 0x%08X (must be 0 to unbind a render-to-texture)\n", (unsigned)srt);
+            p_back->Release();
+        }
+    }
 
     // 1. Release all default-pool resources.
     D3D_ResetTextures();            // g_sTexturesList + texture-projection render targets
     D3D_ResetBuffers();             // mesh vertex/index wrappers + scene shared vertex buffers
     D3D_ReleaseRenderSurfaces();    // blur surfaces + scratch vertex/index buffers
 
+    // DIAG: name any default-pool resource the engine still holds (the Reset blocker) + drop tracker refs.
+    GfxTrack_ReportLeaks();
+
+    printf("[gfx] ---- release phase done ----\n");
+    {
+        HRESULT tcl = dev->TestCooperativeLevel();
+        dev->AddRef();
+        ULONG dev_rc = dev->Release();   // device refcount == 1 (ours) + living child resources
+        printf("[gfx] DIAG TestCooperativeLevel=0x%08X  device refcount=%lu (1 + living resources)\n",
+            (unsigned)tcl, dev_rc);
+        // DIAG: is this native D3D9 or a translation layer (DXVK / dgVoodoo / D3D9On12)? That would
+        // explain Reset rejecting everything. Also dump device creation behavior flags.
+        if (NxXbox::EngineGlobals.p_d3d)
+        {
+            D3DADAPTER_IDENTIFIER9 id; ZeroMemory(&id, sizeof(id));
+            if (NxXbox::EngineGlobals.p_d3d->GetAdapterIdentifier(NxXbox::GetSelectedAdapter(), 0, &id) == D3D_OK)
+                printf("[gfx] DIAG adapter: '%s' driver='%s' (looks like a wrapper if it says DXVK/dgVoodoo/D3D9On12)\n",
+                    id.Description, id.Driver);
+        }
+        {
+            D3DDEVICE_CREATION_PARAMETERS cp; ZeroMemory(&cp, sizeof(cp));
+            if (dev->GetCreationParameters(&cp) == D3D_OK)
+                printf("[gfx] DIAG device creation: BehaviorFlags=0x%08X focusWnd=%p adapter=%u\n",
+                    cp.BehaviorFlags, (void*)cp.hFocusWindow, cp.AdapterOrdinal);
+        }
+        printf("[gfx] DIAG thread: device created on %lu, reset running on %lu  (%s)\n",
+            g_d3d_create_thread_id, GetCurrentThreadId(),
+            g_d3d_create_thread_id == GetCurrentThreadId() ? "SAME" : "DIFFERENT - this breaks Reset!");
+        // DIAG: Reset() fails with INVALIDCALL if the device is inside a BeginScene/EndScene block.
+        // If EndScene() here returns D3D_OK, we WERE mid-scene when the reset fired - that's the bug.
+        HRESULT es = dev->EndScene();
+        printf("[gfx] DIAG EndScene() before reset -> 0x%08X  (0=we were mid-scene!)\n", (unsigned)es);
+
+        // DIAG: a held reference to the implicit swap-chain / back buffer / auto depth-stencil
+        // blocks Reset. GetX adds one ref; the printed count minus 1 is the EXTRA refs held
+        // elsewhere. A back buffer with refs > its swap-chain baseline, or an auto depth with any
+        // outstanding app ref, makes Reset fail with INVALIDCALL.
+        {
+            IDirect3DSurface9* bb = NULL;
+            if (dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &bb) == D3D_OK && bb)
+            {
+                bb->AddRef(); ULONG rc = bb->Release();
+                printf("[gfx] DIAG backbuffer refcount=%lu (after our GetBackBuffer +1)\n", rc);
+                bb->Release();
+            }
+            IDirect3DSurface9* ds = NULL;
+            if (dev->GetDepthStencilSurface(&ds) == D3D_OK && ds)
+            {
+                ds->AddRef(); ULONG rc = ds->Release();
+                printf("[gfx] DIAG auto depth-stencil refcount=%lu (after our Get +1)\n", rc);
+                ds->Release();
+            }
+            else
+            {
+                printf("[gfx] DIAG no depth-stencil currently set\n");
+            }
+            IDirect3DSwapChain9* sc = NULL;
+            if (dev->GetSwapChain(0, &sc) == D3D_OK && sc)
+            {
+                sc->AddRef(); ULONG rc = sc->Release();
+                printf("[gfx] DIAG swapchain(0) refcount=%lu\n", rc);
+                sc->Release();
+            }
+            UINT nsc = dev->GetNumberOfSwapChains();
+            printf("[gfx] DIAG number of swap chains=%u\n", nsc);
+        }
+        // DIAG PROBE B (runs FIRST - it's the ground-truth test): ask the swap chain for the device's
+        // ACTUAL current present params and reset with those. Earlier F7 attempts left saved_params at a
+        // different resolution than the device actually has, so this is the only true "unchanged" reset.
+        // If even THIS fails, it's conclusively NOT our params struct - the device just won't Reset.
+        HRESULT hrb = (HRESULT)0xDEADBEEF;
+        D3DPRESENT_PARAMETERS scpp;
+        ZeroMemory(&scpp, sizeof(scpp));
+        IDirect3DSwapChain9* sc2 = NULL;
+        HRESULT gsc = dev->GetSwapChain(0, &sc2);
+        if (gsc == D3D_OK && sc2)
+        {
+            HRESULT gp = sc2->GetPresentParameters(&scpp);
+            sc2->Release();
+            printf("[gfx] DIAG swapchain params (gp=0x%08X): %dx%d windowed=%d fmt=%d swap=%d count=%d autoDS=%d dsFmt=%d pi=%u\n",
+                (unsigned)gp, scpp.BackBufferWidth, scpp.BackBufferHeight, scpp.Windowed,
+                (int)scpp.BackBufferFormat, (int)scpp.SwapEffect, scpp.BackBufferCount,
+                scpp.EnableAutoDepthStencil, (int)scpp.AutoDepthStencilFormat, scpp.PresentationInterval);
+            scpp.EnableAutoDepthStencil = TRUE;             // swap chain doesn't own the auto depth-stencil
+            scpp.AutoDepthStencilFormat = D3DFMT_D24X8;
+            scpp.hDeviceWindow = NxXbox::EngineGlobals.hWnd;
+            hrb = D3DDevice_Reset(&scpp);
+            printf("[gfx] DIAG ProbeB Reset(EXACT swapchain params, autoDS=ON) -> 0x%08X\n", (unsigned)hrb);
+
+            if (hrb != D3D_OK)
+            {
+                // PROBE C: same params but WITHOUT the implicit auto depth-stencil. If this succeeds,
+                // the runtime-owned auto depth-stencil is what blocks Reset (and we manage depth ourselves).
+                D3DPRESENT_PARAMETERS nods = scpp;
+                nods.EnableAutoDepthStencil = FALSE;
+                nods.AutoDepthStencilFormat = D3DFMT_UNKNOWN;
+                HRESULT hrc = D3DDevice_Reset(&nods);
+                printf("[gfx] DIAG ProbeC Reset(EXACT params, autoDS=OFF) -> 0x%08X\n", (unsigned)hrc);
+
+                // PROBE D: minimal params built from scratch (not from the swap chain), DISCARD/1 buffer.
+                D3DPRESENT_PARAMETERS mini;
+                ZeroMemory(&mini, sizeof(mini));
+                mini.Windowed = TRUE;
+                mini.SwapEffect = D3DSWAPEFFECT_DISCARD;
+                mini.BackBufferFormat = D3DFMT_UNKNOWN;     // let the runtime pick the desktop format
+                mini.BackBufferCount = 1;
+                mini.hDeviceWindow = NxXbox::EngineGlobals.hWnd;
+                mini.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
+                HRESULT hrd = D3DDevice_Reset(&mini);
+                printf("[gfx] DIAG ProbeD Reset(minimal windowed, fmt=UNKNOWN, no autoDS) -> 0x%08X\n", (unsigned)hrd);
+            }
+        }
+        else
+        {
+            printf("[gfx] DIAG GetSwapChain failed gsc=0x%08X (cannot probe exact params)\n", (unsigned)gsc);
+        }
+    }
+    fflush(stdout);
+
     // 2. Rebuild present params (resolution / AA / vsync / refresh / monitor) from settings,
     //    and move/restyle the window to match.
     UINT adapter = NxXbox::GetSelectedAdapter();
     NxXbox::BuildPresentParams(adapter);
+
+    {
+        D3DPRESENT_PARAMETERS& p = NxXbox::EngineGlobals.params;
+        printf("[gfx] DIAG new params: %dx%d windowed=%d fmt=%d msaa=%d swap=%d ds=%d pi=%u hz=%u count=%u hwnd=%p\n",
+            p.BackBufferWidth, p.BackBufferHeight, p.Windowed, (int)p.BackBufferFormat,
+            (int)p.MultiSampleType, (int)p.SwapEffect, (int)p.AutoDepthStencilFormat,
+            p.PresentationInterval, p.FullScreen_RefreshRateInHz, p.BackBufferCount, (void*)p.hDeviceWindow);
+    }
+    fflush(stdout);
 
     // 3. Reset, waiting out a still-lost device (e.g. window minimized) if necessary.
     HRESULT hr = D3DERR_DEVICELOST;
@@ -369,22 +654,31 @@ extern "C" bool D3D_ResetDevice( void )
         Sleep(50);  // device not yet resettable; wait and retry
     }
 
-    if (hr != D3D_OK)
+    // 4. If Reset failed, roll back to the previous mode. The device kept its old state,
+    //    so we still recreate the resources we released, sized to the old params. The game
+    //    keeps running at the previous resolution instead of crashing.
+    bool ok = (hr == D3D_OK);
+    if (!ok)
     {
-        // D3DERR_INVALIDCALL here means a default-pool resource is still alive (leak),
-        // or the requested mode is unsupported. Leave the (now lost) device be; the caller
-        // keeps running and can retry. Surface it loudly in debug.
-        printf("[gfx] device Reset failed: hr=0x%08X\n", (unsigned)hr);
-        Dbg_Assert(0);
-        return false;
+        printf("[gfx] device Reset failed: hr=0x%08X - rolling back to %dx%d\n",
+            (unsigned)hr, saved_params.BackBufferWidth, saved_params.BackBufferHeight);
+        NxXbox::EngineGlobals.params           = saved_params;
+        NxXbox::EngineGlobals.cmdline_width    = saved_w;
+        NxXbox::EngineGlobals.cmdline_height   = saved_h;
+        NxXbox::EngineGlobals.cmdline_fullscreen = saved_fs;
+        // Put the window back to the old size/style so it matches the (unchanged) back buffer.
+        NxXbox::BuildPresentParams(adapter);
     }
 
-    // 4. Recreate everything we released.
+    // 5. Recreate everything we released.
     D3D_RecreateRenderSurfaces();   // scratch buffers + blur surfaces + render states
     D3D_ReCreateTextures();         // default-pool textures + projection render targets
     D3D_ReCreateBuffers();          // scene shared VBs (re-point) + per-mesh re-upload from shadows
 
-    // 5. Refresh resolution-derived metrics (the back buffer size may have changed).
+    if (!ok)
+        return false;
+
+    // 6. Refresh resolution-derived metrics (the back buffer size may have changed).
 #define params NxXbox::EngineGlobals.params
     NxXbox::EngineGlobals.backbuffer_width  = params.BackBufferWidth;
     NxXbox::EngineGlobals.backbuffer_height = params.BackBufferHeight;
