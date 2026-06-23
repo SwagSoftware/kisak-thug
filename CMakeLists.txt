@@ -71,3 +71,11 @@ set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT K
 set_target_properties(KisakThug PROPERTIES
     VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:KisakThug>"
     VS_DEBUGGER_COMMAND_ARGUMENTS "-loosescripts")
+
+# Copy the 32-bit SDL2.dll next to the exe on every build so the game can launch from its
+# output dir (Game/) without a manual copy. copy_if_different is a no-op when unchanged, which
+# also avoids "file busy" errors if the game is still running.
+add_custom_command(TARGET KisakThug POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_CURRENT_SOURCE_DIR}/SDL2/SDL2.dll" "$<TARGET_FILE_DIR:KisakThug>/SDL2.dll"
+    VERBATIM)
