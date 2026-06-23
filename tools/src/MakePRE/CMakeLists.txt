@@ -1,0 +1,8 @@
+
+FILE(GLOB MAKEPRE_SRCS "*.cpp")
+
+source_group("Sources" FILES ${MAKEPRE_SRCS})
+add_executable(MakePRE ${MAKEPRE_SRCS} ${TOOLS_COMMON_SRCS} ${TOOL_CORE_SRCS})
+set_property(TARGET MakePRE PROPERTY CXX_STANDARD 98)
+target_compile_definitions(MakePRE PRIVATE __INLINE_MEMGLOBALS__ __PLAT_TOOL__ __PLAT_WIN32__ __LINUX__)
+INSTALL(TARGETS MakePRE)

@@ -7,6 +7,17 @@ set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Code")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_GENERATOR_PLATFORM "WIN32")
 
+# --- Output layout: both configs build into a single flat runtime dir Game/ (NOT
+# build/Debug + build/Release) so they share ONE Data/ tree. The exes are told apart
+# by a debug postfix:   Release -> Game/KisakThug.exe   Debug -> Game/KisakThug_d.exe
+# Multi-config generators (VS) append a per-config subdir to CMAKE_RUNTIME_OUTPUT_DIRECTORY
+# unless the per-config _DEBUG/_RELEASE variants are set explicitly, so set those too.
+# These must be set before the target is created (in cmake_files.cmake, below).
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY         "${CMAKE_SOURCE_DIR}/Game")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG   "${CMAKE_SOURCE_DIR}/Game")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/Game")
+set(CMAKE_DEBUG_POSTFIX "_d")
+
 include(cmake_files.cmake)
 
 target_compile_definitions(KisakThug PUBLIC WIN32)
@@ -54,7 +65,7 @@ set_target_properties(KisakThug PROPERTIES WIN32_EXECUTABLE TRUE)
 # --- Visual Studio debugger run configuration (F5) ---
 # CMake makes ALL_BUILD the default startup project, which isn't runnable, and it would
 # launch from the project dir (build/) where the game can't find its assets. Make KisakThug
-# the startup project and run it from its output dir (build/Debug), where the Data/, Faces/
+# the startup project and run it from its output dir (Game/), where the Data/, Faces/
 # and Save/ folders live next to the .exe.
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT KisakThug)
 set_target_properties(KisakThug PROPERTIES
