@@ -148,6 +148,36 @@ void CEngine::s_plat_start_engine( void )
 
 
 
+// lwss add: runtime device-Reset support (resolution / graphics-settings changes
+// without restarting the game). Orchestrator lives in WinMain.cpp; these helpers
+// give it access to the per-scene shared vertex buffers (sp_loaded_scenes).
+extern "C" volatile bool g_pending_device_reset;
+extern "C" bool          D3D_ResetDevice( void );
+
+// Release the scene-owned reference to each loaded scene's shared vertex buffer.
+// Called after the per-mesh wrapper references have been dropped, so the
+// D3DPOOL_DEFAULT buffer reaches refcount 0 before Reset().
+void ResetSceneVertexBuffers( void )
+{
+	for (int i = 0; i < CEngine::MAX_LOADED_SCENES; i++)
+	{
+		if (CEngine::sp_loaded_scenes[i])
+			static_cast<CXboxScene*>(CEngine::sp_loaded_scenes[i])->ReleaseDeviceVertexBuffer();
+	}
+}
+
+// Recreate each loaded scene's shared vertex buffer after Reset() and re-point its
+// mesh wrappers. Must run before the generic ReInitD3DBuffer() pass re-uploads slices.
+void RecreateSceneVertexBuffers( void )
+{
+	for (int i = 0; i < CEngine::MAX_LOADED_SCENES; i++)
+	{
+		if (CEngine::sp_loaded_scenes[i])
+			static_cast<CXboxScene*>(CEngine::sp_loaded_scenes[i])->RecreateDeviceVertexBuffer();
+	}
+}
+// lwss end
+
 /******************************************************************/
 /*                                                                */
 /*                                                                */
@@ -155,6 +185,15 @@ void CEngine::s_plat_start_engine( void )
 // lwss: done
 void CEngine::s_plat_pre_render( void )
 {
+	// lwss add: apply any pending device Reset between frames, before BeginScene.
+	// (Triggered by a settings change / debug hotkey via RequestDeviceReset.)
+	if (g_pending_device_reset)
+	{
+		g_pending_device_reset = false;
+		D3D_ResetDevice();
+	}
+	// lwss end
+
 	// The screen clear is now added to the push buffer directly after the swap, in s_plat_post_render().
 
 	// No rendering should take place whilst the loading screen is visible.

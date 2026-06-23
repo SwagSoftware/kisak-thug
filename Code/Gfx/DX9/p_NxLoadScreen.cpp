@@ -530,6 +530,15 @@ void CLoadScreen::s_plat_clear()
 		delete sp_load_screen_texture;
 		sp_load_screen_texture = NULL;
 	}
+
+	// blops: gate the async loading-bar timer off the instant we invalidate the texture.
+	// sDisplay() does s_clear() -> s_plat_display(); s_clear() nulls sp_load_screen_texture
+	// but the bar timer is still live with loadingscreen_visible == true from the previous
+	// screen. A timer tick landing in that swap window draws no full-screen image (texture is
+	// null) yet still draws the bar and Presents a stale/clear backbuffer -> "blank load screen".
+	// Retail s_plat_hide clears loadingscreen_visible whenever it nulls the texture; mirror that
+	// here so the timer stops presenting until s_plat_display re-arms it with the new texture.
+	NxXbox::EngineGlobals.loadingscreen_visible = false;
 #ifdef __PLAT_WN32__
 	ReleaseMutex(NxXbox::EngineGlobals.g_asyncRenderMutex);
 #endif

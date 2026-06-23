@@ -9,6 +9,11 @@ namespace NxXbox
 
 void InitialiseEngine( void );
 void FatalFileError( uint32 error );
+// lwss add: factored out so a runtime device Reset can rebuild present params from settings
+UINT GetSelectedAdapter( void );
+void BuildPresentParams( UINT selected_adapter );
+void InitialiseRenderstates( void );
+// lwss end
 // lwss add
 void CreateVertexBufferPC(uint32 len);
 void CreateIndexBufferPC(uint32 len);

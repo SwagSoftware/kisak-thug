@@ -4339,7 +4339,13 @@ bool CSkaterCorePhysicsComponent::check_for_wallplant (   )
 	// K: Modified this to take an array of triggers, so that Kurt could check out using
 	// Down,X DownLeft,X or DownRight,X as a trigger.
 	bool triggered=false;
-	Script::CArray *p_trick_query_array=Script::GetArray(CRCD(0x5d1f84a7, "Wallplant_Trick"));
+	// blops: "Wallplant on X" tweak -- when tweak_wallplant_easy is set, use the plain-X trigger
+	// array (Wallplant_Trick_Easy) instead of the original Down+X set. (change() can't swap an Array
+	// global at runtime, so both arrays are static in script and we pick here.)
+	uint32 wallplant_trick_array = Script::GetInteger(CRCD(0xef5d47da, "tweak_wallplant_easy"))
+		? CRCD(0x6a36b82f, "Wallplant_Trick_Easy")
+		: CRCD(0x5d1f84a7, "Wallplant_Trick");
+	Script::CArray *p_trick_query_array=Script::GetArray(wallplant_trick_array);
 	for (uint32 i=0; i<p_trick_query_array->GetSize(); ++i)
 	{
 		Script::CStruct *p_trick_query_struct=p_trick_query_array->GetStructure(i);
@@ -4450,8 +4456,8 @@ bool CSkaterCorePhysicsComponent::check_for_wallride (   )
 	// Requires that m_feeler is a valid wall
 	
 	if (!m_col_flag_wallable) return false;
-		
-	// Allow a wall-ride attempt if triangle being pressed & long enough after the last wall-ride.	
+
+	// Allow a wall-ride attempt if triangle being pressed & long enough after the last wall-ride.
 	if ((mp_trick_component->GetButtonState(CRCD(0x20689278, "Triangle")) || mp_trick_component->TriggeredInLastNMilliseconds(
 			CRCD(0x20689278, "Triangle"),
 			1000 * GetPhysicsFloat(CRCD(0x5d241b00, "Wall_Ride_Triangle_Window"))

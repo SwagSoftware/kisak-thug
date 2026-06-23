@@ -218,8 +218,14 @@ CBaseComponent::EMemberFunctionResult CSkaterBalanceTrickComponent::CallMemberFu
 				case CRCC(0x255ed86f, "Grind"):
 				case CRCC(0x8d10119d, "Slide"):
 				{
+					// blops: keep the grind meter (position mManualLean + speed mManualLeanDir) across
+					// diagonal double-tap grind tricks. Those pass ClearCheese; a transient re-rail on the
+					// double-tap can call StopBalanceTrick first, which zeroes mBalanceTrickType (so
+					// OldBalanceTrickType==0 and the old-type test alone would miss it) but leaves
+					// mGrind's lean/dir intact (CManual::Stop only switches off the meter). So treat
+					// clear_cheese (== a tap continuation, never a fresh grind) as keep-worthy too.
 					bool keep = keep_balance &&
-						(OldBalanceTrickType == 0x255ed86f || OldBalanceTrickType == 0x8d10119d);
+						(OldBalanceTrickType == 0x255ed86f || OldBalanceTrickType == 0x8d10119d || clear_cheese);
 					float saved_lean		= mGrind.mManualLean;
 					float saved_lean_dir	= mGrind.mManualLeanDir;
 					if (clear_cheese)
@@ -233,6 +239,8 @@ CBaseComponent::EMemberFunctionResult CSkaterBalanceTrickComponent::CallMemberFu
 						mGrind.mManualLean	= saved_lean;
 						mGrind.mManualLeanDir	= saved_lean_dir;
 					}
+					printf("BLOPS grind-bal: keep_balance=%d old=0x%x clearcheese=%d -> keep=%d lean=%.2f dir=%.2f\n",
+						(int)keep_balance, OldBalanceTrickType, (int)clear_cheese, (int)keep, saved_lean, saved_lean_dir);
 					break;
 				}
 					

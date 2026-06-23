@@ -1166,10 +1166,16 @@ DRAW_SHIT:
 
 #ifdef _DEBUG
 	// lwss TEST -- Ensure none of the indexes in the indexbuffer are out of range
-	for (int i = 0; i < mp_index_buffer[idx]->len / 2; i++)
+	// blops: indices are immutable for a built buffer, so validate once instead of every draw -
+	// the per-frame O(num_indices) walk was a major debug-build renderer cost.
+	if (!mp_index_buffer[idx]->validated)
 	{
-		uint16_t index = mp_index_buffer[idx]->rawdata[i];
-		Dbg_Assert(index >= 0 && index <= m_num_vertices);
+		for (int i = 0; i < mp_index_buffer[idx]->len / 2; i++)
+		{
+			uint16_t index = mp_index_buffer[idx]->rawdata[i];
+			Dbg_Assert(index >= 0 && index <= m_num_vertices);
+		}
+		mp_index_buffer[idx]->validated = true;
 	}
 	// Also check the length of the vertex buffer
 	//for (int i = 0; i < mp_vertex_buffer[m_current_write_vertex_buffer]->len; i++)

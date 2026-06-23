@@ -323,6 +323,82 @@ void QueryRegistryAndSetGammaRamp()
 }
 // lwss end
 
+// Pick the D3D adapter for the configured monitor (-1 / out-of-range falls back to primary).
+UINT GetSelectedAdapter( void )
+{
+	UINT selected_adapter = D3DADAPTER_DEFAULT;
+	if (g_cmdline_monitor >= 0 && (UINT)g_cmdline_monitor < EngineGlobals.p_d3d->GetAdapterCount())
+		selected_adapter = (UINT)g_cmdline_monitor;
+	return selected_adapter;
+}
+
+// Build EngineGlobals.params from the current graphics settings, and move/restyle the
+// window to match. Used both for the initial device creation and when re-applying
+// settings at runtime via a device Reset (see D3D_ResetDevice in WinMain.cpp).
+void BuildPresentParams( UINT selected_adapter )
+{
+	D3DDISPLAYMODE displayMode;
+	Dbg_Assert(EngineGlobals.p_d3d->GetAdapterDisplayMode(selected_adapter, &displayMode) == D3D_OK);
+
+#define params EngineGlobals.params
+
+	ZeroMemory( &params, sizeof( D3DPRESENT_PARAMETERS ));
+
+	//params.Windowed = FALSE;
+	params.Windowed = EngineGlobals.cmdline_fullscreen ? FALSE : TRUE;
+	params.hDeviceWindow = EngineGlobals.hWnd;
+
+	int width  = (EngineGlobals.cmdline_width  > 0) ? EngineGlobals.cmdline_width  : 1280;
+	int height = (EngineGlobals.cmdline_height > 0) ? EngineGlobals.cmdline_height : 960;
+
+	if (params.Windowed)
+	{
+		RECT wr = { 0, 0, width, height };
+		AdjustWindowRect(&wr, 0x80C80000, FALSE);
+		// Restore the windowed style (matches window creation) in case we are coming back
+		// from fullscreen's WS_POPUP. Preserve the current WS_VISIBLE bit so this is a no-op
+		// during initial boot, where window visibility is managed separately.
+		LONG cur_style = GetWindowLongA(EngineGlobals.hWnd, GWL_STYLE);
+		SetWindowLongA(EngineGlobals.hWnd, GWL_STYLE, 0x80C80000 | (cur_style & WS_VISIBLE));
+		SetWindowPos(EngineGlobals.hWnd, HWND_NOTOPMOST, 0, 0,
+			wr.right - wr.left, wr.bottom - wr.top, SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
+	}
+	else
+	{
+		int fs_x = 0, fs_y = 0;
+		HMONITOR h_adapter_mon = EngineGlobals.p_d3d->GetAdapterMonitor(selected_adapter);
+		MONITORINFO ami = { sizeof(MONITORINFO) };
+		if (h_adapter_mon && GetMonitorInfoA(h_adapter_mon, &ami))
+		{
+			fs_x = ami.rcMonitor.left;
+			fs_y = ami.rcMonitor.top;
+		}
+		SetWindowLongA(EngineGlobals.hWnd, GWL_STYLE, WS_POPUP | WS_VISIBLE);
+		SetWindowPos(EngineGlobals.hWnd, HWND_TOP, fs_x, fs_y,
+			width, height, SWP_FRAMECHANGED);
+	}
+
+	params.BackBufferWidth = width;
+	params.BackBufferHeight = height;
+	params.BackBufferCount = 1;
+	params.EnableAutoDepthStencil = TRUE;
+	params.MultiSampleType = D3DMULTISAMPLE_NONE;
+	params.SwapEffect = D3DSWAPEFFECT_DISCARD;
+
+	if (EngineGlobals.g_Registry_options_flag_1_MSAA)
+	{
+		params.MultiSampleType = D3DMULTISAMPLE_2_SAMPLES;
+		params.SwapEffect = D3DSWAPEFFECT_DISCARD;
+	}
+
+	params.AutoDepthStencilFormat = D3DFMT_D24X8;
+	params.FullScreen_RefreshRateInHz = (!params.Windowed && g_cmdline_refresh > 0) ? (UINT)g_cmdline_refresh : 0;
+	// blops todo: add vsync toggle somewhere
+	params.PresentationInterval = g_vsync_enabled ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
+	params.BackBufferFormat = params.Windowed ? displayMode.Format : D3DFMT_X8R8G8B8;
+#undef params
+}
+
 // LWSS: Somewhat Heavily Reworked this function for PC port.
 // LWSS: Should be Done
 void InitialiseEngine( void )
@@ -346,76 +422,15 @@ void InitialiseEngine( void )
 
 	Dbg_Assert(EngineGlobals.p_d3d != NULL);
 
-	UINT selected_adapter = D3DADAPTER_DEFAULT;
-	if (g_cmdline_monitor >= 0 && (UINT)g_cmdline_monitor < EngineGlobals.p_d3d->GetAdapterCount())
-		selected_adapter = (UINT)g_cmdline_monitor;
+	UINT selected_adapter = GetSelectedAdapter();
 
-	D3DDISPLAYMODE displayMode;
-	Dbg_Assert(EngineGlobals.p_d3d->GetAdapterDisplayMode(selected_adapter, &displayMode) == D3D_OK);
+	BuildPresentParams(selected_adapter);
 
 #define params NxXbox::EngineGlobals.params
 
-	ZeroMemory( &params, sizeof( D3DPRESENT_PARAMETERS ));
-
-	//params.Windowed = FALSE;
-	params.Windowed = EngineGlobals.cmdline_fullscreen ? FALSE : TRUE;
-	params.hDeviceWindow = EngineGlobals.hWnd;
-
-	int graphicsLevel = 3 - EngineGlobals.g_Registry_resolution_setting;
-	if (graphicsLevel > 3)
-		graphicsLevel = 3;
-	if (graphicsLevel < 0)			// guard against an out-of-range registry value
-		graphicsLevel = 0;
-
+	// Fallback resolutions tried in order if CreateDevice fails at the requested size.
 	static const int heights[] = { 1024, 768, 600, 480 };
-	static const int widths[] = { 1280, 1024, 800, 640 };
-
-	static int s_engineResolutionWidth = widths[graphicsLevel];
-	static int s_engineResolutionHeight = heights[graphicsLevel];
-
-	s_engineResolutionWidth  = (EngineGlobals.cmdline_width  > 0) ? EngineGlobals.cmdline_width  : 1280;
-	s_engineResolutionHeight = (EngineGlobals.cmdline_height > 0) ? EngineGlobals.cmdline_height : 960;
-
-	if (params.Windowed)
-	{
-		RECT wr = { 0, 0, s_engineResolutionWidth, s_engineResolutionHeight };
-		AdjustWindowRect(&wr, 0x80C80000, FALSE);
-		SetWindowPos(EngineGlobals.hWnd, HWND_NOTOPMOST, 0, 0,
-			wr.right - wr.left, wr.bottom - wr.top, SWP_NOMOVE | SWP_NOZORDER);
-	}
-	else
-	{
-		int fs_x = 0, fs_y = 0;
-		HMONITOR h_adapter_mon = EngineGlobals.p_d3d->GetAdapterMonitor(selected_adapter);
-		MONITORINFO ami = { sizeof(MONITORINFO) };
-		if (h_adapter_mon && GetMonitorInfoA(h_adapter_mon, &ami))
-		{
-			fs_x = ami.rcMonitor.left;
-			fs_y = ami.rcMonitor.top;
-		}
-		SetWindowLongA(EngineGlobals.hWnd, GWL_STYLE, WS_POPUP | WS_VISIBLE);
-		SetWindowPos(EngineGlobals.hWnd, HWND_TOP, fs_x, fs_y,
-			s_engineResolutionWidth, s_engineResolutionHeight, SWP_FRAMECHANGED);
-	}
-
-	params.BackBufferWidth = s_engineResolutionWidth;
-	params.BackBufferHeight = s_engineResolutionHeight;
-	params.BackBufferCount = 1;
-	params.EnableAutoDepthStencil = TRUE;
-	params.MultiSampleType = D3DMULTISAMPLE_NONE;
-	params.SwapEffect = D3DSWAPEFFECT_DISCARD;
-
-	if (EngineGlobals.g_Registry_options_flag_1_MSAA)
-	{
-		params.MultiSampleType = D3DMULTISAMPLE_2_SAMPLES;
-		params.SwapEffect = D3DSWAPEFFECT_DISCARD;
-	}
-
-	params.AutoDepthStencilFormat = D3DFMT_D24X8;
-	params.FullScreen_RefreshRateInHz = (!params.Windowed && g_cmdline_refresh > 0) ? (UINT)g_cmdline_refresh : 0;
-	// blops todo: add vsync toggle somewhere
-	params.PresentationInterval = g_vsync_enabled ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
-	params.BackBufferFormat = params.Windowed ? displayMode.Format : D3DFMT_X8R8G8B8;
+	static const int widths[]  = { 1280, 1024, 800, 640 };
 
 	int attempts = 0;
 TRY_THE_FUCK_AGAIN:
@@ -443,8 +458,8 @@ TRY_THE_FUCK_AGAIN:
 		{
 			params.BackBufferWidth = widths[attempts];
 			params.BackBufferHeight = heights[attempts];
-			s_engineResolutionWidth = widths[attempts];
-			s_engineResolutionHeight = heights[attempts];
+			EngineGlobals.cmdline_width  = widths[attempts];
+			EngineGlobals.cmdline_height = heights[attempts];
 			goto TRY_THE_FUCK_AGAIN;
 		}
 		else
@@ -557,10 +572,10 @@ void FatalFileError( uint32 error )
 {
 	static char*	p_error_message_english[2]	= {	"There's a problem with the disc you're using.",
 													"It may be dirty or damaged." };
-	static char*	p_error_message_french[2]	= {	"Le disque utilisé présente une anomalie.",
-													"Il est peut-être sale ou endommagé." };
+	static char*	p_error_message_french[2]	= {	"Le disque utilisï¿½ prï¿½sente une anomalie.",
+													"Il est peut-ï¿½tre sale ou endommagï¿½." };
 	static char*	p_error_message_german[2]	= {	"Bei der benutzten CD ist ein Problem aufgetreten.",
-													"Möglicherweise ist sie verschmutzt oder beschädigt." };
+													"Mï¿½glicherweise ist sie verschmutzt oder beschï¿½digt." };
 	// Turn off the loading bar if it is active.
 	if( EngineGlobals.loadingbar_timer_event != 0 )
 	{

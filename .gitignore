@@ -1,7 +1,18 @@
 /xbox/x_exe/Debug
 *.ncb
 *.suo
-/build
+
+# Build output is ignored (compiled .qb, textures, models, the runtime Data tree, the exe, etc.)...
+/build/*
+!/build/Debug
+/build/Debug/*
+!/build/Debug/Data
+/build/Debug/Data/*
+# ...except the loose .q / .qn script SOURCES the game loads under -loosescripts, which we track.
+# (Compiled .qb sit next to them but are build artifacts -- regenerate with build_scripts.bat.)
+!/build/Debug/Data/scripts
+/build/Debug/Data/scripts/**/*.qb
+
 /kisak-thug/gaym
 /kisak-thug/Debug
 /kisak-thug/.vs

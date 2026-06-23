@@ -26,6 +26,26 @@ namespace NxXbox { extern bool g_shadow_test; }
 namespace Config { extern bool g_config_cd; }
 extern bool g_loose_scripts;
 
+// lwss add: runtime device-Reset support (apply resolution / graphics-settings
+// changes without restarting the game). See D3D_ResetDevice() below.
+namespace NxXbox
+{
+    UINT GetSelectedAdapter( void );
+    void BuildPresentParams( UINT selected_adapter );
+    void QueryRegistryAndSetGammaRamp( void );
+}
+namespace Nx
+{
+    void ResetSceneVertexBuffers( void );		// drop scene-owned shared VB refs (pre-Reset)
+    void RecreateSceneVertexBuffers( void );	// recreate scene shared VBs + re-point wrappers (post-Reset)
+}
+// Set this true (from any thread / the WndProc) to have the render loop apply a
+// device Reset between frames. Defined here, read in p_nx.cpp s_plat_pre_render.
+extern "C" volatile bool g_pending_device_reset = false;
+extern "C" void RequestDeviceReset( void ) { g_pending_device_reset = true; }
+extern "C" bool g_vsync_enabled;	// defined elsewhere; needed by the debug hotkeys below
+// lwss end
+
 BOOL(__cdecl* g_downloadCompletionFunc)(DWORD) = NULL;
 
 static HANDLE hEvent = 0;
@@ -69,24 +89,25 @@ void D3D_ResetTextures()
         D3DDevice_SetTexture(i, NULL);
     }
 
-    // KISAKTODO: should probably remove the texture from the linkedlist here guys
+    // Only render-target textures need releasing for Reset(): they live in D3DPOOL_DEFAULT.
+    // Ordinary textures are D3DPOOL_MANAGED (they survive Reset automatically) and keep NO
+    // CPU copy here (texrawdata is freed after upload) - releasing them would permanently
+    // blank every texture. Render targets are distinguished by a non-NULL pD3DSurface
+    // (set in sTexture::SetRenderTarget); their contents are regenerated each frame, so
+    // recreating them empty after Reset is fine. D3D_ReCreateTextures keys off pD3DTexture
+    // being NULL, so leaving managed textures' pD3DTexture intact makes recreate skip them.
     for (NxXbox::LinkedList* j = NxXbox::g_sTexturesList; j; j = j->next)
     {
         NxXbox::sTexture* data = (NxXbox::sTexture*)j->data;
-        // KISAKTODO: sTexture class seems to have a DO_NOT_PURGE flag that's missing here.
-        if (data->pD3DTexture)
+        if (data->pD3DSurface)   // non-NULL => render target (D3DPOOL_DEFAULT)
         {
-            //D3DSURFACE_DESC desc;
-            //data->pD3DTexture->GetLevelDesc(0, &desc);
-            ULONG rr = data->pD3DTexture->Release();
-            //Dbg_Assert(rr == 0);
-            data->pD3DTexture = NULL;
-        }
-        if (data->pD3DSurface)
-        {
-            ULONG rr = data->pD3DSurface->Release();
-            //Dbg_Assert(rr == 0);
+            data->pD3DSurface->Release();
             data->pD3DSurface = NULL;
+            if (data->pD3DTexture)
+            {
+                data->pD3DTexture->Release();
+                data->pD3DTexture = NULL;
+            }
         }
     }
 
@@ -131,16 +152,6 @@ void D3D_ResetBuffers()
         }
     }
 
-    // KISAKTODO: ugh
-    //for (int i = 0; i < /*MAX_LOADED_SCENES*/4; i++)
-    //{
-    //    if (NxXbox::sp_loaded_scenes[i])
-    //    {
-    //        CXboxScene* pXboxScene = static_cast<CXboxScene*>(sp_loaded_scenes[i]);
-    //
-    //    }
-    //}
-
     for (NxXbox::LinkedList* indexItr = NxXbox::g_meshIndexBuffers; indexItr; indexItr = indexItr->next)
     {
         NxXbox::IndexBufferWrapper* data = (NxXbox::IndexBufferWrapper*)indexItr->data;
@@ -153,6 +164,11 @@ void D3D_ResetBuffers()
             }
         }
     }
+
+    // Now that every mesh wrapper has dropped its shared-buffer reference, drop the
+    // scene-owned reference so each scene's D3DPOOL_DEFAULT vertex buffer is fully
+    // released before Reset().
+    Nx::ResetSceneVertexBuffers();
 }
 void D3D_ReleaseRenderSurfaces()
 {
@@ -198,13 +214,15 @@ void D3D_ReleaseRenderSurfaces()
 }
 void D3D_ReCreateTextures()
 {
+    // Only the render targets released by D3D_ResetTextures have a NULL pD3DTexture here
+    // (managed textures kept theirs). Recreate them as empty D3DPOOL_DEFAULT render targets;
+    // their contents are regenerated each frame.
     for (NxXbox::LinkedList* i = NxXbox::g_sTexturesList; i; i = i->next)
     {
         NxXbox::sTexture* data = (NxXbox::sTexture*)i->data;
         if (!data->pD3DTexture)
         {
-            // KISAKTODO: flag for DO_NOT_PURGE here.
-            D3DDevice_CreateTexture(data->BaseWidth, data->BaseHeight, 1, 0, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &data->pD3DTexture, NULL);
+            D3DDevice_CreateTexture(data->BaseWidth, data->BaseHeight, 1, D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &data->pD3DTexture, NULL);
 
             if (data->pD3DTexture)
                 data->pD3DTexture->GetSurfaceLevel(0, &data->pD3DSurface);
@@ -216,10 +234,12 @@ void D3D_ReCreateTextures()
     while (p_details)
     {
         NxXbox::sTexture* p_texture = p_details->p_texture;
-        if (p_texture)
+        // Projection-target textures are also in g_sTexturesList, so the loop above already
+        // recreated them; only handle any the loop missed.
+        if (p_texture && !p_texture->pD3DTexture)
         {
-            D3DDevice_CreateTexture(p_texture->BaseWidth, p_texture->BaseHeight, p_texture->Levels, 1, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &p_texture->pD3DTexture, NULL);
-            
+            D3DDevice_CreateTexture(p_texture->BaseWidth, p_texture->BaseHeight, p_texture->Levels, D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &p_texture->pD3DTexture, NULL);
+
             p_texture->pD3DTexture->GetSurfaceLevel(0, &p_texture->pD3DSurface);
         }
         p_details = NxXbox::pTextureProjectionDetailsTable->IterateNext();
@@ -227,7 +247,10 @@ void D3D_ReCreateTextures()
 }
 void D3D_ReCreateBuffers()
 {
-    // KISAKTODO: sp_loaded_scenes crap
+    // Recreate each loaded scene's shared vertex buffer and re-point the mesh
+    // wrappers at it FIRST. The wrapper ReInitD3DBuffer() pass below then AddRef()s
+    // the shared buffer and re-uploads each mesh's slice from its CPU shadow.
+    Nx::RecreateSceneVertexBuffers();
 
     for (NxXbox::LinkedList* i = NxXbox::g_meshVertexBuffers; i; i = i->next)
     {
@@ -314,6 +337,72 @@ void D3D_RecreateRenderSurfaces()
     );
 
     NxXbox::InitialiseRenderstates();
+#undef params
+}
+
+// lwss add: apply the current graphics settings to a live device via IDirect3DDevice9::Reset.
+// Releases every D3DPOOL_DEFAULT resource (managed ones survive automatically), rebuilds the
+// present params from EngineGlobals, Resets, then recreates everything. Must be called between
+// frames (outside any BeginScene/EndScene pair) - see s_plat_pre_render in p_nx.cpp.
+extern "C" bool D3D_ResetDevice( void )
+{
+    if (NxXbox::EngineGlobals.p_Device == NULL)
+        return false;
+
+    // 1. Release all default-pool resources.
+    D3D_ResetTextures();            // g_sTexturesList + texture-projection render targets
+    D3D_ResetBuffers();             // mesh vertex/index wrappers + scene shared vertex buffers
+    D3D_ReleaseRenderSurfaces();    // blur surfaces + scratch vertex/index buffers
+
+    // 2. Rebuild present params (resolution / AA / vsync / refresh / monitor) from settings,
+    //    and move/restyle the window to match.
+    UINT adapter = NxXbox::GetSelectedAdapter();
+    NxXbox::BuildPresentParams(adapter);
+
+    // 3. Reset, waiting out a still-lost device (e.g. window minimized) if necessary.
+    HRESULT hr = D3DERR_DEVICELOST;
+    for (int tries = 0; tries < 240; ++tries)
+    {
+        hr = D3DDevice_Reset(&NxXbox::EngineGlobals.params);
+        if (hr != D3DERR_DEVICELOST)
+            break;
+        Sleep(50);  // device not yet resettable; wait and retry
+    }
+
+    if (hr != D3D_OK)
+    {
+        // D3DERR_INVALIDCALL here means a default-pool resource is still alive (leak),
+        // or the requested mode is unsupported. Leave the (now lost) device be; the caller
+        // keeps running and can retry. Surface it loudly in debug.
+        printf("[gfx] device Reset failed: hr=0x%08X\n", (unsigned)hr);
+        Dbg_Assert(0);
+        return false;
+    }
+
+    // 4. Recreate everything we released.
+    D3D_RecreateRenderSurfaces();   // scratch buffers + blur surfaces + render states
+    D3D_ReCreateTextures();         // default-pool textures + projection render targets
+    D3D_ReCreateBuffers();          // scene shared VBs (re-point) + per-mesh re-upload from shadows
+
+    // 5. Refresh resolution-derived metrics (the back buffer size may have changed).
+#define params NxXbox::EngineGlobals.params
+    NxXbox::EngineGlobals.backbuffer_width  = params.BackBufferWidth;
+    NxXbox::EngineGlobals.backbuffer_height = params.BackBufferHeight;
+    NxXbox::EngineGlobals.backbuffer_format = params.BackBufferFormat;
+    NxXbox::EngineGlobals.zstencil_depth    = (params.AutoDepthStencilFormat != D3DFMT_D16) ? 32 : 16;
+    NxXbox::EngineGlobals.screen_conv_x_multiplier = params.BackBufferWidth  / 640.0f;
+    NxXbox::EngineGlobals.screen_conv_x_offset     = 0;
+    NxXbox::EngineGlobals.screen_conv_y_multiplier = params.BackBufferHeight / 480.0f;
+    NxXbox::EngineGlobals.screen_conv_y_offset     = (int)(NxXbox::EngineGlobals.screen_conv_y_multiplier * 16.0f);
+#undef params
+
+    // 6. The gamma ramp is cleared by Reset(); restore it.
+    NxXbox::QueryRegistryAndSetGammaRamp();
+
+    printf("[gfx] device Reset OK: %dx%d %s\n",
+        NxXbox::EngineGlobals.backbuffer_width, NxXbox::EngineGlobals.backbuffer_height,
+        NxXbox::EngineGlobals.params.Windowed ? "windowed" : "fullscreen");
+    return true;
 }
 
 HWND __cdecl Win32_CreateClassAndWindow(
@@ -405,7 +494,38 @@ void Handle_WM_CHAR(WPARAM wParam, LPARAM lParam)
 }
 void Handle_WM_KEYDOWN(WPARAM wParam, LPARAM lParam)
 {
-    // KISAKTODO
+    // lwss add: debug hotkeys for the runtime device-Reset path (precursor to the
+    // in-game graphics menu). These just stage new settings into EngineGlobals and
+    // request a Reset; s_plat_pre_render applies it between frames.
+    //   F7 - cycle resolution    F8 - toggle windowed/fullscreen    F9 - toggle vsync
+    switch (wParam)
+    {
+    case VK_F7:
+    {
+        static const int s_test_w[] = { 1280, 1600, 1920, 1024,  800 };
+        static const int s_test_h[] = {  960,  900, 1080,  768,  600 };
+        static int s_idx = 0;
+        s_idx = (s_idx + 1) % (sizeof(s_test_w) / sizeof(s_test_w[0]));
+        NxXbox::EngineGlobals.cmdline_width  = s_test_w[s_idx];
+        NxXbox::EngineGlobals.cmdline_height = s_test_h[s_idx];
+        printf("[gfx] hotkey: resolution -> %dx%d\n", s_test_w[s_idx], s_test_h[s_idx]);
+        RequestDeviceReset();
+        break;
+    }
+    case VK_F8:
+        NxXbox::EngineGlobals.cmdline_fullscreen = !NxXbox::EngineGlobals.cmdline_fullscreen;
+        printf("[gfx] hotkey: %s\n", NxXbox::EngineGlobals.cmdline_fullscreen ? "fullscreen" : "windowed");
+        RequestDeviceReset();
+        break;
+    case VK_F9:
+        g_vsync_enabled = !g_vsync_enabled;
+        printf("[gfx] hotkey: vsync %s\n", g_vsync_enabled ? "on" : "off");
+        RequestDeviceReset();
+        break;
+    default:
+        break;
+    }
+    // lwss end
 }
 
 static bool            g_borderless_fullscreen = false;

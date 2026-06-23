@@ -112,6 +112,69 @@ void CXboxScene::plat_post_load(void* p_meat)
 
 /******************************************************************/
 /*                                                                */
+/* Device-Reset support.                                          */
+/*                                                                */
+/* The scene holds the final reference to its shared vertex       */
+/* buffer (each mesh wrapper that points into it AddRef()'d a     */
+/* copy). Those wrapper references are dropped first by            */
+/* D3D_ResetBuffers; this drops the scene's own one so the        */
+/* D3DPOOL_DEFAULT buffer is fully released before Reset().       */
+/*                                                                */
+/******************************************************************/
+void CXboxScene::ReleaseDeviceVertexBuffer( void )
+{
+	if (p_vertex_buffer)
+	{
+		p_vertex_buffer->Release();
+		p_vertex_buffer = NULL;
+	}
+}
+
+/******************************************************************/
+/*                                                                */
+/* Recreate the shared buffer after Reset() and re-point every    */
+/* mesh wrapper that shares it at the new buffer. The generic     */
+/* ReInitD3DBuffer() pass (D3D_ReCreateBuffers) then AddRef()s    */
+/* and re-uploads each mesh's slice from its CPU shadow, exactly  */
+/* as sMesh::sub_4B3A90 does at load time. Must run BEFORE that   */
+/* pass.                                                          */
+/*                                                                */
+/******************************************************************/
+void CXboxScene::RecreateDeviceVertexBuffer( void )
+{
+	if (p_vertex_buffer_len <= 0)
+		return;		// scene has no shared vertex buffer (e.g. instanced/cloned scenes)
+
+	IDirect3DVertexBuffer9* p_new_buffer = NULL;
+	HRESULT hr = D3DDevice_CreateVertexBuffer(p_vertex_buffer_len, D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT, &p_new_buffer, 0);
+	Dbg_Assert(hr == D3D_OK);
+	if (hr != D3D_OK)
+		return;
+
+	p_vertex_buffer = p_new_buffer;
+
+	NxXbox::sScene* p_engine = mp_engine_scene;
+	if (p_engine)
+	{
+		for (int m = 0; m < p_engine->m_num_mesh_entries; m++)
+		{
+			NxXbox::sMesh* p_mesh = p_engine->m_meshes[m];
+			if (!p_mesh)
+				continue;
+
+			NxXbox::VertexBufferWrapper* p_wrapper = p_mesh->mp_vertex_buffer[0];
+			// Only wrappers that share the scene buffer (created without their own
+			// buffer) need re-pointing; standalone wrappers recreate themselves.
+			if (p_wrapper && (p_wrapper->vertexWrapperCreationFlags & FLAG_NO_CREATE_VERTEX_BUFFER))
+			{
+				p_wrapper->vertexBuffer = p_new_buffer;
+			}
+		}
+	}
+}
+
+/******************************************************************/
+/*                                                                */
 /*                                                                */
 /******************************************************************/
 bool CXboxScene::plat_load_textures(const char* p_name)

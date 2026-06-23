@@ -23,6 +23,14 @@ public:
 	void						SetEngineScene( NxXbox::sScene *p_scene )	{ mp_engine_scene = p_scene; }
 	void						DestroySectorMeshes( void );
 
+	// lwss add: device-Reset support. The scene owns one shared D3DPOOL_DEFAULT vertex
+	// buffer that all of its meshes' wrappers point into. On a device Reset it must be
+	// released and recreated; the per-mesh wrappers re-upload their slices from their
+	// CPU shadow copies (see D3D_ReCreateBuffers / VertexBufferWrapper::ReInitD3DBuffer).
+	void						ReleaseDeviceVertexBuffer( void );
+	void						RecreateDeviceVertexBuffer( void );
+	// lwss end
+
 private:		// It's all private, as it is machine specific
 #ifdef __PLAT_WN32__
 	virtual void				plat_post_load(void* p_meat = NULL);

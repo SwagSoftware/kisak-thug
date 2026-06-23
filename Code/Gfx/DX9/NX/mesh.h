@@ -57,6 +57,7 @@ struct IndexBufferWrapper
 	void* unk4; // 14
 	void* unk5; // 18
 	char debug_name[64];// lwss add
+	bool validated;		// blops: debug index-range check runs once, not every draw
 
 	IndexBufferWrapper(size_t size, int arg_d3dusage, D3DFORMAT arg_d3dformat, const char* p_debug_name = NULL)
 	{
@@ -83,6 +84,7 @@ struct IndexBufferWrapper
 		this->rawdata = (uint16*)malloc(size);
 		unk4 = NULL;
 		unk5 = NULL;
+		validated = false;
 
 		LinkedList* v5; // eax
 		LinkedList* v6; // ecx
@@ -126,6 +128,7 @@ struct IndexBufferWrapper
 			memcpy(dst, this->rawdata, this->len);
 			this->indexBuffer->Unlock();
 		}
+		validated = false;	// indices changed - revalidate once on next draw (debug only)
 		return 0;
 	}
 

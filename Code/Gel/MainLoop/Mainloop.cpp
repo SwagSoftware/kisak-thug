@@ -64,6 +64,10 @@ void Win32_ApplyInputs();
 void Win32_ProcessMsgPump();
 void Win32_GameNetUpdate();
 
+// Set by the window proc on WM_CLOSE/WM_DESTROY (clicking the titlebar X). The main loops below
+// must honour it or the close button does nothing while the game loop is running.
+extern bool gbQuit;
+
 void D3D_ResetTextures();
 void D3D_ResetBuffers();
 void D3D_ReleaseRenderSurfaces();
@@ -301,6 +305,13 @@ void		Manager::MainLoop( void )
 		Win32_ProcessMsgPump();
 		Win32_GameNetUpdate();
 
+		// Window closed (titlebar X) while we were waiting on focus - bail out of the gate
+		// so we fall through to the game loop, which will exit immediately on gbQuit.
+		if (gbQuit)
+		{
+			break;
+		}
+
 		if (g_isWindowInFocus)
 		{
 			break;
@@ -316,7 +327,7 @@ void		Manager::MainLoop( void )
 		{
 			Sleep(100u);
 			Win32_ProcessMsgPump();
-		} while (!g_isWindowInFocus);
+		} while (!g_isWindowInFocus && !gbQuit);
 
 		if (done)
 		{
@@ -327,7 +338,7 @@ void		Manager::MainLoop( void )
 
 #endif
 
-	while ( !done )
+	while ( !done && !gbQuit )
 	{
 // lwss Add
 #ifdef __PLAT_WN32__
