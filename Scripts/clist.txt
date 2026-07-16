@@ -1,0 +1,35 @@
+// Prints the passed text onto the EE0 output on the target manager.
+Printf "Default printf text"
+
+// Eventually this will play a sound effect.
+// Won't do anything yet except printf the passed parameters.
+PlaySound SFX_UNKNOWN Vol=100 Pitch=100
+
+// Loads a bsp file. Assumes the current directory is \skate3\data, so a valid
+// string would be "levels\aus\aus.bsp"
+// can also have an optional "Sky="xxx.bsp" parameter 
+//for loading the sky dome with a level file
+LoadLevelGeometry Level="blaa.bsp" Sky="sky.bsp"
+
+// Sets the render mode to be CPU.
+SetRenderModeCPU
+
+// Sets the render mode to be VU.
+SetRenderModeVU
+
+// Sets the background color. Each component is in the range 0-255.
+// The alpha value currently is not used.
+SetBackgroundColor r=0 g=0 b=0 alpha=0
+
+// Sets the ambient color.
+// Won't do anything yet ...   
+SetAmbientColor r=0 g=0 b=0 alpha=0                                         
+
+// Sets the clipping distances.
+// Won't do anything yet ...   
+SetClippingDistances Near=100 Far=1000
+
+// Sets the default world size (for viewing dffs)
+SetWorldSize Size=100
+
+
